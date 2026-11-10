@@ -14,6 +14,7 @@ import Arrival from './Arrival.tsx'
 import { FEATURES } from './features.ts'
 import Launcher from './screens/Launcher.tsx'
 import OnChainOverlay from './OnChainOverlay.tsx'
+import FloatingProgress from './FlowProgress.tsx'
 
 /** The homepage's single under-the-hood strip, for all three phones. */
 function HomeStrip() {
@@ -94,7 +95,7 @@ export default function App() {
       {/* For judges, not linked from the parents' screens. */}
       <Route path="/how-it-works" element={<HowItWorks mode="testnet" />} />
       {/* One URL for everything: the root explains the demo; Boloka's home is /home. */}
-      {allInOne && <Route index element={<Launcher mode="testnet" strip={<HomeStrip />} />} />}
+      {allInOne && <Route index element={<Launcher mode="testnet" strip={<HomeStrip />} floating={<FloatingProgress />} />} />}
       <Route element={<Phone />}>
         {allInOne ? <Route path="/home" element={<Home />} /> : <Route index element={<Home />} />}
         <Route path="/received" element={<Received />} />

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as R
 import * as store from './store.ts'
 import { keypair } from './chain.ts'
 import { readProgress, type Progress } from './progress.ts'
+import { ProgressSteps } from './FlowProgress.tsx'
 import { CHAIN_SCALE, PULA_PER_USD } from './money.ts'
 
 import { EXPLORER } from './explorer.ts'
@@ -244,32 +245,11 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
         )}
       </div>
       {facts}
-      {progress && (() => {
-        const done = new Set(progress.steps.map((s) => s.key))
-        const current = progress.flow.find((f) => !done.has(f.key))
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingBottom: 6, borderBottom: '1px dashed rgba(120, 220, 170, 0.35)' }}>
-            <div style={{ fontWeight: 700, color: '#8EE0B4' }}>{current ? `right now · ${progress.title}` : progress.title.replace(' in progress', ' settled')}</div>
-            {progress.flow.map((f) => {
-              const s = progress.steps.find((x) => x.key === f.key)
-              const now = f === current
-              return (
-                <div key={f.key} style={{ display: 'flex', gap: 8, opacity: s || now ? 1 : 0.5 }}>
-                  <span style={{ width: 12, flex: 'none', color: s ? '#8EE0B4' : '#F0B96B', display: 'inline-flex', justifyContent: 'center' }}>
-                    {s ? '✓' : now ? <span aria-label="in progress" style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', border: '2px solid #F0B96B', borderRightColor: 'transparent', animation: 'strip-spin 0.8s linear infinite' }} /> : '·'}
-                  </span>
-                  <span style={{ flex: 1 }}>{f.label}{now ? '…' : ''}{s?.kind === 'simulated' ? ' · simulated at this scale' : ''}</span>
-                  {s?.tx && (
-                    <a href={`${EXPLORER}/transactions/${s.tx}`} target="_blank" rel="noreferrer" style={{ color: '#8EE0B4', textDecoration: 'none', flex: 'none' }}>
-                      {s.tx.slice(0, 6)}… ↗
-                    </a>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )
-      })()}
+      {progress && !inline && (
+        <div style={{ paddingBottom: 6, borderBottom: '1px dashed rgba(120, 220, 170, 0.35)' }}>
+          <ProgressSteps progress={progress} />
+        </div>
+      )}
       {entries.length > 0 && <div style={{ opacity: 0.75 }}>Real Stellar testnet transactions behind this screen:</div>}
       {entries.length === 0 && !progress && <div style={{ opacity: 0.75 }}>No transactions yet. Send money in MoneyGram and they appear here, each linked to the chain explorer.</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: inline ? 260 : 150, overflowY: 'auto' }}>

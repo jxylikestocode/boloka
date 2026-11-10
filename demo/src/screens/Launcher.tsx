@@ -62,7 +62,7 @@ function Phone({ app, scale = 1 }: { app: (typeof APPS)[number]; scale?: number 
   )
 }
 
-export default function Launcher({ mode, strip }: { mode: Mode; strip?: ReactNode }) {
+export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?: ReactNode; floating?: ReactNode }) {
   usePageMeta('Boloka — Demo')
   const wide = useWide()
   return (
@@ -96,6 +96,7 @@ export default function Launcher({ mode, strip }: { mode: Mode; strip?: ReactNod
               ))}
             </div>
             {strip}
+            {floating}
           </>
         ) : (
           <>
