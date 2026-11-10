@@ -42,6 +42,14 @@ export default function SavingsFacts() {
         </span>
       </div>
       <div style={row}>
+        <span style={k}>why ×{CHAIN_SCALE.toLocaleString('en-US')}</span>
+        <span style={{ opacity: 0.8 }}>
+          the test anchor only moves 1–10 USDC per transaction, so this demo puts 1/{CHAIN_SCALE.toLocaleString('en-US')} of
+          each amount on chain and the screens multiply it back. Same flow, same contracts, small numbers; with a production
+          anchor the scale is 1.
+        </span>
+      </div>
+      <div style={row}>
         <span style={k}>interest</span>
         <span>
           {y ? (
