@@ -255,7 +255,9 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
               const now = f === current
               return (
                 <div key={f.key} style={{ display: 'flex', gap: 8, opacity: s || now ? 1 : 0.5 }}>
-                  <span style={{ width: 12, flex: 'none', color: s ? '#8EE0B4' : '#F0B96B' }}>{s ? '✓' : now ? '›' : '·'}</span>
+                  <span style={{ width: 12, flex: 'none', color: s ? '#8EE0B4' : '#F0B96B', display: 'inline-flex', justifyContent: 'center' }}>
+                    {s ? '✓' : now ? <span aria-label="in progress" style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', border: '2px solid #F0B96B', borderRightColor: 'transparent', animation: 'strip-spin 0.8s linear infinite' }} /> : '·'}
+                  </span>
                   <span style={{ flex: 1 }}>{f.label}{now ? '…' : ''}</span>
                   {s?.tx && (
                     <a href={`${EXPLORER}/transactions/${s.tx}`} target="_blank" rel="noreferrer" style={{ color: '#8EE0B4', textDecoration: 'none', flex: 'none' }}>

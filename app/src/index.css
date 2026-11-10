@@ -657,3 +657,6 @@ button:active,
   from { transform: scale(0.8); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* Under-the-hood strip: the step in progress. */
+@keyframes strip-spin { to { transform: rotate(360deg); } }
