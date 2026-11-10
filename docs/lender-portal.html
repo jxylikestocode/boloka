@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Boloka — Lender portal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:#14201C;-webkit-font-smoothing:antialiased}
+a{color:#0E7C5B}a:hover{color:#0A5C44}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; background: #F4F6F5; display: flex; flex-direction: column">
+  <div style="height: 64px; background: #FFFFFF; border-bottom: 1px solid #E6ECE9; display: flex; align-items: center; justify-content: space-between; padding: 0 40px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 32px; height: 32px; border-radius: 8px; background: #0E7C5B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700">B</div>
+      <div style="font-size: 16px; font-weight: 700">Boloka for Lenders</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 24px; font-size: 14px; font-weight: 500">
+      <a href="#verify" style="text-decoration: none; color: #0E7C5B">Verify a proof</a>
+      <a href="#history" style="text-decoration: none; color: #5B6B66">History</a>
+      <a href="#settings" style="text-decoration: none; color: #5B6B66">Settings</a>
+      <div style="padding: 8px 12px; background: #F4F6F5; border-radius: 999px; font-size: 13px">Letshego Microfinance</div>
+    </div>
+  </div>
+
+  <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 40px; max-width: 1200px; width: 100%; margin: 0 auto; box-sizing: border-box">
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.3px">Verify an income proof</h1>
+        <div style="font-size: 14px; color: #5B6B66; line-height: 1.5">Paste the code the applicant shared from Boloka. The check runs against the public ledger; Boloka never sees this request.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <label for="code" style="font-size: 13px; font-weight: 600; color: #5B6B66">Proof code</label>
+        <input id="code" type="text" value="BLK-7Q2M-9KD4-X81F" style="height: 52px; border: 1.5px solid #D5DDD9; border-radius: 12px; padding: 0 16px; font: 500 16px Inter, system-ui, sans-serif; color: #14201C; letter-spacing: 1px">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <label for="applicant" style="font-size: 13px; font-weight: 600; color: #5B6B66">Applicant reference (your own)</label>
+        <input id="applicant" type="text" value="LOAN-2026-01184" style="height: 52px; border: 1.5px solid #D5DDD9; border-radius: 12px; padding: 0 16px; font: 500 16px Inter, system-ui, sans-serif; color: #14201C">
+      </div>
+      <button style="height: 52px; border: none; border-radius: 12px; background: #0E7C5B; color: #FFFFFF; font: 600 15px Inter, system-ui, sans-serif; cursor: pointer">Verify</button>
+      <div style="font-size: 13px; color: #5B6B66; line-height: 1.5">You receive a yes or no for the fact the applicant chose to prove. You never receive their balance, their transaction history, or who sends them money.</div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; align-items: center; gap: 14px">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #E3F3EC; display: flex; align-items: center; justify-content: center">
+          <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0E7C5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <div style="font-size: 22px; font-weight: 700; color: #0E7C5B">Verified · APPROVED</div>
+          <div style="font-size: 13px; color: #5B6B66">Checked on the ledger just now</div>
+        </div>
+      </div>
+
+      <div style="border: 1.5px solid #E6ECE9; border-radius: 14px; padding: 4px 18px">
+        <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #E6ECE9; font-size: 14px"><span style="color: #5B6B66">Fact proven</span><span style="font-weight: 600">Receives at least P {{threshold}} every month</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #E6ECE9; font-size: 14px"><span style="color: #5B6B66">Period</span><span style="font-weight: 600">May – Oct 2026 (6 months)</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #E6ECE9; font-size: 14px"><span style="color: #5B6B66">Source of record</span><span style="font-weight: 600">Boloka savings pool, Stellar</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #E6ECE9; font-size: 14px"><span style="color: #5B6B66">Valid until</span><span style="font-weight: 600">6 Dec 2026</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 14px 0; font-size: 14px"><span style="color: #5B6B66">Not disclosed</span><span style="font-weight: 600; color: #5B6B66">Sender · amounts · balance · history</span></div>
+      </div>
+
+      <div style="display: flex; gap: 12px">
+        <button style="flex: 1; height: 48px; border: none; border-radius: 12px; background: #14201C; color: #FFFFFF; font: 600 14px Inter, system-ui, sans-serif; cursor: pointer">Attach to LOAN-2026-01184</button>
+        <button style="flex: 1; height: 48px; border: 1.5px solid #D5DDD9; border-radius: 12px; background: #FFFFFF; color: #14201C; font: 600 14px Inter, system-ui, sans-serif; cursor: pointer">Download certificate</button>
+      </div>
+
+      <div style="margin-top: auto; padding: 14px 16px; background: #F4F6F5; border-radius: 12px; font-size: 13px; color: #5B6B66; line-height: 1.5">Remittance income is not yet counted by most Botswana lenders. This proof gives you a verifiable six-month record to count it on your own terms.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"threshold":{"editor":"text","default":"5,000"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return { threshold: this.props.threshold ?? '5,000' };
+}
+}
+</script>
+</body>
+</html>

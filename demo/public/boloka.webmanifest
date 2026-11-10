@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "Boloka",
+  "short_name": "Boloka",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "/icons/boloka-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icons/boloka-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

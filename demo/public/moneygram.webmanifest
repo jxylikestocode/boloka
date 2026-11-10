@@ -1,0 +1,24 @@
+{
+  "id": "/",
+  "name": "MoneyGram",
+  "short_name": "MoneyGram",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#DA291C",
+  "theme_color": "#DA291C",
+  "icons": [
+    {
+      "src": "/icons/moneygram-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/moneygram-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

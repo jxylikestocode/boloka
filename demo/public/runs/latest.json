@@ -1,0 +1,117 @@
+{
+  "finishedAt": "2026-11-10T02:36:25.560Z",
+  "seconds": 187,
+  "anchor": "testanchor.stellar.org",
+  "pool": "CDRRIIFI4G4V6XSSNFSVY7BDSY7ZIZVKIFETWR2H6W27UQ3AV2ZR2U7Q",
+  "asset": "USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+  "blend": {
+    "pool": "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF",
+    "usdc": "USDC:GATALTGTWIOT6BUDBCZM3Q4OQ4BO2COLOAZ7IYSKPLC2PMSOPPGF5V56"
+  },
+  "scale": 1000,
+  "scenario": {
+    "sendCad": 10000,
+    "arrivesPula": 99300,
+    "schoolFeePula": 24000
+  },
+  "accounts": {
+    "sender": "GAWOGRFCZV362QHT4GTAKCZ77BF6Q5JG57KTOKA3NQKP63LPXPGUNLZP",
+    "payout": "GA4GVM4S65HSO6WL4I4IWMLKH5WKTMYSG5HDVOB5BNABEAG4SX7VLC3H",
+    "yield": "GDTJZYNK2TM55JRU5CYRJQTQ5HSMOJ5QLT5AKBN24CFJVXBLQJDVBB7N",
+    "parent": "GCUQNWLCZUXHS4J5M2UA6F2SBHUN53W6LMDKISSYLH6I2KVLOWEYT53H"
+  },
+  "steps": [
+    {
+      "key": "sep10",
+      "title": "SEP-10 sign-in with the anchor",
+      "kind": "offchain",
+      "note": "testanchor.stellar.org issued a session token after the account signed its challenge (signed, never submitted, so no transaction).",
+      "data": {
+        "account": "GAWOGRFCZV362QHT4GTAKCZ77BF6Q5JG57KTOKA3NQKP63LPXPGUNLZP",
+        "anchor": "testanchor.stellar.org"
+      },
+      "at": "2026-11-10T02:33:59.231Z"
+    },
+    {
+      "key": "sep24-deposit",
+      "title": "SEP-24 deposit: anchor pays USDC to the sender",
+      "kind": "real",
+      "tx": "962d0dd203c9584163eba49d1067e2efa4680e4f440cb0707036779c5c40b3ff",
+      "note": "Requested 8.18 USDC, received 7.37 after the anchor's fee. The anchor's KYC page was completed automatically with fictional test details (test anchor only).",
+      "data": {
+        "anchorTxId": "ae793a39-6000-4b73-9ad7-d04a36534065",
+        "requested": "8.18",
+        "received": "7.37"
+      },
+      "at": "2026-11-10T02:34:37.560Z"
+    },
+    {
+      "key": "pool-deposit",
+      "title": "Pool deposit for the parents (commitment only)",
+      "kind": "real",
+      "tx": "d869aeb7d8f8e9379ecfb2397d230f3bbe9aca4b695e18e34cf2f8ab3f007358",
+      "data": {
+        "usdc": 7.3555556,
+        "pool": "CDRRIIFI4G4V6XSSNFSVY7BDSY7ZIZVKIFETWR2H6W27UQ3AV2ZR2U7Q"
+      },
+      "at": "2026-11-10T02:34:58.315Z"
+    },
+    {
+      "key": "blend-supply",
+      "title": "Blend supply (mirror, Blend mock USDC)",
+      "kind": "real",
+      "tx": "b00151865ece1c0a8f3602b8b08dd3672d904eb6903bb3e65eac9a70d78bfa90",
+      "note": "Blend's testnet pool doesn't list Circle's USDC, so the same amount of Blend's mock USDC is supplied by the yield account. On mainnet the pool supplies its own USDC.",
+      "data": {
+        "usdc": 7.3555556,
+        "blendPool": "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+      },
+      "at": "2026-11-10T02:35:17.738Z"
+    },
+    {
+      "key": "yield-read",
+      "title": "Yield read from the real Blend position",
+      "kind": "read",
+      "note": "get_reserve + get_positions (read-only). Value = b-tokens × b_rate / 1e12.",
+      "data": {
+        "bTokens": "69180737",
+        "bRate": "1063237536884",
+        "valueUsdc": 7.3555556,
+        "measuredApr": null
+      },
+      "at": "2026-11-10T02:35:24.026Z"
+    },
+    {
+      "key": "pool-withdraw",
+      "title": "Pool withdraw to the payout account",
+      "kind": "real",
+      "tx": "c6c2ca4554247e75e632dcef7c3c7d35da6f878adf4b4a3eb4c713aee07b33d3",
+      "data": {
+        "usdc": 1.7777778
+      },
+      "at": "2026-11-10T02:35:33.201Z"
+    },
+    {
+      "key": "blend-withdraw",
+      "title": "Blend withdraw (mirror)",
+      "kind": "real",
+      "tx": "0b50c8fbcf8d929b4719fb938099da60559722b8631af6bc7c1bcad33c40a5a6",
+      "data": {
+        "usdc": 1.7777778
+      },
+      "at": "2026-11-10T02:35:54.527Z"
+    },
+    {
+      "key": "sep24-withdraw",
+      "title": "SEP-24 withdrawal: USDC to the anchor, fiat out",
+      "kind": "real",
+      "tx": "131e897df35d37a0a323c1d5904a308345b861d0b98860b471a4a26c8f894dbf",
+      "note": "Payment of USDC to the anchor's account with its memo; the anchor then completes the fiat payout. KYC page completed automatically with fictional test details.",
+      "data": {
+        "anchorTxId": "9b159167-5a44-49f8-bcd0-888e309ba64a",
+        "usdc": "1.77"
+      },
+      "at": "2026-11-10T02:36:25.560Z"
+    }
+  ]
+}

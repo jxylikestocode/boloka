@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MoneyGram — $10,000, only Boloka works</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:#14201C;-webkit-font-smoothing:antialiased}
+a{color:#0E7C5B}a:hover{color:#0A5C44}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F6F5; display: flex; flex-direction: column; position: relative; overflow: hidden">
+  <div style="padding: 56px 20px 0; display: flex; flex-direction: column; gap: 14px; opacity: 0.45">
+    <div style="font-size: 12px; font-weight: 600; color: #5B6B66; text-transform: uppercase; letter-spacing: 0.4px">MoneyGram · Canada</div>
+    <div style="background: #FFFFFF; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+      <div style="font-size: 12px; color: #5B6B66">Sending to</div>
+      <div style="font-size: 16px; font-weight: 600">Mma Kgosi · Botswana</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+      <div style="font-size: 12px; color: #5B6B66">You send</div>
+      <div style="font-size: 28px; font-weight: 700">$ {{amount}} CAD</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+      <div style="font-size: 12px; color: #5B6B66">How you pay</div>
+      <div style="font-size: 16px; font-weight: 600">Bank account · RBC •• 2210</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFFFFF; border-radius: 24px 24px 0 0; padding: 20px 20px 28px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 -8px 30px rgba(20,32,28,0.12)">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div style="font-size: 20px; font-weight: 700">How they receive</div>
+      <button aria-label="Close" style="width: 44px; height: 44px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14201C" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+
+    <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 2px solid #0E7C5B; background: #E3F3EC; border-radius: 16px; cursor: pointer">
+      <input type="radio" name="receive" checked style="width: 20px; height: 20px; accent-color: #0E7C5B; flex: none">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #0E7C5B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex: none">B</div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 15px; font-weight: 700">Dollar savings · Boloka</div>
+        <div style="font-size: 12px; color: #14201C">1 CAD = {{bolokaRate}} BWP · Within minutes · 0.00 CAD</div>
+        <div style="font-size: 12px; color: #0E7C5B; font-weight: 600">No limit · P {{bolokaArrives}} arrives as dollar savings</div>
+      </div>
+    </label>
+
+    <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 1.5px solid #E6ECE9; border-radius: 16px; cursor: not-allowed; opacity: 0.55">
+      <input type="radio" name="receive" disabled style="width: 20px; height: 20px; accent-color: #0E7C5B; flex: none">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #F26B1D; display: flex; align-items: center; justify-content: center; flex: none">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"></rect><path d="M10 18h4"></path></svg>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 15px; font-weight: 600">Mobile wallet · Orange Money</div>
+        <div style="font-size: 12px; color: #5B6B66">1 CAD = {{bwpRate}} BWP · Within minutes · 0.00 CAD</div>
+        <div style="font-size: 12px; color: #B3261E; font-weight: 600">Over the limit — P 10,000 per transfer, P 30,000 per month</div>
+      </div>
+    </label>
+
+    <label style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 1.5px solid #E6ECE9; border-radius: 16px; cursor: not-allowed; opacity: 0.55">
+      <input type="radio" name="receive" disabled style="width: 20px; height: 20px; accent-color: #0E7C5B; flex: none">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: #E6ECE9; display: flex; align-items: center; justify-content: center; flex: none">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14201C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 15px; font-weight: 600">Cash pickup</div>
+        <div style="font-size: 12px; color: #5B6B66">1 CAD = {{cashRate}} BWP · Within minutes · 0.00 CAD</div>
+        <div style="font-size: 12px; color: #B3261E; font-weight: 600">Rate 4.2% worse · agent may not hold this much cash</div>
+      </div>
+    </label>
+
+    <button style="height: 56px; border: none; border-radius: 14px; background: #14201C; color: #FFFFFF; font: 600 15px Inter, system-ui, sans-serif; cursor: pointer; margin-top: 4px">Continue</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"amount":{"editor":"text","default":"10,000.00"},"bolokaArrives":{"editor":"text","default":"99,300"},"bolokaRate":{"editor":"text","default":"9.9300"},"bwpRate":{"editor":"text","default":"9.8700"},"cashRate":{"editor":"text","default":"9.5100"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { amount: this.props.amount ?? '10,000.00', bolokaArrives: this.props.bolokaArrives ?? '99,300', bolokaRate: this.props.bolokaRate ?? '9.9300', bwpRate: this.props.bwpRate ?? '9.8700', cashRate: this.props.cashRate ?? '9.5100' };
+}
+}
+</script>
+</body>
+</html>
