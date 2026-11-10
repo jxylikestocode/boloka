@@ -120,20 +120,18 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
       const r = await roles(cfg)
       const who = r.yield.publicKey()
       const pos = await yieldLeg.readPosition(cfg, who)
-      let principal = await yieldLeg.principal(who)
-      // A fresh server (new volume) has no supply history: take the position
-      // as the baseline, so "earned" only counts growth from here on.
-      if (principal === 0n && pos.valueUnits > 0n) {
-        await yieldLeg.addPrincipal(who, pos.valueUnits)
-        principal = pos.valueUnits
-      }
+      const principal = await yieldLeg.principal(who)
+      // Value this server has no supply history for (a fresh volume) is a
+      // baseline, so "earned" counts growth from the first read onwards.
+      const base = await yieldLeg.baseline(who, pos.valueUnits, principal)
+      const earned = pos.valueUnits - principal - base
       return send(200, {
         account: who,
         bTokens: pos.bTokens,
         bRate: pos.bRate,
         valueUnits: pos.valueUnits,
         principalUnits: principal,
-        earnedUnits: pos.valueUnits > principal ? pos.valueUnits - principal : 0n,
+        earnedUnits: earned > 0n ? earned : 0n,
         apr: await yieldLeg.measuredApr(),
       })
     }

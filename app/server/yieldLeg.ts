@@ -66,7 +66,7 @@ export async function readPosition(cfg: YieldConfig, who: string): Promise<Posit
   return { bTokens, bRate, valueUnits: (bTokens * bRate) / B_RATE_SCALAR, at: Date.now() }
 }
 
-type YieldState = { samples: { t: number; bRate: string }[]; principal: Record<string, string> }
+type YieldState = { samples: { t: number; bRate: string }[]; principal: Record<string, string>; baseline?: Record<string, string> }
 
 async function loadState(): Promise<YieldState> {
   const raw = await storage.read(STATE_FILE)
@@ -94,6 +94,21 @@ export async function measuredApr(): Promise<number | null> {
   if (dt < 600) return null
   const growth = Number(BigInt(b.bRate) * 1_000_000_000n / BigInt(a.bRate)) / 1e9
   return Math.pow(growth, 31_536_000 / dt) - 1
+}
+
+/**
+ * Position value this server first saw that it has no supply history for
+ * (e.g. a fresh volume): recorded once, so "earned" counts growth from then.
+ */
+export async function baseline(who: string, valueUnits: bigint, principalUnits: bigint): Promise<bigint> {
+  const s = await loadState()
+  s.baseline ??= {}
+  if (s.baseline[who] === undefined) {
+    const b = valueUnits - principalUnits
+    s.baseline[who] = (b > 0n ? b : 0n).toString()
+    await saveState(s)
+  }
+  return BigInt(s.baseline[who])
 }
 
 /** Principal supplied by the app's yield account (supplies − withdrawals). */
