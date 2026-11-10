@@ -3,7 +3,7 @@
 // testnet transactions behind this user's transfers as they land, each
 // linking to the chain explorer. Not part of the product UI, so the
 // parents' screens themselves stay free of chain words.
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent, type ReactNode } from 'react'
 import * as store from './store.ts'
 import { CHAIN_SCALE, PULA_PER_USD } from './money.ts'
 
@@ -32,6 +32,69 @@ const LABEL: Record<string, string> = {
 }
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace'
+const WIDTH = 372
+const POS_KEY = 'ui.stripPos' // not a shared "demo." key: positions are per screen
+
+type Pos = { x: number; y: number }
+
+const clamp = (p: Pos): Pos => ({
+  x: Math.max(0, Math.min(window.innerWidth - Math.min(WIDTH, window.innerWidth - 16), p.x)),
+  y: Math.max(0, Math.min(window.innerHeight - 44, p.y)),
+})
+
+/** Beside the 390px phone frame on a wide screen; otherwise none (bottom of the screen). */
+function defaultPos(): Pos | null {
+  const wide = window.innerWidth >= 390 + 2 * (WIDTH + 24)
+  return wide ? { x: window.innerWidth / 2 + 195 + 16, y: 16 } : null
+}
+
+/**
+ * Drag anywhere by the handle (pointer events, so mouse and touch). Returns
+ * the position (null = default bottom placement), the handle's props, and
+ * whether the last pointer interaction was a drag rather than a tap.
+ */
+function useDraggable() {
+  const [pos, setPos] = useState<Pos | null>(() => {
+    try {
+      const saved = localStorage.getItem(POS_KEY)
+      return saved ? clamp(JSON.parse(saved) as Pos) : defaultPos()
+    } catch {
+      return defaultPos()
+    }
+  })
+  const drag = useRef<{ dx: number; dy: number; moved: boolean } | null>(null)
+  const lastWasDrag = useRef(false)
+
+  const onPointerDown = (e: RPointerEvent<HTMLElement>) => {
+    const r = e.currentTarget.closest('[data-strip]')?.getBoundingClientRect()
+    if (!r) return
+    drag.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, moved: false }
+    lastWasDrag.current = false
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const onPointerMove = (e: RPointerEvent<HTMLElement>) => {
+    const d = drag.current
+    if (!d) return
+    const next = clamp({ x: e.clientX - d.dx, y: e.clientY - d.dy })
+    if (!d.moved) {
+      const r = e.currentTarget.closest('[data-strip]')?.getBoundingClientRect()
+      if (r && Math.hypot(next.x - r.left, next.y - r.top) < 4) return
+      d.moved = true
+    }
+    setPos(next)
+  }
+  const onPointerUp = () => {
+    if (drag.current?.moved) {
+      lastWasDrag.current = true
+      setPos((p) => {
+        if (p) localStorage.setItem(POS_KEY, JSON.stringify(p))
+        return p
+      })
+    }
+    drag.current = null
+  }
+  return { pos, handle: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp }, lastWasDrag }
+}
 
 /** The amount a step moved, from what the flow recorded. */
 function usdcOf(e: Entry): number | undefined {
@@ -77,6 +140,7 @@ export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
   const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
   const known = useRef<Set<string>>(new Set())
+  const { pos, handle, lastWasDrag } = useDraggable()
 
   useEffect(() => {
     let live = true
@@ -114,13 +178,14 @@ export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
 
   if ((!entries.length && !facts) || hidden) return null
 
-  const base = {
-    position: 'fixed' as const,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    bottom: 'calc(env(safe-area-inset-bottom) + 10px)',
+  const place: CSSProperties = pos
+    ? { left: pos.x, top: pos.y }
+    : { left: '50%', transform: 'translateX(-50%)', bottom: 'calc(env(safe-area-inset-bottom) + 10px)' }
+  const base: CSSProperties = {
+    position: 'fixed',
+    ...place,
     zIndex: 60,
-    width: 'min(372px, calc(100% - 16px))',
+    width: `min(${WIDTH}px, calc(100% - 16px))`,
     fontFamily: MONO,
     fontSize: 11,
     color: '#D7E6DD',
@@ -131,19 +196,27 @@ export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
     backdropFilter: 'blur(8px)',
   }
 
+  const grab: CSSProperties = { cursor: 'grab', touchAction: 'none', userSelect: 'none' }
+
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} style={{ ...base, width: 'auto', padding: '7px 12px', cursor: 'pointer', textAlign: 'left' }}>
+      <button
+        type="button"
+        data-strip=""
+        {...handle}
+        onClick={() => !lastWasDrag.current && setOpen(true)}
+        style={{ ...base, ...grab, width: 'auto', padding: '7px 12px', textAlign: 'left' }}
+      >
         ⛓ demo · under the hood{entries.length ? ` · ${entries.length} on-chain transaction${entries.length === 1 ? '' : 's'}` : ''} · tap to see
       </button>
     )
   }
 
   return (
-    <div style={{ ...base, padding: '10px 12px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div data-strip="" style={{ ...base, padding: '10px 12px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div {...handle} title="Drag to move" style={{ ...grab, display: 'flex', alignItems: 'center', gap: 8, margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
         <span style={{ fontWeight: 700, color: '#8EE0B4', letterSpacing: 0.4 }}>⛓ DEMO · UNDER THE HOOD</span>
-        <span style={{ flex: 1, opacity: 0.7 }}>not part of the app</span>
+        <span style={{ flex: 1, opacity: 0.7 }}>not part of the app · drag me</span>
         <button type="button" onClick={() => setOpen(false)} aria-label="Fold" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
           ▾
         </button>
