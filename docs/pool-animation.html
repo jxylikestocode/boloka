@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boloka — how the pool works</title>
+<!--
+  Boloka's "How it works" animation, as one editable page.
+  Everything you are likely to change is in the CONFIG block below: the words,
+  the split of the interest, the colours, the speed. The drawing itself is the
+  <svg> further down (a 340 × 214 canvas). The same picture lives in the app at
+  app/src/PoolAnimation.tsx; keep them in step by hand if you change one.
+-->
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --card: #E3F3EC;       /* the tinted card behind the picture */
+    --green: #0E7C5B;      /* Boloka green: pool outline, interest, badge */
+    --ink: #14201C;
+    --muted: #5B6B66;
+    --coin: #2775CA;       /* dollar coins */
+    --water: #BFDCFF;
+    --water-deep: #A9CDF7;
+  }
+  html, body { margin: 0; background: var(--bg); font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+  .wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; box-sizing: border-box; }
+  .card { background: var(--card); border-radius: 20px; padding: 14px 12px 8px; width: min(720px, 100%); box-sizing: border-box; }
+  svg { display: block; width: 100%; height: auto; }
+  text { font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .note { font-size: 13px; color: var(--muted); max-width: 720px; line-height: 1.5; text-align: center; }
+  .note code { background: #F4F6F5; padding: 1px 5px; border-radius: 4px; }
+
+  /* Motion. Durations are set from CONFIG.speed in the script. */
+  @keyframes coin-in { 0% { transform: translate(-70px, -54px) scale(1); opacity: 0 } 12% { opacity: 1 } 78% { transform: translate(0, 0) scale(1); opacity: 1 } 100% { transform: translate(0, 8px) scale(.45); opacity: 0 } }
+  @keyframes splash { 0%, 74% { transform: scale(.2); opacity: 0 } 82% { opacity: .9 } 100% { transform: scale(1.8); opacity: 0 } }
+  @keyframes coin-out { 0% { transform: translate(0, 6px) scale(.45); opacity: 0 } 18% { transform: translate(8px, -14px) scale(1); opacity: 1 } 88% { opacity: 1 } 100% { transform: translate(74px, -56px) scale(1); opacity: 0 } }
+  @keyframes wave { to { transform: translateX(-70px) } }
+  @keyframes rise { 0% { transform: translateY(0) scale(.6); opacity: 0 } 25% { opacity: 1; transform: translateY(-12px) scale(1) } 100% { transform: translateY(-46px) scale(1); opacity: 0 } }
+  @keyframes cut { 0% { transform: translate(0, 0); opacity: 0 } 15% { opacity: 1 } 85% { opacity: 1 } 100% { transform: translate(46px, 66px); opacity: 0 } }
+  .coin-in   { animation: coin-in  calc(2.7s / var(--speed)) ease-in infinite;      transform-box: fill-box; transform-origin: center }
+  .splash-in { animation: splash   calc(2.7s / var(--speed)) ease-out infinite;     transform-box: fill-box; transform-origin: center }
+  .coin-out  { animation: coin-out calc(2.7s / var(--speed)) ease-out infinite;     transform-box: fill-box; transform-origin: center }
+  .wave      { animation: wave     calc(3.2s / var(--speed)) linear infinite }
+  .wave.back { animation-duration: calc(4.6s / var(--speed)); animation-direction: reverse }
+  .bubble    { animation: rise     calc(3s / var(--speed)) ease-out infinite;       transform-box: fill-box; transform-origin: center }
+  .coin-cut  { animation: cut      calc(3.6s / var(--speed)) ease-in-out infinite;  transform-box: fill-box; transform-origin: center }
+  @media (prefers-reduced-motion: reduce) { svg * { animation: none !important } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <svg id="pool" viewBox="0 0 340 214" role="img" aria-label="Dollars from family abroad flow into one shared pool, earn interest there, and flow out to the bank as pula">
+      <defs>
+        <clipPath id="pool-clip"><rect x="100" y="78" width="140" height="92" rx="22"/></clipPath>
+      </defs>
+
+      <!-- Where the money comes from and goes to -->
+      <text id="t-from" x="52" y="18" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)"></text>
+      <text id="t-from-sub" x="52" y="31" text-anchor="middle" font-size="10" fill="var(--muted)"></text>
+      <text id="t-to" x="290" y="18" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)"></text>
+      <text id="t-to-sub" x="290" y="31" text-anchor="middle" font-size="10" fill="var(--muted)"></text>
+
+      <!-- The arcs the coins travel -->
+      <path d="M58 42 C 80 70, 100 80, 128 92" fill="none" stroke="var(--green)" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <path d="M212 92 C 240 80, 260 70, 284 42" fill="none" stroke="var(--green)" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="3 4"/>
+
+      <!-- The pool -->
+      <rect x="100" y="78" width="140" height="92" rx="22" fill="#FFFFFF" stroke="var(--green)" stroke-width="2"/>
+      <g clip-path="url(#pool-clip)">
+        <g transform="translate(0 104)"><path class="wave back" id="wave-back" fill="var(--water-deep)"/></g>
+        <g transform="translate(0 108)"><path class="wave" id="wave-front" fill="var(--water)" fill-opacity=".95"/></g>
+        <g id="bubbles"></g>
+      </g>
+      <rect x="100" y="78" width="140" height="92" rx="22" fill="none" stroke="var(--green)" stroke-width="2"/>
+
+      <!-- Coins in (left, with a splash) and out (right) -->
+      <g id="coins-in" transform="translate(130 96)"></g>
+      <g id="coins-out" transform="translate(210 96)"></g>
+
+      <!-- The interest: most stays in the pool, a share goes to Boloka -->
+      <text id="t-yield" x="12" y="190" font-size="10.5" font-weight="600" fill="var(--green)"></text>
+      <text id="t-yield-sub" x="12" y="204" font-size="10" fill="var(--muted)"></text>
+      <path d="M228 122 C 248 136, 262 160, 272 186" fill="none" stroke="var(--green)" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <g id="cuts" transform="translate(228 122)"></g>
+      <g transform="translate(246 184)">
+        <rect width="84" height="24" rx="12" fill="var(--green)"/>
+        <text id="t-badge" x="42" y="16" text-anchor="middle" font-size="10.5" font-weight="700" fill="#FFFFFF"></text>
+      </g>
+    </svg>
+  </div>
+  <div class="note">
+    Dollar coins arrive from family abroad, sit in one shared pool, earn interest there (the “+” tokens), and leave as pula for the bank.
+    Change the words, the split or the speed in the <code>CONFIG</code> block at the top of this page's script.
+  </div>
+</div>
+
+<script>
+  // ───────────────────────────── CONFIG: edit here ─────────────────────────────
+  const CONFIG = {
+    from:      'From family abroad',   // top left
+    fromSub:   'arrives as dollars',
+    to:        'To your bank',         // top right
+    toSub:     'paid out in pula',
+    yieldLine: 'Interest from lending on Blend',
+    boloka:    'Boloka',               // who takes the cut
+    cut:       0.20,                   // Boloka's share of the interest (0.20 = 20%)
+    speed:     1,                      // 1 = normal; 2 = twice as fast; 0.5 = half speed
+    coinsIn:   3,                      // how many coins are in flight each way
+    coinsOut:  3,
+    bubbles:   5,                      // interest tokens rising in the water
+    cuts:      2,                      // tokens leaving for Boloka
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const svgNS = 'http://www.w3.org/2000/svg'
+  const el = (name, attrs = {}, text) => {
+    const n = document.createElementNS(svgNS, name)
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v)
+    if (text !== undefined) n.textContent = text
+    return n
+  }
+  const pct = (x) => `${Math.round(x * 100)}%`
+  const set = (id, text) => (document.getElementById(id).textContent = text)
+
+  document.documentElement.style.setProperty('--speed', String(CONFIG.speed))
+  set('t-from', CONFIG.from); set('t-from-sub', CONFIG.fromSub)
+  set('t-to', CONFIG.to); set('t-to-sub', CONFIG.toSub)
+  set('t-yield', CONFIG.yieldLine)
+  set('t-yield-sub', `${pct(1 - CONFIG.cut)} stays in your savings`)
+  set('t-badge', `${pct(CONFIG.cut)} to ${CONFIG.boloka}`)
+
+  // The wave outline: from x −70 to 350, so it covers the pool while scrolling 70px either way.
+  const WAVE = 'M-70 0 q 17.5 -7 35 0 ' + 't 35 0 '.repeat(11) + 'V 90 H -70 Z'
+  document.getElementById('wave-front').setAttribute('d', WAVE)
+  document.getElementById('wave-back').setAttribute('d', WAVE)
+
+  function coin(cls, delay) {
+    const g = el('g', { class: cls, style: `animation-delay:${delay}s` })
+    g.append(el('circle', { r: 10, fill: 'var(--coin)' }), el('circle', { r: 10, fill: 'none', stroke: '#FFFFFF', 'stroke-opacity': .5, 'stroke-width': 1 }), el('text', { y: 4, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: '#FFFFFF' }, '$'))
+    return g
+  }
+  function plus(cls, delay, r = 6) {
+    const g = el('g', { class: cls, style: `animation-delay:${delay}s` })
+    g.append(el('circle', { r, fill: 'var(--green)' }), el('text', { y: r * 0.58, 'text-anchor': 'middle', 'font-size': r * 1.7, 'font-weight': 700, fill: '#FFFFFF' }, '+'))
+    return g
+  }
+  const spread = (n, period) => Array.from({ length: n }, (_, i) => +((i * period) / n).toFixed(2))
+
+  const cin = document.getElementById('coins-in')
+  for (const d of spread(CONFIG.coinsIn, 2.7 / CONFIG.speed)) cin.append(el('ellipse', { class: 'splash-in', style: `animation-delay:${d}s`, rx: 12, ry: 4, fill: 'none', stroke: 'var(--coin)', 'stroke-width': 1.5 }))
+  for (const d of spread(CONFIG.coinsIn, 2.7 / CONFIG.speed)) cin.append(coin('coin-in', d))
+  const cout = document.getElementById('coins-out')
+  for (const d of spread(CONFIG.coinsOut, 2.7 / CONFIG.speed)) cout.append(coin('coin-out', d + 0.45 / CONFIG.speed))
+  const bubbles = document.getElementById('bubbles')
+  spread(CONFIG.bubbles, 3 / CONFIG.speed).forEach((d, i) => {
+    const x = 128 + (i * 88) / Math.max(1, CONFIG.bubbles - 1)
+    const g = el('g', { transform: `translate(${x} 162)` })
+    g.append(plus('bubble', d))
+    bubbles.append(g)
+  })
+  const cuts = document.getElementById('cuts')
+  for (const d of spread(CONFIG.cuts, 3.6 / CONFIG.speed)) cuts.append(plus('coin-cut', d, 5.5))
+</script>
+</body>
+</html>
