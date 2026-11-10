@@ -286,7 +286,7 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
               <span style={{ opacity: 0.65, whiteSpace: 'nowrap' }}>
                 {amountText(e, e.usdc ?? usdcOf(e))}
                 {(e.usdc ?? usdcOf(e)) !== undefined && ' · '}
-                {new Date(e.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                {new Date(e.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(',', '')}
               </span>
             </span>
             <span style={{ color: '#8EE0B4', flex: 'none' }}>{e.tx!.slice(0, 6)}…{e.tx!.slice(-4)} ↗</span>
