@@ -5,11 +5,14 @@
 // parents' screens themselves stay free of chain words.
 import { useEffect, useRef, useState } from 'react'
 import * as store from './store.ts'
+import { CHAIN_SCALE, PULA_PER_USD } from './money.ts'
 
 import { EXPLORER } from './explorer.ts'
 
 type Entry = {
   at: string
+  /** On-chain amount in USDC (1/CHAIN_SCALE of the amount on screen). */
+  usdc?: number
   flowId: string
   key: string
   title: string
@@ -29,6 +32,25 @@ const LABEL: Record<string, string> = {
 }
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace'
+
+/** The amount a step moved, from what the flow recorded. */
+function usdcOf(e: Entry): number | undefined {
+  const d = e.data ?? {}
+  const v = d.received ?? d.usdc
+  return v === undefined || v === null ? undefined : Number(v)
+}
+
+/** Steps whose amount is exactly the transfer, so "≈ P …" is meaningful. */
+const TRANSFER_STEPS = new Set(['pool-deposit', 'pool-withdraw', 'blend-supply', 'blend-withdraw'])
+
+/** "0.7356 USDC ≈ P 9,930": the on-chain amount and what it stands for on screen. */
+function amountText(e: Entry, usdc: number | undefined) {
+  if (usdc === undefined) return ''
+  const text = `${usdc.toLocaleString('en-US', { maximumFractionDigits: 4 })} USDC`
+  if (!TRANSFER_STEPS.has(e.key)) return text
+  const pula = usdc * PULA_PER_USD * CHAIN_SCALE
+  return `${text} ≈ P ${Math.round(pula).toLocaleString('en-US')}`
+}
 
 /**
  * Transactions belonging to this device's transfers: every flow that holds a
@@ -66,7 +88,7 @@ export default function OnChainOverlay() {
         const local: Entry[] = store
           .withdrawals()
           .filter((w) => w.tx && !all.some((e) => e.tx === w.tx))
-          .map((w) => ({ at: w.date, flowId: `local-${w.id}`, key: 'pool-withdraw', title: '', kind: 'real', tx: w.tx }))
+          .map((w) => ({ at: w.date, flowId: `local-${w.id}`, key: 'pool-withdraw', title: '', kind: 'real', tx: w.tx, usdc: Number(w.amount) / 1e7 }))
         const next = [...local, ...mine(all)].sort((a, b) => b.at.localeCompare(a.at))
         if (!live) return
         setEntries(next)
@@ -129,7 +151,7 @@ export default function OnChainOverlay() {
         </button>
       </div>
       <div style={{ opacity: 0.75 }}>Real Stellar testnet transactions behind this screen:</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 132, overflowY: 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 168, overflowY: 'auto' }}>
         {entries.slice(0, 12).map((e) => (
           <a
             key={e.tx}
@@ -138,8 +160,14 @@ export default function OnChainOverlay() {
             rel="noreferrer"
             style={{ display: 'flex', gap: 8, alignItems: 'baseline', color: '#D7E6DD', textDecoration: 'none' }}
           >
-            <span style={{ opacity: 0.6, flex: 'none' }}>{new Date(e.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{LABEL[e.key] ?? e.key}</span>
+            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{LABEL[e.key] ?? e.key}</span>
+              <span style={{ opacity: 0.65, whiteSpace: 'nowrap' }}>
+                {amountText(e, e.usdc ?? usdcOf(e))}
+                {(e.usdc ?? usdcOf(e)) !== undefined && ' · '}
+                {new Date(e.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            </span>
             <span style={{ color: '#8EE0B4', flex: 'none' }}>{e.tx!.slice(0, 6)}…{e.tx!.slice(-4)} ↗</span>
           </a>
         ))}

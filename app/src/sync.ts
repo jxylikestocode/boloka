@@ -39,7 +39,7 @@ function mergeLists(a: string | null, b: string | null): string {
   for (const raw of [a, b]) {
     try {
       for (const r of JSON.parse(raw ?? '[]') as { id: string }[]) {
-        if (r && typeof r.id === 'string' && !out.has(r.id)) out.set(r.id, r)
+        if (r && typeof r.id === 'string') out.set(r.id, { ...(out.get(r.id) as object | undefined), ...r })
       }
     } catch {
       // ignore an unreadable list; the other side still counts
