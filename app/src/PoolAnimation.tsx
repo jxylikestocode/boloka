@@ -9,9 +9,9 @@ const WATER = '#BFDCFF'
 const WATER_DEEP = '#A9CDF7'
 
 const CSS = `
-@keyframes help-in { 0% { transform: translate(-78px, -82px) scale(1); opacity: 0 } 12% { opacity: 1 } 78% { transform: translate(0, 0) scale(1); opacity: 1 } 100% { transform: translate(0, 8px) scale(.45); opacity: 0 } }
+@keyframes help-in { 0% { transform: translate(-70px, -54px) scale(1); opacity: 0 } 12% { opacity: 1 } 78% { transform: translate(0, 0) scale(1); opacity: 1 } 100% { transform: translate(0, 8px) scale(.45); opacity: 0 } }
 @keyframes help-splash { 0%, 74% { transform: scale(.2); opacity: 0 } 82% { opacity: .9 } 100% { transform: scale(1.8); opacity: 0 } }
-@keyframes help-out { 0% { transform: translate(0, 6px) scale(.45); opacity: 0 } 18% { transform: translate(8px, -14px) scale(1); opacity: 1 } 88% { opacity: 1 } 100% { transform: translate(80px, -84px) scale(1); opacity: 0 } }
+@keyframes help-out { 0% { transform: translate(0, 6px) scale(.45); opacity: 0 } 18% { transform: translate(8px, -14px) scale(1); opacity: 1 } 88% { opacity: 1 } 100% { transform: translate(74px, -56px) scale(1); opacity: 0 } }
 @keyframes help-wave { to { transform: translateX(-70px) } }
 @keyframes help-rise { 0% { transform: translateY(0); opacity: 0 } 25% { opacity: 1 } 100% { transform: translateY(-44px); opacity: 0 } }
 .help-anim .coin-in { animation: help-in 2.7s ease-in infinite; transform-box: fill-box; transform-origin: center }
@@ -34,8 +34,8 @@ function Coin({ className, delay }: { className: string; delay: number }) {
   )
 }
 
-/** The wave outline, wide enough to scroll by 70px without a gap. */
-const WAVE = 'M-70 0 q 17.5 -7 35 0 t 35 0 t 35 0 t 35 0 t 35 0 t 35 0 t 35 0 t 35 0 t 35 0 V 90 H -70 Z'
+/** The wave outline: from x −70 to 350, so it covers the pool (x 100–240) while scrolling 70px either way. */
+const WAVE = 'M-70 0 ' + 'q 17.5 -7 35 0 ' + 't 35 0 '.repeat(11) + 'V 90 H -70 Z'
 
 export default function PoolAnimation() {
   return (
