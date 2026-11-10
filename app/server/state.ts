@@ -39,6 +39,11 @@ const body = (req: IncomingMessage) =>
 /** Handles /api/state; resolves false for any other URL. */
 export async function handleState(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
   if ((req.url ?? '').split('?')[0] !== '/api/state') return false
+  if (process.env.SHARED_STATE !== 'true' && process.env.VITE_SHARED_STATE !== 'true') {
+    res.statusCode = 404
+    res.end('{"error":"shared state is off: each browser is its own account"}')
+    return true
+  }
   res.setHeader('Content-Type', 'application/json')
   res.setHeader('Cache-Control', 'no-store')
   if (req.method === 'GET') {

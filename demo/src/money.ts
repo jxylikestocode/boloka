@@ -42,7 +42,8 @@ export const SCHOOL_FEE = 24_000
 /** What other routes hide in the exchange rate. */
 export const HIDDEN_COST = 0.05
 
-export const SEND_FEE = 0.025
+/** Withdrawals are free: no fee to the bank or to Orange Money. */
+export const SEND_FEE = 0
 
 /** Where money can be paid out to. Bank / school first: no per-transfer cap. */
 export type Destination = 'bank' | 'orange'
@@ -66,8 +67,8 @@ export const DESTINATIONS: Record<
     name: 'Kalahari Bank',
     account: 'Cheque account •• 4821',
     limit: null,
-    fee: () => 10,
-    feeLabel: 'Fee (flat)',
+    fee: () => 0,
+    feeLabel: 'Fee',
     speed: 'Arrives in the bank account today',
     quick: [ATM_LIMIT, TRANSFER_CAP, SCHOOL_FEE],
     start: SCHOOL_FEE,
@@ -77,8 +78,8 @@ export const DESTINATIONS: Record<
     name: 'Orange Money',
     account: '72 •• 391',
     limit: ORANGE_LIMIT,
-    fee: (pula) => pula * SEND_FEE,
-    feeLabel: `Fee (${SEND_FEE * 100}%)`,
+    fee: () => 0,
+    feeLabel: 'Fee',
     speed: 'Arrives within minutes',
     quick: [1_000, ATM_LIMIT, ORANGE_LIMIT],
     start: ATM_LIMIT,

@@ -80,8 +80,14 @@ async function pull() {
   if (changed) window.dispatchEvent(new StorageEvent('storage'))
 }
 
-/** Loads the shared state once, then keeps polling for other apps' changes. */
+/**
+ * Loads the shared state once, then keeps polling for other apps' changes.
+ * Only when the build enables it (VITE_SHARED_STATE=true: local dev, where the
+ * three apps run on separate ports). The public site leaves it off: every
+ * browser is its own account, and the three apps share one origin anyway.
+ */
 export async function startSync() {
+  if (import.meta.env.VITE_SHARED_STATE !== 'true') return
   try {
     await pull()
   } catch {

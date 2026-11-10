@@ -13,7 +13,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 COPY . .
-# VITE_* values from .env are baked into the bundle here.
+# VITE_* values from .env are baked into the bundle here; the public site
+# does not share accounts between browsers.
+ENV VITE_SHARED_STATE=false SHARED_STATE=false
 RUN npx vite build
 
 ENV NODE_ENV=production PORT=8080 DATA_DIR=/data

@@ -120,7 +120,13 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
       const r = await roles(cfg)
       const who = r.yield.publicKey()
       const pos = await yieldLeg.readPosition(cfg, who)
-      const principal = await yieldLeg.principal(who)
+      let principal = await yieldLeg.principal(who)
+      // A fresh server (new volume) has no supply history: take the position
+      // as the baseline, so "earned" only counts growth from here on.
+      if (principal === 0n && pos.valueUnits > 0n) {
+        await yieldLeg.addPrincipal(who, pos.valueUnits)
+        principal = pos.valueUnits
+      }
       return send(200, {
         account: who,
         bTokens: pos.bTokens,
