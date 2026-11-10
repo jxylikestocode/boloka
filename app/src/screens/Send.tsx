@@ -51,6 +51,8 @@ export default function Send() {
   const s = useSavings()
   const [params] = useSearchParams()
   const [dest, setDest] = useState<Destination>(params.get('to') === 'orange' ? 'orange' : 'bank')
+  // The bank is the default; "Change" opens the other option.
+  const [picking, setPicking] = useState(false)
   const [text, setText] = useState(amt(DESTINATIONS[dest].start))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -85,17 +87,40 @@ export default function Send() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Pay out to</div>
-        {(Object.keys(DESTINATIONS) as Destination[]).map((d) => (
-          <DestinationRow
-            key={d}
-            d={d}
-            on={dest === d}
-            onPick={() => {
-              setDest(d)
-              setText(amt(DESTINATIONS[d].start))
-            }}
-          />
-        ))}
+        {picking ? (
+          (Object.keys(DESTINATIONS) as Destination[]).map((d) => (
+            <DestinationRow
+              key={d}
+              d={d}
+              on={dest === d}
+              onPick={() => {
+                setDest(d)
+                setText(amt(DESTINATIONS[d].start))
+                setPicking(false)
+              }}
+            />
+          ))
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, border: `1.5px solid ${BORDER}`, background: '#FFFFFF' }}>
+            {(() => {
+              const Icon = ICONS[dest]
+              return <Icon />
+            })()}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>{info.name}</div>
+              <div style={{ fontSize: 12, color: MUTED }}>
+                {info.account} · {info.limit ? `up to P ${amt(info.limit)}` : 'no limit'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPicking(true)}
+              style={{ border: 'none', background: 'transparent', color: GREEN, font: `600 14px ${FONT}`, cursor: 'pointer', padding: '8px 0' }}
+            >
+              Change
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
