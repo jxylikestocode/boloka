@@ -26,7 +26,7 @@ export async function startFlow(path: '/api/flow/deposit' | '/api/flow/payout', 
 export async function followFlow(id: string, onStep?: (s: FlowStep) => void): Promise<FlowStep[]> {
   let seen = 0
   for (;;) {
-    await new Promise((r) => setTimeout(r, 2000))
+    await new Promise((r) => setTimeout(r, 1000))
     const r = await fetch(`/api/flow/${id}`)
     if (!r.ok) continue
     const job = (await r.json()) as { status: string; steps: FlowStep[]; error?: string }

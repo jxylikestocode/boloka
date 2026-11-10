@@ -2,7 +2,11 @@
 // transaction (or marked simulated / read-only). Used by the dev server for
 // the apps and by scripts/demo-e2e.ts.
 //
-//   deposit: SEP-10 → SEP-24 deposit → pool deposit → Blend supply → yield read
+//   deposit: pool deposit from the settlement FLOAT ‖ Blend supply → (SEP-10 → SEP-24 deposit
+//            refills the float ‖ yield read). The float is the sender role's USDC balance,
+//            kept at or above one transfer, the way a remittance payout partner is pre-funded:
+//            the parents see the money in ~10 s, the anchor settlement completes behind it.
+//            An empty float (first run) is funded by the anchor first, then refilled.
 //   payout:  pool withdraw (done in the parent's browser) → Blend withdraw → SEP-10 → SEP-24 withdrawal
 import { Keypair } from '@stellar/stellar-sdk'
 import { AnchorClient } from './anchor.ts'
@@ -52,75 +56,102 @@ export async function depositFlow(
   const sender = who.sender
   const log = (m: string, d?: Record<string, unknown>) => rec.log(m, d)
 
-  // SEP-24 deposit of the anchor's USDC into the sender's settlement account.
-  // Always at least one real deposit; the test anchor takes 1–10 USDC and
-  // keeps a fee (about 10%), so ask for enough to cover the transfer.
+  // The settlement float: the sender role's USDC, topped up by the anchor.
   let balance = await tokenBalance(cfg.tokenId, sender.publicKey())
-  let first = true
-  do {
-    const short = units > balance ? units - balance : 0n
-    const amount = clampAmount(USDC(short) / 0.9, min || 1, max === Infinity ? 10 : max)
-    const d = await anchor.deposit(sender, amount, (m, data) => {
-      log(m, data)
-      if (m === 'SEP-10 signed in' && first) {
-        rec.step({
-          key: 'sep10',
-          title: 'SEP-10 sign-in with the anchor',
-          kind: 'offchain',
-          note: `${cfg.anchorDomain} issued a session token after the account signed its challenge (signed, never submitted, so no transaction).`,
-          data: { account: sender.publicKey(), anchor: cfg.anchorDomain },
-        })
-      }
-    })
-    rec.step({
-      key: 'sep24-deposit',
-      title: 'SEP-24 deposit: anchor pays USDC to the sender',
-      kind: 'real',
-      tx: d.stellarTx,
-      note: `Requested ${amount} USDC, received ${d.amountOut} after the anchor's fee. The anchor's KYC page was completed automatically with fictional test details (test anchor only).`,
-      data: { anchorTxId: d.id, requested: amount, received: d.amountOut },
-    })
-    first = false
-    balance = await tokenBalance(cfg.tokenId, sender.publicKey())
-  } while (balance < units)
+  let signedIn = false
 
-  const poolTx = await invoke(sender, cfg.poolId, 'deposit', [
-    address(sender.publicKey()),
-    bytes32(commitment),
-    i128(units),
+  // SEP-24 deposits of the anchor's USDC into the float until it covers one
+  // transfer. Always at least one real deposit per transfer; the test anchor
+  // takes 1–10 USDC and keeps a fee (about 10%), so ask for enough.
+  const topUp = async (why: 'refill' | 'fund') => {
+    do {
+      const short = units > balance ? units - balance : 0n
+      const amount = clampAmount(USDC(short) / 0.9, min || 1, max === Infinity ? 10 : max)
+      const d = await anchor.deposit(sender, amount, (m, data) => {
+        log(m, data)
+        if (m === 'SEP-10 signed in' && !signedIn) {
+          signedIn = true
+          rec.step({
+            key: 'sep10',
+            title: 'SEP-10 sign-in with the anchor',
+            kind: 'offchain',
+            note: `${cfg.anchorDomain} issued a session token after the account signed its challenge (signed, never submitted, so no transaction).`,
+            data: { account: sender.publicKey(), anchor: cfg.anchorDomain },
+          })
+        }
+      })
+      rec.step({
+        key: 'sep24-deposit',
+        title: why === 'refill' ? 'SEP-24 deposit: anchor refills the settlement float in USDC' : 'SEP-24 deposit: anchor funds the settlement float in USDC',
+        kind: 'real',
+        tx: d.stellarTx,
+        note:
+          (why === 'refill'
+            ? 'The parents were paid from the float above; this is the anchor settling the money in behind it. '
+            : 'The float was short, so the anchor settled the money in before the pool deposit. ') +
+          `Requested ${amount} USDC, received ${d.amountOut} after the anchor's fee. The anchor's KYC page was completed automatically with fictional test details (test anchor only).`,
+        data: { anchorTxId: d.id, requested: amount, received: d.amountOut, float: why },
+      })
+      const got = Number(d.amountOut)
+      balance = Number.isFinite(got) && got > 0 ? balance + BigInt(Math.round(got * 1e7)) : await tokenBalance(cfg.tokenId, sender.publicKey())
+    } while (balance < units)
+  }
+
+  const funded = balance >= units
+  if (!funded) {
+    log('float short', { have: USDC(balance), need: USDC(units) })
+    await topUp('fund')
+  }
+
+  // The parents' deposit and its Blend mirror run together (different accounts).
+  const [poolTx, supplyTx] = await Promise.all([
+    invoke(sender, cfg.poolId, 'deposit', [address(sender.publicKey()), bytes32(commitment), i128(units)]).then((tx) => {
+      rec.step({
+        key: 'pool-deposit',
+        title: 'Pool deposit for the parents (commitment only)',
+        kind: 'real',
+        tx,
+        note: funded
+          ? 'Paid from the settlement float straight away (pre-funded, as a remittance payout partner is); the anchor refills the float below.'
+          : undefined,
+        data: { usdc: USDC(units), pool: cfg.poolId, commitment: Buffer.from(commitment).toString('hex'), float: funded ? 'pre-funded' : 'funded first' },
+      })
+      return tx
+    }),
+    yieldLeg.supply(cfg, who.yield, units).then(async (tx) => {
+      await yieldLeg.addPrincipal(who.yield.publicKey(), units)
+      rec.step({
+        key: 'blend-supply',
+        title: 'Blend supply (mirror, Blend mock USDC)',
+        kind: 'real',
+        tx,
+        note: "Blend's testnet pool doesn't list Circle's USDC, so the same amount of Blend's mock USDC is supplied by the yield account. On mainnet the pool supplies its own USDC.",
+        data: { usdc: USDC(units), blendPool: cfg.blendPool },
+      })
+      return tx
+    }),
   ])
-  rec.step({
-    key: 'pool-deposit',
-    title: 'Pool deposit for the parents (commitment only)',
-    kind: 'real',
-    tx: poolTx,
-    data: { usdc: USDC(units), pool: cfg.poolId, commitment: Buffer.from(commitment).toString('hex') },
-  })
+  balance -= units
 
-  const supplyTx = await yieldLeg.supply(cfg, who.yield, units)
-  await yieldLeg.addPrincipal(who.yield.publicKey(), units)
-  rec.step({
-    key: 'blend-supply',
-    title: 'Blend supply (mirror, Blend mock USDC)',
-    kind: 'real',
-    tx: supplyTx,
-    note: "Blend's testnet pool doesn't list Circle's USDC, so the same amount of Blend's mock USDC is supplied by the yield account. On mainnet the pool supplies its own USDC.",
-    data: { usdc: USDC(units), blendPool: cfg.blendPool },
-  })
-
-  const pos = await yieldLeg.readPosition(cfg, who.yield.publicKey())
-  rec.step({
-    key: 'yield-read',
-    title: 'Yield read from the real Blend position',
-    kind: 'read',
-    note: 'get_reserve + get_positions (read-only). Value = b-tokens × b_rate / 1e12.',
-    data: {
-      bTokens: pos.bTokens.toString(),
-      bRate: pos.bRate.toString(),
-      valueUsdc: USDC(pos.valueUnits),
-      measuredApr: await yieldLeg.measuredApr(),
-    },
-  })
+  // Behind the parents' screen: the anchor refills the float (always at least
+  // once, so every transfer has its real anchor leg) while the yield is read.
+  await Promise.all([
+    topUp('refill'),
+    yieldLeg.readPosition(cfg, who.yield.publicKey()).then(async (pos) =>
+      rec.step({
+        key: 'yield-read',
+        title: 'Yield read from the real Blend position',
+        kind: 'read',
+        note: 'get_reserve + get_positions (read-only). Value = b-tokens × b_rate / 1e12.',
+        data: {
+          bTokens: pos.bTokens.toString(),
+          bRate: pos.bRate.toString(),
+          valueUsdc: USDC(pos.valueUnits),
+          measuredApr: await yieldLeg.measuredApr(),
+        },
+      }),
+    ),
+  ])
   return { poolTx, supplyTx }
 }
 

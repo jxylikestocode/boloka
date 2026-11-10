@@ -1,6 +1,7 @@
 // Server-side settings, read from app/.env (the same file the browser app
 // gets its VITE_* values from), so the dev server and scripts agree.
 import { existsSync, readFileSync } from 'node:fs'
+import { rpcUrls } from '../src/rpc.ts'
 
 const ENV_FILE = new URL('../.env', import.meta.url)
 
@@ -44,7 +45,7 @@ export function serverConfig(env = readEnv()): ServerConfig {
     return v
   }
   return {
-    rpcUrl: 'https://soroban-testnet.stellar.org',
+    rpcUrl: rpcUrls(env.VITE_RPC_URLS)[0],
     poolId: need('VITE_POOL_ID'),
     tokenId: need('VITE_TOKEN_ID'),
     asset: need('VITE_ASSET'),

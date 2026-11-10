@@ -46,9 +46,12 @@ Money enters and leaves through a **Stellar anchor**, reached only through the s
 change of that value.
 
 - **Sender flow** (MoneyGram screen → Boloka): the browser makes the parents' secret and
-  commitment (the secret never leaves the device), then `POST /api/flow/deposit`: SEP-10 →
-  SEP-24 deposit of the anchor's USDC into the `sender` settlement account → pool `deposit`
-  under the commitment → Blend mirror supply → yield read.
+  commitment (the secret never leaves the device), then `POST /api/flow/deposit`: pool
+  `deposit` under the commitment **from the `sender` settlement float** ‖ Blend mirror supply
+  → (SEP-10 → SEP-24 deposit of the anchor's USDC **refills the float** ‖ yield read). The
+  float is pre-funded like a remittance payout partner, so the parents see the money in ~10 s
+  and the anchor settles behind it; an empty float is funded by the anchor first. Each transfer
+  always has at least one real anchor deposit.
 - **Payout flow** ("Pay to bank / school", "Send to Orange Money"): the parents' browser runs the
   pool `withdraw` (Merkle proof + nullifier) to the `payout` account, then
   `POST /api/flow/payout`: Blend mirror withdraw → SEP-10 → SEP-24 withdrawal (pay the anchor's

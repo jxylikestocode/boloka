@@ -60,15 +60,21 @@ export async function recoverStaleJobs() {
   }
 }
 
-const recorder = (job: Job) => ({
-  step: (s: Omit<Step, 'at'>) => {
-    const step = { ...s, at: new Date().toISOString() }
-    job.steps.push(step)
-    void saveJob(job)
-    void ledger.append({ ...step, flow: job.flow, flowId: job.id })
-  },
-  log: (m: string, d?: Record<string, unknown>) => console.log('[flow]', m, d ? JSON.stringify(d) : ''),
-})
+// Logs carry the seconds since the flow started, so slow steps are visible in `fly logs`.
+const recorder = (job: Job) => {
+  const t0 = Date.now()
+  const tag = () => `[flow ${job.id} +${((Date.now() - t0) / 1000).toFixed(1)}s]`
+  return {
+    step: (s: Omit<Step, 'at'>) => {
+      const step = { ...s, at: new Date().toISOString() }
+      job.steps.push(step)
+      console.log(tag(), 'step', s.key, s.tx ?? '')
+      void saveJob(job)
+      void ledger.append({ ...step, flow: job.flow, flowId: job.id })
+    },
+    log: (m: string, d?: Record<string, unknown>) => console.log(tag(), m, d ? JSON.stringify(d) : ''),
+  }
+}
 
 function body(req: IncomingMessage): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {

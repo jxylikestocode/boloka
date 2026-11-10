@@ -44,7 +44,7 @@ export default function Received() {
           Money from <strong style={{ color: INK }}>{item.title}</strong> {item.pending ? 'is on its way' : 'arrived'}
         </div>
         <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: -0.5 }}>P {amt(item.pula)}</div>
-        <div style={{ fontSize: 13, color: MUTED }}>{when(item.date)} · Sent from Canada{item.pending ? ' · arrives in a minute or two' : ''}</div>
+        <div style={{ fontSize: 13, color: MUTED }}>{when(item.date)} · Sent from Canada{item.pending ? ' · arrives in a moment' : ''}</div>
       </div>
 
       <Rows>

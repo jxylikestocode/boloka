@@ -72,7 +72,7 @@ export class AnchorClient {
       last = status
       if (until(t)) return t
       if (FAILED.has(status)) throw new Error(`Anchor ${t.kind} ${t.status}: ${t.message ?? ''}`)
-      await new Promise((r) => setTimeout(r, 3000))
+      await new Promise((r) => setTimeout(r, 1000))
     }
     throw new Error(`Anchor ${id} stuck in ${last}`)
   }

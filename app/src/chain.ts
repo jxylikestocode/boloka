@@ -14,10 +14,11 @@ import {
   xdr,
   type Transaction,
 } from '@stellar/stellar-sdk'
-import { ASSET, NETWORK_PASSPHRASE, POOL_ID, RPC_URL, TOKEN_ID } from './config.ts'
+import { ASSET, NETWORK_PASSPHRASE, POOL_ID, RPC_URLS, TOKEN_ID } from './config.ts'
+import { rpcServer } from './rpc.ts'
 import { toHex } from './proof.ts'
 
-const server = new rpc.Server(RPC_URL)
+const server = rpcServer(RPC_URLS)
 const pool = new Contract(POOL_ID)
 
 // Argument encoders matching the contract's parameter types.

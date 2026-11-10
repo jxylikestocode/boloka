@@ -37,12 +37,12 @@ const KIND: Record<Step['kind'], { label: string; fg: string; bg: string }> = {
   simulated: { label: 'Simulated', fg: RED, bg: '#FBE9E7' },
 }
 
-/** The 7 stages judges asked for; the Blend withdraw belongs to "pool withdraw". */
+/** The 7 stages judges asked for, in the order they run; the Blend withdraw belongs to "pool withdraw". */
 const STAGES = [
-  ['sep10', 'SEP-10 auth'],
-  ['sep24-deposit', 'SEP-24 deposit'],
   ['pool-deposit', 'Pool deposit'],
   ['blend-supply', 'Blend supply'],
+  ['sep10', 'SEP-10 auth'],
+  ['sep24-deposit', 'SEP-24 deposit'],
   ['yield-read', 'Yield read'],
   ['pool-withdraw', 'Pool withdraw'],
   ['sep24-withdraw', 'SEP-24 withdrawal'],
@@ -119,7 +119,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
           </ol>
           <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, borderTop: `1px solid ${LINE}`, paddingTop: 10 }}>
             {mode === 'testnet'
-              ? 'Every step runs on Stellar testnet: a Stellar anchor settles the money in and out, and the savings pool and yield are real contracts. A transfer takes 1–3 minutes to confirm. Best on a laptop with the three apps as separate windows, or on three phones.'
+              ? 'Every step runs on Stellar testnet: a Stellar anchor settles the money in and out, and the savings pool and yield are real contracts. A transfer reaches the parents in about 10 seconds (paid from a pre-funded settlement float); the anchor settlement completes behind it within a minute or two. Best on a laptop with the three apps side by side.'
               : 'This build is simulated so the flow is instant; nothing goes on chain here. The run below is the real testnet rehearsal behind it, with every transaction.'}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
@@ -134,7 +134,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
         <div style={{ ...card, gap: 8 }}>
           <h2 style={{ margin: 0, fontSize: 20 }}>One transfer, end to end, on Stellar testnet</h2>
           <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.6 }}>
-            SEP-10 auth → SEP-24 deposit → pool deposit → Blend supply → yield read → pool withdraw → SEP-24 withdrawal.
+            Pool deposit (from the settlement float) → Blend supply → SEP-10 auth → SEP-24 deposit (refills the float) → yield read → pool withdraw → SEP-24 withdrawal.
             Every step below is from one real run of <code>npm run demo:e2e</code> from fresh friendbot accounts; each hash opens on the chain explorer.
           </div>
           {run && (
@@ -206,6 +206,11 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
               <li>
                 <strong>Display scale 1:{run?.scale ?? 1000}.</strong> Amounts on chain are 1/{run?.scale ?? 1000} of the amounts on screen, so every
                 anchor leg fits the test anchor's 1–10 USDC per-transaction limits. Every leg is otherwise real.
+              </li>
+              <li>
+                <strong>Settlement float.</strong> The settlement account is pre-funded, the way a remittance payout partner is: the parents are
+                paid into the pool straight away (one transaction, about 10 s), and the anchor's SEP-24 deposit then refills the float behind it.
+                If the float is ever short, the anchor leg runs first. Both legs are real and on chain for every transfer.
               </li>
               <li>
                 <strong>Anchor KYC.</strong> The test anchor's SEP-24 page is completed automatically with fictional test details. With a

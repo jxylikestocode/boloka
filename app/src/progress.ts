@@ -8,12 +8,15 @@ export type Progress = { id: number; at: number; title: string; flow: FlowDef; s
 
 const KEY = 'ui.flowProgress'
 
-/** MoneyGram → Boloka. */
+/**
+ * MoneyGram → Boloka. The parents are paid from a pre-funded settlement float
+ * first (that is what the app shows); the anchor settles the money in behind it.
+ */
 export const DEPOSIT_FLOW: FlowDef = [
-  { key: 'sep10', label: 'Signed in with the anchor (SEP-10)' },
-  { key: 'sep24-deposit', label: 'Anchor settled the deposit in USDC (SEP-24)' },
-  { key: 'pool-deposit', label: 'Paid into Boloka' },
+  { key: 'pool-deposit', label: 'Paid into Boloka from the settlement float · the app shows arrival here' },
   { key: 'blend-supply', label: 'Put to work earning interest' },
+  { key: 'sep10', label: 'Settlement behind the scenes: signed in with the anchor (SEP-10)' },
+  { key: 'sep24-deposit', label: 'Settlement behind the scenes: anchor refills the float in USDC (SEP-24)' },
 ]
 
 /** Boloka → bank / Orange Money. */

@@ -27,7 +27,7 @@ type Entry = {
 
 /** Short, plain names for the strip. */
 const LABEL: Record<string, string> = {
-  'sep24-deposit': 'anchor → USDC (SEP-24 deposit)',
+  'sep24-deposit': 'anchor → USDC float (SEP-24 deposit)',
   'pool-deposit': 'savings pool deposit',
   'blend-supply': 'Blend supply (yield)',
   'pool-withdraw': 'savings pool withdrawal',

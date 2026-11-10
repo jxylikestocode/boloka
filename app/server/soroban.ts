@@ -15,9 +15,12 @@ import {
   xdr,
 } from '@stellar/stellar-sdk'
 import { toHex } from '../src/proof.ts'
+import { rpcServer, rpcUrls } from '../src/rpc.ts'
+import { readEnv } from './config.ts'
 
 export const NETWORK = Networks.TESTNET
-export const server = new rpc.Server('https://soroban-testnet.stellar.org')
+/** Fast public RPCs first, the SDF one last (see src/rpc.ts); VITE_RPC_URLS overrides. */
+export const server = rpcServer(rpcUrls(readEnv().VITE_RPC_URLS))
 
 export const bytes32 = (b: Uint8Array) => xdr.ScVal.scvBytes(b)
 export const bytesVec = (bs: Uint8Array[]) => xdr.ScVal.scvVec(bs.map(bytes32))

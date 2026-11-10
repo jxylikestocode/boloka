@@ -164,7 +164,9 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
 
   // MoneyGram runs as a separate app; its transfers reach this app through
   // the shared records ('storage') and count once the pool confirms them, so
-  // also re-read the pool every few seconds.
+  // also re-read the pool every few seconds: every 2 s while something is on
+  // its way (the pool read is one cheap ledger lookup), every 5 s otherwise.
+  const waiting = (snap?.pendingDeposits.length ?? 0) + (snap?.pendingWithdrawals.length ?? 0) > 0
   useEffect(() => {
     let busy = false
     const tick = () => {
@@ -176,13 +178,13 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     }
     window.addEventListener('storage', tick)
     window.addEventListener('focus', tick)
-    const t = setInterval(tick, 5000)
+    const t = setInterval(tick, waiting ? 2000 : 5000)
     return () => {
       window.removeEventListener('storage', tick)
       window.removeEventListener('focus', tick)
       clearInterval(t)
     }
-  }, [refresh])
+  }, [refresh, waiting])
 
   async function send(pula: number, dest: Destination): Promise<SendReceipt> {
     const kp = keypair()

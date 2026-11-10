@@ -1,4 +1,5 @@
 import { Networks } from '@stellar/stellar-sdk'
+import { rpcUrls } from './rpc.ts'
 
 function env(name: string): string {
   const v = import.meta.env[name] as string | undefined
@@ -6,7 +7,8 @@ function env(name: string): string {
   return v
 }
 
-export const RPC_URL = 'https://soroban-testnet.stellar.org'
+/** Soroban RPC endpoints, first preferred (see rpc.ts); VITE_RPC_URLS overrides. */
+export const RPC_URLS = rpcUrls(import.meta.env.VITE_RPC_URLS as string | undefined)
 export const NETWORK_PASSPHRASE = Networks.TESTNET
 
 export const POOL_ID = env('VITE_POOL_ID')

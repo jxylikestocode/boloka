@@ -34,7 +34,10 @@ export async function fillInteractiveForm(url: string, opts: { amount: string },
   const browser = await launchChrome()
   try {
     const page = await browser.newPage()
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60_000 })
+    // Don't wait for the network to go quiet (the page keeps polling); the
+    // form fields are what matter.
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 })
+    await page.waitForSelector('input, select', { timeout: 15_000 }).catch(() => {})
     // Some anchors use more than one page; fill and submit until it shows
     // the transaction summary (or nothing is left to fill).
     for (let round = 0; round < 4; round++) {
@@ -66,7 +69,18 @@ export async function fillInteractiveForm(url: string, opts: { amount: string },
         return true
       })
       if (!clicked) break
-      await new Promise((r) => setTimeout(r, 3500))
+      // Wait for the page to move on (the fields we filled go away), not a fixed delay.
+      await page
+        .waitForFunction(
+          (keys: string[]) =>
+            keys.every((k) => {
+              const el = document.querySelector(`[name="${k}"], [id="${k}"]`) as HTMLInputElement | null
+              return !el || el.offsetParent === null || el.disabled
+            }),
+          { timeout: 4000 },
+          empty.map((f) => f.key),
+        )
+        .catch(() => {})
     }
   } finally {
     await browser.close()

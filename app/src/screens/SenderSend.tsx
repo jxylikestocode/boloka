@@ -422,7 +422,7 @@ export default function SenderSend() {
 
         {sending && (
           <div style={{ margin: '14px 16px 0', fontSize: 13, color: SUBTLE, lineHeight: 1.5 }}>
-            Processing your transfer. This usually takes a minute or two.
+            Processing your transfer…
           </div>
         )}
 
