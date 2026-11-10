@@ -19,7 +19,7 @@ import {
   u32,
 } from './chain.ts'
 import { depositForReceiver, runFlow } from './deposit.ts'
-import { addProgress, clearProgress, PAYOUT_FLOW, startProgress } from './progress.ts'
+import { addProgress, clearProgress, failProgress, PAYOUT_FLOW, startProgress } from './progress.ts'
 import {
   encodeProof,
   fromHex,
@@ -96,7 +96,7 @@ async function snapshot(): Promise<Snapshot> {
     .filter((d) => position.has(d.commitment))
     .map((rec) => ({ rec, index: position.get(rec.commitment)! }))
   const withdrawals = allW.filter((w) => used.has(w.nullifier))
-  const pendingDeposits = store.deposits().filter((d) => !position.has(d.commitment) && recent(d.date))
+  const pendingDeposits = store.deposits().filter((d) => !position.has(d.commitment) && !d.failed && recent(d.date))
   const pendingWithdrawals = allW.filter((w) => !used.has(w.nullifier) && recent(w.date))
   const sum = (xs: { amount: string }[]) => xs.reduce((n, x) => n + BigInt(x.amount), 0n)
   const balanceUnits = sum(deposits.map((d) => d.rec)) - sum(withdrawals) - sum(pendingWithdrawals)
@@ -243,7 +243,10 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             return runFlow('/api/flow/payout', { units: units.toString(), withdrawTx: res.hash }, (s) => addProgress(s))
           })
           .then(() => refresh())
-          .catch((e) => console.error('payout', e))
+          .catch((e) => {
+            console.error('payout', e)
+            failProgress(e instanceof Error ? e.message : String(e))
+          })
         break
       } catch (e) {
         if (attempt === 0 && String(e).includes('Error(Contract, #4)')) continue

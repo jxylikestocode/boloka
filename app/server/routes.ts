@@ -43,6 +43,23 @@ function start(flow: Job['flow'], run: (job: Job) => Promise<unknown>): string {
   return id
 }
 
+/** A restart kills in-flight flows: mark their saved jobs failed so no screen waits forever. */
+export async function recoverStaleJobs() {
+  for (const name of await storage.list('jobs/')) {
+    try {
+      const job = JSON.parse((await storage.read(name)) ?? 'null') as Job | null
+      if (job?.status === 'running') {
+        job.status = 'error'
+        job.error = 'The server restarted during this transfer. Please send it again.'
+        await storage.write(name, JSON.stringify(job))
+        console.log('[job] marked failed after restart:', job.id)
+      }
+    } catch {
+      // not a job file
+    }
+  }
+}
+
 const recorder = (job: Job) => ({
   step: (s: Omit<Step, 'at'>) => {
     const step = { ...s, at: new Date().toISOString() }

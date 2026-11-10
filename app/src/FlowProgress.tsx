@@ -24,10 +24,13 @@ export function useProgress(): Progress | null {
 
 export function ProgressSteps({ progress }: { progress: Progress }) {
   const done = new Set(progress.steps.map((s) => s.key))
-  const current = progress.flow.find((f) => !done.has(f.key))
+  const current = progress.failed ? undefined : progress.flow.find((f) => !done.has(f.key))
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{ fontWeight: 700, color: '#8EE0B4' }}>{current ? `right now · ${progress.title}` : progress.title.replace(' in progress', ' settled')}</div>
+      <div style={{ fontWeight: 700, color: progress.failed ? '#F28B82' : '#8EE0B4' }}>
+        {progress.failed ? progress.title.replace(' in progress', ' failed') : current ? `right now · ${progress.title}` : progress.title.replace(' in progress', ' settled')}
+      </div>
+      {progress.failed && <div style={{ color: '#F28B82' }}>✕ {progress.failed}</div>}
       {progress.flow.map((f) => {
         const s = progress.steps.find((x) => x.key === f.key)
         const now = f === current

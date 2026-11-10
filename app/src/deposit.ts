@@ -1,6 +1,7 @@
 // Starting the server-side money flows (server/flows.ts) and following them.
 import { commitment, monthOf, randomBytes32, toHex } from './proof.ts'
 import * as store from './store.ts'
+import { failProgress } from './progress.ts'
 
 export type FlowStep = {
   key: string
@@ -72,6 +73,10 @@ export async function depositForReceiver(
   }
   store.addDeposit(rec)
   const id = await startFlow('/api/flow/deposit', { commitment: toHex(leaf), units: units.toString() })
-  followFlow(id, onStep).catch((e) => console.error('deposit flow', e))
+  followFlow(id, onStep).catch((e) => {
+    console.error('deposit flow', e)
+    store.markDepositFailed(rec.id)
+    failProgress(e instanceof Error ? e.message : String(e))
+  })
   return rec
 }

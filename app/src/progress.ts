@@ -4,7 +4,7 @@
 import type { FlowStep } from './deposit.ts'
 
 export type FlowDef = { key: string; label: string }[]
-export type Progress = { id: number; at: number; title: string; flow: FlowDef; steps: FlowStep[] }
+export type Progress = { id: number; at: number; title: string; flow: FlowDef; steps: FlowStep[]; failed?: string }
 
 const KEY = 'ui.flowProgress'
 
@@ -36,6 +36,13 @@ export function addProgress(step: FlowStep) {
 }
 
 export const clearProgress = () => localStorage.removeItem(KEY)
+
+/** The flow stopped: the card shows why instead of spinning. */
+export function failProgress(message: string) {
+  const cur = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Progress | null
+  if (!cur) return
+  localStorage.setItem(KEY, JSON.stringify({ ...cur, at: Date.now(), failed: message }))
+}
 
 export function readProgress(): Progress | null {
   try {

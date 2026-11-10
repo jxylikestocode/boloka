@@ -6,7 +6,7 @@ import { createReadStream, existsSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join, normalize } from 'node:path'
 import { DIST_DIR } from './paths.ts'
-import { handle } from './routes.ts'
+import { handle, recoverStaleJobs } from './routes.ts'
 import { handleState } from './state.ts'
 
 const PORT = Number(process.env.PORT ?? 8080)
@@ -27,6 +27,8 @@ if (!existsSync(join(DIST_DIR, 'index.html'))) {
   console.error('dist/index.html is missing: run `npx vite build` first')
   process.exit(1)
 }
+
+await recoverStaleJobs()
 
 createServer((req, res) => {
   void (async () => {

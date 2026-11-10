@@ -13,6 +13,8 @@ export type DepositRecord = {
   sender: string
   via: string
   date: string
+  /** Its transfer failed before reaching the pool. */
+  failed?: boolean
 }
 
 export type WithdrawalRecord = {
@@ -52,6 +54,10 @@ export function addDeposit(d: DepositRecord) {
 
 export function addWithdrawal(w: WithdrawalRecord) {
   localStorage.setItem(WITHDRAWALS, JSON.stringify([...withdrawals(), w]))
+}
+
+export function markDepositFailed(id: string) {
+  localStorage.setItem(DEPOSITS, JSON.stringify(deposits().map((d) => (d.id === id ? { ...d, failed: true } : d))))
 }
 
 export function setWithdrawalTx(id: string, tx: string) {
