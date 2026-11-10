@@ -18,9 +18,9 @@ export const DEPOSIT_FLOW: FlowDef = [
 
 /** Boloka → bank / Orange Money. */
 export const PAYOUT_FLOW: FlowDef = [
-  { key: 'pool-withdraw', label: 'Paid out of the savings pool' },
-  { key: 'blend-withdraw', label: 'Taken back from Blend (yield)' },
-  { key: 'sep24-withdraw', label: 'Anchor paid out in local money (SEP-24)' },
+  { key: 'pool-withdraw', label: 'Paid out of the savings pool · the app shows success here' },
+  { key: 'blend-withdraw', label: 'Settlement behind the scenes: taken back from Blend (yield)' },
+  { key: 'sep24-withdraw', label: 'Settlement behind the scenes: anchor pays out in local money (SEP-24)' },
 ]
 
 export function startProgress(title: string, flow: FlowDef, steps: FlowStep[] = []) {
