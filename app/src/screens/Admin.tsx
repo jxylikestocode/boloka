@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } 
 import { i128, invokeAs, readPoolConfig, readPoolFunds, type Signer } from '../chain.ts'
 import { POOL_ID } from '../config.ts'
 import TransactionsCard from '../TransactionsCard.tsx'
+import PoolFacts from '../PoolFacts.tsx'
 import { connectFreighter } from '../freighter.ts'
 import { BORDER, FONT, GREEN, INK, LINE, MUTED, PANEL, RED, TINT, disabledStyle, usePageMeta } from '../ui.tsx'
 
@@ -327,6 +328,9 @@ export default function Admin() {
               </>
             )}
           </div>
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <PoolFacts />
         </div>
         <TransactionsCard poolId={POOL_ID} style={{ gridColumn: '1 / -1' }} />
       </div>

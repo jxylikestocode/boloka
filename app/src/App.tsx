@@ -14,15 +14,10 @@ import Arrival from './Arrival.tsx'
 import { FEATURES } from './features.ts'
 import Launcher from './screens/Launcher.tsx'
 import OnChainOverlay from './OnChainOverlay.tsx'
-import SavingsFacts from './SavingsFacts.tsx'
 
 /** The homepage's single under-the-hood strip, for all three phones. */
 function HomeStrip() {
-  return (
-    <SavingsProvider>
-      <OnChainOverlay inline facts={<SavingsFacts />} />
-    </SavingsProvider>
-  )
+  return <OnChainOverlay inline />
 }
 import HowItWorks from './screens/HowItWorks.tsx'
 import BankApp from './screens/BankApp.tsx'
@@ -34,7 +29,7 @@ function Phone() {
       <div className="phone">
         <Arrival />
         <Gate />
-        <OnChainOverlay facts={<SavingsFacts />} />
+        <OnChainOverlay />
       </div>
     </SavingsProvider>
   )
