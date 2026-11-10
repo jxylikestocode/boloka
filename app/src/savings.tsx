@@ -19,7 +19,7 @@ import {
   u32,
 } from './chain.ts'
 import { depositForReceiver, runFlow } from './deposit.ts'
-import { addProgress, PAYOUT_FLOW, startProgress } from './progress.ts'
+import { addProgress, clearProgress, PAYOUT_FLOW, startProgress } from './progress.ts'
 import {
   encodeProof,
   fromHex,
@@ -188,9 +188,14 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     // Any confirmed deposit proves membership; the newest is as good as any.
     // A deposit landing between reading the tree and sending changes the
     // root, so rebuild the path and retry once if that happens.
+    // The demo's under-the-hood card shows the payout from the tap onwards.
+    startProgress('payout in progress', PAYOUT_FLOW)
     for (let attempt = 0; ; attempt++) {
       const s = await snapshot()
-      if (units > s.balanceUnits) throw new Error('That is more than your savings.')
+      if (units > s.balanceUnits) {
+        clearProgress()
+        throw new Error('That is more than your savings.')
+      }
       const dep = s.deposits[s.deposits.length - 1]
       const path = await merklePath(s.leaves, dep.index)
       const nullifier = randomBytes32()
@@ -218,15 +223,14 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         // the background: the parents' part is done.
         store.setWithdrawalTx(toHex(nullifier), res.hash)
         // For the demo's under-the-hood strip: the pool step is done, the rest follows.
-        startProgress('payout in progress', PAYOUT_FLOW, [
-          { key: 'pool-withdraw', title: 'Pool withdraw', kind: 'real', tx: res.hash },
-        ])
+        addProgress({ key: 'pool-withdraw', title: 'Pool withdraw', kind: 'real', tx: res.hash })
         runFlow('/api/flow/payout', { units: units.toString(), withdrawTx: res.hash }, (s) => addProgress(s)).catch(
           (e) => console.error('payout flow', e),
         )
         break
       } catch (e) {
         if (attempt === 0 && String(e).includes('Error(Contract, #4)')) continue
+        clearProgress()
         throw friendly(e)
       }
     }
