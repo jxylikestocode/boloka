@@ -72,8 +72,8 @@ export default function Help() {
           }
         >
           They are held as <strong>USDC</strong>, a digital dollar issued by Circle and backed one-to-one by US dollars, on the
-          Stellar network. A licensed money partner turns what Kate sends into dollars, and turns dollars back into pula when
-          you withdraw. We show them as pula at today's rate (P {PULA_PER_USD.toFixed(2)} per dollar); flip the P / $ switch
+          Stellar network. A licensed money partner turns what your family sends into dollars, and turns dollars back into pula
+          when you withdraw. We show them as pula at today's rate (P {PULA_PER_USD.toFixed(2)} per dollar); flip the P / $ switch
           on Home to see the dollars.
         </Point>
 
