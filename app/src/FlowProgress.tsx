@@ -145,7 +145,7 @@ export default function FloatingProgress() {
     <div ref={ref} style={style} data-progress="" data-strip="">
       <div {...handle} title="Drag to move" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'grab', touchAction: 'none', userSelect: 'none', margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
         <span style={{ fontWeight: 700, color: '#8EE0B4', letterSpacing: 0.4 }}>⛓ DEMO · UNDER THE HOOD</span>
-        <span style={{ flex: 1, opacity: 0.7 }}>not part of the apps · drag me</span>
+        <span style={{ flex: 1, opacity: 0.7 }}>drag me</span>
         <button type="button" onClick={() => setDismissed(progress.id)} aria-label="Hide" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
           ✕
         </button>

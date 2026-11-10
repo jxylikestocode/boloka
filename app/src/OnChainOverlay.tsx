@@ -178,7 +178,7 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
     <div data-strip="" style={{ ...base, padding: '10px 12px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div {...(inline ? {} : handle)} title={inline ? undefined : 'Drag to move'} style={{ ...(inline ? {} : grab), display: 'flex', alignItems: 'center', gap: 8, margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
         <span style={{ fontWeight: 700, color: '#8EE0B4', letterSpacing: 0.4 }}>⛓ DEMO · UNDER THE HOOD</span>
-        <span style={{ flex: 1, opacity: 0.7 }}>{inline ? 'not part of the apps · real Stellar testnet transactions behind the three phones' : 'not part of the app · drag me'}</span>
+        <span style={{ flex: 1, opacity: 0.7 }}>{inline ? 'real Stellar testnet transactions behind the three phones' : 'drag me'}</span>
         {!inline && (
           <>
             <button type="button" onClick={() => setOpen(false)} aria-label="Fold" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
