@@ -67,8 +67,10 @@ const navIcon = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', str
 export default function Home() {
   usePageMeta('Boloka — Home')
   const s = useSavings()
+  const loading = s.status === 'loading'
   // "Growing": one month at Blend's real, measured supply rate.
-  const growth = monthlyGrowth(s.balance, useYield()?.apr ?? null)
+  const apr = useYield()?.apr ?? null
+  const growth = loading ? null : monthlyGrowth(s.balance, apr)
   const navigate = useNavigate()
   const whole = (n: number) => Math.round(n).toLocaleString('en-US')
 
@@ -91,7 +93,9 @@ export default function Home() {
 
       <div style={{ background: GREEN, borderRadius: 20, padding: '24px 22px', color: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ fontSize: 13, fontWeight: 500, opacity: 0.85 }}>Dollar savings</div>
-        <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -0.5 }}>P {whole(s.balance)}</div>
+        <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -0.5 }}>
+          P {loading ? <span style={{ opacity: 0.45, animation: 'soft-pulse 1.2s ease-in-out infinite' }}>· · ·</span> : whole(s.balance)}
+        </div>
         <div style={{ fontSize: 13, opacity: 0.85 }}>Held in US dollars · shown in pula</div>
         <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.16)', borderRadius: 999, padding: '6px 12px', fontSize: 13, fontWeight: 600, width: 'fit-content' }}>
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -108,7 +112,9 @@ export default function Home() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={sectionLabel}>Recent</div>
-        {s.activity.length === 0 ? (
+        {loading ? (
+          <div style={{ fontSize: 13, color: MUTED, animation: 'soft-pulse 1.2s ease-in-out infinite' }}>Loading…</div>
+        ) : s.activity.length === 0 ? (
           <div style={{ fontSize: 13, color: MUTED }}>Nothing yet. Money you receive shows up here.</div>
         ) : (
           s.activity.slice(0, 3).map((a) => <RecentItem key={a.id} a={a} />)

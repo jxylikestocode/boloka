@@ -38,9 +38,8 @@ function Phone() {
 
 function Gate() {
   const s = useSavings()
-  if (s.status === 'loading') {
-    return <div className="center muted">Setting up your account…</div>
-  }
+  // While the first read of the chain is in flight the screens show
+  // themselves with placeholders; the numbers fill in when they arrive.
   if (s.status === 'error') {
     return (
       <div className="center">

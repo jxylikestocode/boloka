@@ -660,3 +660,6 @@ button:active,
 
 /* Under-the-hood strip: the step in progress. */
 @keyframes strip-spin { to { transform: rotate(360deg); } }
+
+/* Numbers still arriving from the chain. */
+@keyframes soft-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
