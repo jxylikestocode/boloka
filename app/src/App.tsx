@@ -14,6 +14,7 @@ import Arrival from './Arrival.tsx'
 import { FEATURES } from './features.ts'
 import Launcher from './screens/Launcher.tsx'
 import OnChainOverlay from './OnChainOverlay.tsx'
+import SavingsFacts from './SavingsFacts.tsx'
 import HowItWorks from './screens/HowItWorks.tsx'
 import BankApp from './screens/BankApp.tsx'
 
@@ -24,7 +25,7 @@ function Phone() {
       <div className="phone">
         <Arrival />
         <Gate />
-        <OnChainOverlay />
+        <OnChainOverlay facts={<SavingsFacts />} />
       </div>
     </SavingsProvider>
   )

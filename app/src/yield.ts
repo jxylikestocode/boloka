@@ -2,7 +2,7 @@
 // server/yieldLeg.ts: a mirror position in Blend's testnet pool).
 import { useEffect, useState } from 'react'
 
-export type YieldInfo = { apr: number | null; valueUnits: string; earnedUnits: string }
+export type YieldInfo = { account: string; apr: number | null; valueUnits: string; earnedUnits: string }
 
 export function useYield(): YieldInfo | null {
   const [info, setInfo] = useState<YieldInfo | null>(null)

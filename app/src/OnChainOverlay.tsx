@@ -3,7 +3,7 @@
 // testnet transactions behind this user's transfers as they land, each
 // linking to the chain explorer. Not part of the product UI, so the
 // parents' screens themselves stay free of chain words.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import * as store from './store.ts'
 import { CHAIN_SCALE, PULA_PER_USD } from './money.ts'
 
@@ -71,7 +71,8 @@ function mine(all: Entry[]): Entry[] {
   return all.filter((e) => e.tx && flows.has(e.flowId)).sort((a, b) => b.at.localeCompare(a.at))
 }
 
-export default function OnChainOverlay() {
+/** `facts` is an extra block shown at the top of the strip (Boloka's balance facts). */
+export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
   const [entries, setEntries] = useState<Entry[]>([])
   const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
@@ -111,7 +112,7 @@ export default function OnChainOverlay() {
     }
   }, [])
 
-  if (!entries.length || hidden) return null
+  if ((!entries.length && !facts) || hidden) return null
 
   const base = {
     position: 'fixed' as const,
@@ -133,7 +134,7 @@ export default function OnChainOverlay() {
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} style={{ ...base, width: 'auto', padding: '7px 12px', cursor: 'pointer', textAlign: 'left' }}>
-        ⛓ demo · {entries.length} on-chain transaction{entries.length === 1 ? '' : 's'} · tap to see
+        ⛓ demo · under the hood{entries.length ? ` · ${entries.length} on-chain transaction${entries.length === 1 ? '' : 's'}` : ''} · tap to see
       </button>
     )
   }
@@ -150,8 +151,9 @@ export default function OnChainOverlay() {
           ✕
         </button>
       </div>
-      <div style={{ opacity: 0.75 }}>Real Stellar testnet transactions behind this screen:</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 168, overflowY: 'auto' }}>
+      {facts}
+      {entries.length > 0 && <div style={{ opacity: 0.75 }}>Real Stellar testnet transactions behind this screen:</div>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
         {entries.slice(0, 12).map((e) => (
           <a
             key={e.tx}
