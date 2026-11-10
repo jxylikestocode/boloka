@@ -66,8 +66,8 @@ export default function Arrival() {
           <span>BOLOKA</span>
           <span>now</span>
         </div>
-        <div style={{ fontWeight: 700, marginTop: 2 }}>Money from {latest.title} arrived</div>
-        <div style={{ fontSize: 13, color: MUTED }}>P {amt(latest.pula)} added to your dollar savings</div>
+        <div style={{ fontWeight: 700, marginTop: 2 }}>Money from {latest.title} {latest.pending ? 'is on its way' : 'arrived'}</div>
+        <div style={{ fontSize: 13, color: MUTED }}>P {amt(latest.pula)} {latest.pending ? 'arriving in' : 'added to'} your dollar savings</div>
       </div>
       <button
         type="button"

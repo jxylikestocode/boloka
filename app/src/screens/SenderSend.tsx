@@ -193,7 +193,7 @@ function Sent({ r, frame, onAgain }: { r: Receipt; frame: CSSProperties; onAgain
 
       <div style={{ ...section, marginTop: 16, padding: '28px 16px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center' }}>
         <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#2E7D32', color: '#FFFFFF', fontSize: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'mg-pop 360ms ease-out' }}>✓</div>
-        <div style={{ fontSize: 22, fontWeight: 700, marginTop: 6 }}>{delivered ? 'Money delivered' : 'Ready for pickup'}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, marginTop: 6 }}>{r.method === 'boloka' ? 'Transfer sent' : delivered ? 'Money delivered' : 'Ready for pickup'}</div>
         <div style={{ fontSize: 14, color: SUBTLE, lineHeight: 1.5, maxWidth: 300 }}>
           {r.method === 'boloka'
             ? `${RECEIVER} has been notified in the Boloka app.`

@@ -12,8 +12,8 @@ import {
   bytes32,
   bytesVec,
   i128,
-  invoke,
   keypair,
+  invokeAsync,
   readPool,
   setupAccount,
   u32,
@@ -34,6 +34,8 @@ import { DESTINATIONS, pulaToUnits, unitsToPula, type Destination } from './mone
 export type Activity = {
   id: string
   kind: 'in' | 'out'
+  /** Submitted, not yet confirmed by the pool. */
+  pending?: boolean
   title: string
   detail: string
   pula: number
@@ -74,8 +76,15 @@ type Snapshot = {
   /** This user's deposits found in the tree, with their leaf index. */
   deposits: { rec: store.DepositRecord; index: number }[]
   withdrawals: store.WithdrawalRecord[]
+  /** Recent records the pool hasn't confirmed yet: shown as on their way. */
+  pendingDeposits: store.DepositRecord[]
+  pendingWithdrawals: store.WithdrawalRecord[]
+  /** Confirmed, less withdrawals already submitted. */
   balanceUnits: bigint
 }
+
+const PENDING_WINDOW = 15 * 60_000
+const recent = (iso: string) => Date.now() - Date.parse(iso) < PENDING_WINDOW
 
 /** Reconciles the local records with what the pool has confirmed. */
 async function snapshot(): Promise<Snapshot> {
@@ -87,10 +96,11 @@ async function snapshot(): Promise<Snapshot> {
     .filter((d) => position.has(d.commitment))
     .map((rec) => ({ rec, index: position.get(rec.commitment)! }))
   const withdrawals = allW.filter((w) => used.has(w.nullifier))
-  const balanceUnits =
-    deposits.reduce((n, d) => n + BigInt(d.rec.amount), 0n) -
-    withdrawals.reduce((n, w) => n + BigInt(w.amount), 0n)
-  return { leaves, deposits, withdrawals, balanceUnits }
+  const pendingDeposits = store.deposits().filter((d) => !position.has(d.commitment) && recent(d.date))
+  const pendingWithdrawals = allW.filter((w) => !used.has(w.nullifier) && recent(w.date))
+  const sum = (xs: { amount: string }[]) => xs.reduce((n, x) => n + BigInt(x.amount), 0n)
+  const balanceUnits = sum(deposits.map((d) => d.rec)) - sum(withdrawals) - sum(pendingWithdrawals)
+  return { leaves, deposits, withdrawals, pendingDeposits, pendingWithdrawals, balanceUnits }
 }
 
 const depositActivity = (d: store.DepositRecord): Activity => ({
@@ -102,19 +112,21 @@ const depositActivity = (d: store.DepositRecord): Activity => ({
   date: d.date,
 })
 
+const withdrawalActivity = (w: store.WithdrawalRecord): Activity => ({
+  id: w.id,
+  kind: 'out',
+  title: DESTINATIONS[w.dest ?? 'orange'].name,
+  detail: 'Sent',
+  pula: unitsToPula(BigInt(w.amount)),
+  date: w.date,
+})
+
 function activityOf(s: Snapshot): Activity[] {
   return [
     ...s.deposits.map((d) => depositActivity(d.rec)),
-    ...s.withdrawals.map(
-      (w): Activity => ({
-        id: w.id,
-        kind: 'out',
-        title: DESTINATIONS[w.dest ?? 'orange'].name,
-        detail: 'Sent',
-        pula: unitsToPula(BigInt(w.amount)),
-        date: w.date,
-      }),
-    ),
+    ...s.pendingDeposits.map((d) => ({ ...depositActivity(d), pending: true })),
+    ...s.withdrawals.map(withdrawalActivity),
+    ...s.pendingWithdrawals.map((w) => ({ ...withdrawalActivity(w), pending: true })),
   ].sort((a, b) => b.date.localeCompare(a.date))
 }
 
@@ -210,7 +222,8 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         dest,
       })
       try {
-        const res = await invoke(kp, 'withdraw', [
+        // Submitted is enough to show success; settlement continues behind.
+        const res = await invokeAsync(kp, 'withdraw', [
           bytes32(nullifier),
           bytes32(fromHex(dep.rec.commitment)),
           bytesVec(path),
@@ -222,11 +235,15 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         // anchor (SEP-24 withdrawal), mirrored out of Blend. That runs on in
         // the background: the parents' part is done.
         store.setWithdrawalTx(toHex(nullifier), res.hash)
-        // For the demo's under-the-hood strip: the pool step is done, the rest follows.
-        addProgress({ key: 'pool-withdraw', title: 'Pool withdraw', kind: 'real', tx: res.hash })
-        runFlow('/api/flow/payout', { units: units.toString(), withdrawTx: res.hash }, (s) => addProgress(s)).catch(
-          (e) => console.error('payout flow', e),
-        )
+        // Once the pool has paid the payout account, the anchor pays out (and
+        // the Blend mirror unwinds); the strip's card follows every step.
+        res.confirmed
+          .then(() => {
+            addProgress({ key: 'pool-withdraw', title: 'Pool withdraw', kind: 'real', tx: res.hash })
+            return runFlow('/api/flow/payout', { units: units.toString(), withdrawTx: res.hash }, (s) => addProgress(s))
+          })
+          .then(() => refresh())
+          .catch((e) => console.error('payout', e))
         break
       } catch (e) {
         if (attempt === 0 && String(e).includes('Error(Contract, #4)')) continue

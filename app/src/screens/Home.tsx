@@ -39,7 +39,10 @@ function RecentItem({ a }: { a: Activity }) {
         <div style={{ fontSize: 15, fontWeight: 600 }}>
           {incoming ? `Money from ${a.title}` : `To ${a.title}`}
         </div>
-        <div style={{ fontSize: 12, color: MUTED }}>{when(a.date)}</div>
+        <div style={{ fontSize: 12, color: MUTED }}>
+          {when(a.date)}
+          {a.pending && <span style={{ color: incoming ? GREEN : '#C4510A', fontWeight: 600 }}> · {incoming ? 'on its way' : 'sending'}</span>}
+        </div>
       </div>
       <div style={{ fontSize: 15, fontWeight: 600, color: incoming ? GREEN : undefined }}>
         {incoming ? '+' : '−'}P {amt(a.pula)}

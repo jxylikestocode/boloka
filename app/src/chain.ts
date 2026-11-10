@@ -107,7 +107,11 @@ async function build(source: string, op: xdr.Operation): Promise<Transaction> {
     .build()
 }
 
-async function submit(signer: Signer, tx: Transaction) {
+/**
+ * Signs and submits; resolves as soon as the network has accepted the
+ * transaction, with `confirmed` settling when it is in a ledger.
+ */
+async function send(signer: Signer, tx: Transaction) {
   const signed = TransactionBuilder.fromXDR(
     await signer.sign(tx.toXDR()),
     NETWORK_PASSPHRASE,
@@ -116,11 +120,18 @@ async function submit(signer: Signer, tx: Transaction) {
   if (sent.status !== 'PENDING' && sent.status !== 'DUPLICATE') {
     throw new Error(`submit failed: ${sent.status}`)
   }
-  const res = await server.pollTransaction(sent.hash, { attempts: 30 })
-  if (res.status !== rpc.Api.GetTransactionStatus.SUCCESS) {
-    throw new Error(`transaction ${sent.hash} ${res.status}`)
-  }
-  return { ...res, hash: sent.hash }
+  const confirmed = server.pollTransaction(sent.hash, { attempts: 30 }).then((res) => {
+    if (res.status !== rpc.Api.GetTransactionStatus.SUCCESS) {
+      throw new Error(`transaction ${sent.hash} ${res.status}`)
+    }
+    return res
+  })
+  return { hash: sent.hash, confirmed }
+}
+
+async function submit(signer: Signer, tx: Transaction) {
+  const { hash, confirmed } = await send(signer, tx)
+  return { ...(await confirmed), hash }
 }
 
 /**
@@ -152,6 +163,13 @@ export async function invokeAs(signer: Signer, method: string, args: xdr.ScVal[]
   })
   if (others.length) throw new Error(`NeedsSignatureFrom ${others.join(', ')}`)
   return submit(signer, tx)
+}
+
+/** Like invoke, but resolves on submission; `confirmed` settles later. */
+export async function invokeAsync(kp: Keypair, method: string, args: xdr.ScVal[]) {
+  const signer = keypairSigner(kp)
+  const tx = await server.prepareTransaction(await build(signer.address, pool.call(method, ...args)))
+  return send(signer, tx)
 }
 
 /** invokeAs with a local keypair. */

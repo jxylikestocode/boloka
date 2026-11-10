@@ -10,19 +10,19 @@ export type FlowStep = {
   note?: string
 }
 
-/** Starts a flow and waits for it, reporting each step as it lands. */
-export async function runFlow(
-  path: '/api/flow/deposit' | '/api/flow/payout',
-  body: Record<string, string>,
-  onStep?: (s: FlowStep) => void,
-): Promise<FlowStep[]> {
+/** Starts a flow on the server; returns its id as soon as it is accepted. */
+export async function startFlow(path: '/api/flow/deposit' | '/api/flow/payout', body: Record<string, string>): Promise<string> {
   const res = await fetch(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`flow failed to start: ${await res.text()}`)
-  const { id } = (await res.json()) as { id: string }
+  return ((await res.json()) as { id: string }).id
+}
+
+/** Follows a started flow, reporting each step as it lands. */
+export async function followFlow(id: string, onStep?: (s: FlowStep) => void): Promise<FlowStep[]> {
   let seen = 0
   for (;;) {
     await new Promise((r) => setTimeout(r, 2000))
@@ -35,12 +35,22 @@ export async function runFlow(
   }
 }
 
+/** Starts a flow and waits for it, reporting each step as it lands. */
+export async function runFlow(
+  path: '/api/flow/deposit' | '/api/flow/payout',
+  body: Record<string, string>,
+  onStep?: (s: FlowStep) => void,
+): Promise<FlowStep[]> {
+  return followFlow(await startFlow(path, body), onStep)
+}
+
 /**
  * Money for the parents: the secret and commitment are made HERE and the
  * secret never leaves this device (saved first, so it is never lost). The
  * server-side flow then runs the anchor's SEP-24 deposit into the sender's
  * settlement account and deposits that USDC into the pool under this
- * commitment, then mirrors it into Blend.
+ * commitment, then mirrors it into Blend. Resolves once the server has
+ * accepted the transfer; settlement continues and is reported via onStep.
  */
 export async function depositForReceiver(
   units: bigint,
@@ -61,6 +71,7 @@ export async function depositForReceiver(
     date: new Date().toISOString(),
   }
   store.addDeposit(rec)
-  await runFlow('/api/flow/deposit', { commitment: toHex(leaf), units: units.toString() }, onStep)
+  const id = await startFlow('/api/flow/deposit', { commitment: toHex(leaf), units: units.toString() })
+  followFlow(id, onStep).catch((e) => console.error('deposit flow', e))
   return rec
 }

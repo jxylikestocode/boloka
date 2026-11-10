@@ -41,15 +41,15 @@ export default function Received() {
           </svg>
         </div>
         <div style={{ fontSize: 15, color: MUTED }}>
-          Money from <strong style={{ color: INK }}>{item.title}</strong> arrived
+          Money from <strong style={{ color: INK }}>{item.title}</strong> {item.pending ? 'is on its way' : 'arrived'}
         </div>
         <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: -0.5 }}>P {amt(item.pula)}</div>
-        <div style={{ fontSize: 13, color: MUTED }}>{when(item.date)} · Sent from Canada</div>
+        <div style={{ fontSize: 13, color: MUTED }}>{when(item.date)} · Sent from Canada{item.pending ? ' · arrives in a minute or two' : ''}</div>
       </div>
 
       <Rows>
         <Row label="Added to" value="Dollar savings" />
-        <Row label="New balance" value={`P ${amt(s.balance)}`} />
+        <Row label={item.pending ? 'Balance once it arrives' : 'New balance'} value={`P ${amt(item.pending ? s.balance + item.pula : s.balance)}`} />
         <Row label="Sent via" value={item.detail} />
         <Row label="Limit" value="None" valueStyle={{ color: GREEN }} last />
       </Rows>
