@@ -25,3 +25,5 @@ dist-ssr
 
 # Demo build: shared demo state
 .demo-state.json
+.vercel
+.env*

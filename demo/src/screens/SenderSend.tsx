@@ -92,8 +92,11 @@ function Header() {
         <img src="/moneygram.svg" alt="" width={26} height={26} style={{ background: '#FFFFFF', borderRadius: '50%' }} />
         <span style={{ fontSize: 20, fontWeight: 700, fontStyle: 'italic', letterSpacing: -0.3 }}>MoneyGram</span>
       </div>
-      <span style={{ fontSize: 12, fontWeight: 700, border: '1.5px solid rgba(255,255,255,0.7)', borderRadius: 3, padding: '3px 6px', letterSpacing: 0.5 }}>
-        CA · EN
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 10, opacity: 0.85, textAlign: 'right', lineHeight: 1.2 }}>demo screen<br />not affiliated</span>
+        <span style={{ fontSize: 12, fontWeight: 700, border: '1.5px solid rgba(255,255,255,0.7)', borderRadius: 3, padding: '3px 6px', letterSpacing: 0.5 }}>
+          CA · EN
+        </span>
       </span>
     </div>
   )

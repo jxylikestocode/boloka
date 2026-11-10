@@ -25,7 +25,8 @@ function valueFor(key: string, amount: string): string {
 }
 
 export async function fillInteractiveForm(url: string, opts: { amount: string }, log: Log) {
-  const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-first-run'] })
+  // --no-sandbox: Chrome runs as root inside the container.
+  const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-first-run', '--no-sandbox', '--disable-dev-shm-usage'] })
   try {
     const page = await browser.newPage()
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60_000 })

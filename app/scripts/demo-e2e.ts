@@ -16,6 +16,8 @@ import { depositFlow, payoutFlow, type Recorder, type Step } from '../server/flo
 import { address, bytes32, bytesVec, i128, invoke, poolLeaves, server, u32, explorer } from '../server/soroban.ts'
 import { commitment, merklePath, monthOf, randomBytes32, toHex } from '../src/proof.ts'
 import * as ledger from '../server/ledger.ts'
+import { dataPath } from '../server/paths.ts'
+import { join } from 'node:path'
 
 const cfg = serverConfig()
 const PULA_PER_USD = 13.5
@@ -108,8 +110,9 @@ const run = {
   accounts,
   steps,
 }
-mkdirSync(new URL('../.runs/', import.meta.url), { recursive: true })
+const runs = dataPath('.runs')
+mkdirSync(runs, { recursive: true })
 const stamp = run.finishedAt.replace(/[:.]/g, '-')
-writeFileSync(new URL(`../.runs/${stamp}.json`, import.meta.url), JSON.stringify(run, null, 2))
-writeFileSync(new URL('../.runs/latest.json', import.meta.url), JSON.stringify(run, null, 2))
+writeFileSync(join(runs, `${stamp}.json`), JSON.stringify(run, null, 2))
+writeFileSync(join(runs, 'latest.json'), JSON.stringify(run, null, 2))
 console.log(`\nDone in ${run.seconds}s. Saved to app/.runs/latest.json (shown on /how-it-works).`)

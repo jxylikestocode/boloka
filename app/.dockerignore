@@ -1,0 +1,9 @@
+node_modules
+dist
+.vercel
+.accounts.json
+.shared-state.json
+.yield-state.json
+.runs
+.demo-state.json
+*.log

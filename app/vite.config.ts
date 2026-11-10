@@ -1,7 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
-import { handle } from './server/routes.ts'
 
 /**
  * The money flows (anchor deposit/withdrawal, pool, Blend mirror) and the
@@ -11,7 +9,10 @@ function flows(): Plugin {
   return {
     name: 'boloka-flows',
     apply: 'serve',
-    configureServer(server) {
+    // Loaded here, not at config time, so `vite build` never pulls in the
+    // server (and its chain/anchor SDKs).
+    async configureServer(server) {
+      const { handle } = await import('./server/routes.ts')
       server.middlewares.use((req, res, next) => {
         void handle(req, res, next)
       })
@@ -19,66 +20,15 @@ function flows(): Plugin {
   }
 }
 
-/**
- * State shared by Boloka, MoneyGram and the bank, which run on separate ports
- * (separate storage): GET /api/state → {version, items}; POST {key, value}.
- * Kept in .shared-state.json (gitignored) so all three servers share it. It
- * holds this browser data's deposit secrets and testnet keys, so it stays on
- * this machine; the deposit and withdrawal lists are merged, never replaced.
- */
-const STATE_FILE = new URL('./.shared-state.json', import.meta.url)
-type State = { version: number; items: Record<string, string> }
-const LISTS = new Set(['savings.deposits', 'savings.withdrawals'])
-
-function loadState(): State {
-  if (!existsSync(STATE_FILE)) return { version: 0, items: {} }
-  try {
-    return JSON.parse(readFileSync(STATE_FILE, 'utf8')) as State
-  } catch {
-    return { version: 0, items: {} }
-  }
-}
-
-function mergeLists(a: string | undefined, b: string): string {
-  const out = new Map<string, unknown>()
-  for (const raw of [a ?? '[]', b]) {
-    for (const r of JSON.parse(raw) as { id: string }[]) {
-      if (r && typeof r.id === 'string') out.set(r.id, { ...(out.get(r.id) as object | undefined), ...r })
-    }
-  }
-  return JSON.stringify([...out.values()])
-}
-
+/** /api/state for the dev server (server/state.ts). */
 function sharedState(): Plugin {
   return {
     name: 'shared-state',
     apply: 'serve',
-    configureServer(server) {
-      server.middlewares.use('/api/state', (req, res) => {
-        res.setHeader('Content-Type', 'application/json')
-        res.setHeader('Cache-Control', 'no-store')
-        if (req.method === 'GET') return res.end(JSON.stringify(loadState()))
-        if (req.method !== 'POST') {
-          res.statusCode = 405
-          return res.end('{}')
-        }
-        let raw = ''
-        req.on('data', (c) => (raw += c))
-        req.on('end', () => {
-          try {
-            const { key, value } = JSON.parse(raw) as { key: string; value: string }
-            if (typeof key !== 'string' || !/^(savings|demo)\./.test(key)) throw new Error('key')
-            if (typeof value !== 'string') throw new Error('value')
-            const s = loadState()
-            s.items[key] = LISTS.has(key) ? mergeLists(s.items[key], value) : value
-            s.version++
-            writeFileSync(STATE_FILE, JSON.stringify(s))
-            res.end(JSON.stringify({ version: s.version }))
-          } catch {
-            res.statusCode = 400
-            res.end('{}')
-          }
-        })
+    async configureServer(server) {
+      const { handleState } = await import('./server/state.ts')
+      server.middlewares.use((req, res, next) => {
+        if (!handleState(req, res)) next()
       })
     },
   }

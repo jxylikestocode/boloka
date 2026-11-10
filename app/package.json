@@ -11,7 +11,8 @@
     "dev:boloka": "VITE_APP=boloka vite --port 5173 --strictPort",
     "dev:moneygram": "VITE_APP=moneygram vite --port 5177 --strictPort",
     "dev:bank": "VITE_APP=bank vite --port 5178 --strictPort",
-    "demo:e2e": "node scripts/demo-e2e.ts"
+    "demo:e2e": "node scripts/demo-e2e.ts",
+    "start": "node server/serve.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

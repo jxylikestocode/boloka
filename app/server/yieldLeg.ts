@@ -11,12 +11,13 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { Keypair, TransactionBuilder, Transaction, xdr, nativeToScVal } from '@stellar/stellar-sdk'
 import { address, invoke, NETWORK, server, simulate } from './soroban.ts'
+import { dataPath } from './paths.ts'
 
 const FAUCET = 'https://ewqw4hx7oa.execute-api.us-east-1.amazonaws.com/getAssets?userId='
 const B_RATE_SCALAR = 1_000_000_000_000n
 const SUPPLY_COLLATERAL = 2
 const WITHDRAW_COLLATERAL = 3
-const STATE_FILE = new URL('../.yield-state.json', import.meta.url)
+const STATE_FILE = () => dataPath('.yield-state.json')
 
 export type YieldConfig = { blendPool: string; blendUsdcId: string; blendUsdcAsset: string }
 
@@ -69,10 +70,10 @@ export async function readPosition(cfg: YieldConfig, who: string): Promise<Posit
 type YieldState = { samples: { t: number; bRate: string }[]; principal: Record<string, string> }
 
 function loadState(): YieldState {
-  if (!existsSync(STATE_FILE)) return { samples: [], principal: {} }
-  return JSON.parse(readFileSync(STATE_FILE, 'utf8')) as YieldState
+  if (!existsSync(STATE_FILE())) return { samples: [], principal: {} }
+  return JSON.parse(readFileSync(STATE_FILE(), 'utf8')) as YieldState
 }
-const saveState = (s: YieldState) => writeFileSync(STATE_FILE, JSON.stringify(s))
+const saveState = (s: YieldState) => writeFileSync(STATE_FILE(), JSON.stringify(s))
 
 /** Keeps the first b_rate seen and the latest, to measure Blend's real rate. */
 function recordSample(bRate: bigint) {

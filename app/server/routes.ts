@@ -14,6 +14,8 @@ import { fromHex } from '../src/proof.ts'
 import * as yieldLeg from './yieldLeg.ts'
 import * as ledger from './ledger.ts'
 import { forDevice } from './chainTx.ts'
+import { dataPath } from './paths.ts'
+import { join } from 'node:path'
 
 type Job = { id: string; flow: 'deposit' | 'payout'; status: 'running' | 'done' | 'error'; steps: Step[]; error?: string }
 const jobs = new Map<string, Job>()
@@ -121,7 +123,7 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
       })
     }
     if (req.method === 'GET' && url === '/api/runs/latest') {
-      const f = new URL('../.runs/latest.json', import.meta.url)
+      const f = join(dataPath('.runs'), 'latest.json')
       if (!existsSync(f)) return send(404, { error: 'no run yet: npm run demo:e2e' })
       return send(200, JSON.parse(readFileSync(f, 'utf8')))
     }
