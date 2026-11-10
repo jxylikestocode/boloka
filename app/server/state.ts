@@ -4,6 +4,7 @@
 // id, never replaced: they hold the secrets that open the deposits. Used by
 // the dev server, the production server and the Vercel function.
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { readEnv } from './config.ts'
 import { storage } from './storage.ts'
 
 type State = { version: number; items: Record<string, string> }
@@ -39,7 +40,8 @@ const body = (req: IncomingMessage) =>
 /** Handles /api/state; resolves false for any other URL. */
 export async function handleState(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
   if ((req.url ?? '').split('?')[0] !== '/api/state') return false
-  if (process.env.SHARED_STATE !== 'true' && process.env.VITE_SHARED_STATE !== 'true') {
+  // On by VITE_SHARED_STATE=true in app/.env (local dev) or SHARED_STATE=true in the cloud.
+  if (process.env.SHARED_STATE !== 'true' && readEnv().VITE_SHARED_STATE !== 'true') {
     res.statusCode = 404
     res.end('{"error":"shared state is off: each browser is its own account"}')
     return true
