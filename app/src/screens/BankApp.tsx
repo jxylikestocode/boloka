@@ -196,7 +196,7 @@ export default function BankApp() {
             </Glyph>
           </div>
         </div>
-        <div style={{ fontSize: 14, opacity: 0.8, marginTop: 18 }}>Dumela, Mma Kgosi</div>
+        <div style={{ fontSize: 14, opacity: 0.8, marginTop: 18 }}>Dumela, Mom</div>
 
         <div style={{ marginTop: 14, background: NAVY_2, borderRadius: 10, padding: '16px 18px', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, opacity: 0.85 }}>

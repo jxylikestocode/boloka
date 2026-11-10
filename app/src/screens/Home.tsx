@@ -79,7 +79,7 @@ export default function Home() {
           <div style={{ width: 36, height: 36, borderRadius: '50%', background: GREEN, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16 }}>
             M
           </div>
-          <div style={{ fontSize: 16, fontWeight: 600 }}>Dumela, Mma Kgosi</div>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>Dumela, Mom</div>
         </div>
         <button type="button" aria-label="Settings" style={{ width: 44, height: 44, border: 'none', background: PANEL, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round">

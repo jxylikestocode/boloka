@@ -10,7 +10,7 @@ import { HIDDEN_COST, ORANGE_LIMIT, PULA_PER_USD, TRANSFER_CAP } from '../money.
 import { usePageMeta } from '../ui.tsx'
 import { EXPLORER } from '../explorer.ts'
 
-const RECEIVER = 'Mma Kgosi'
+const RECEIVER = 'Mom'
 const BOLOKA_RATE = 9.93
 const ORANGE_RATE = 9.87
 const CASH_RATE = 9.51
@@ -407,7 +407,7 @@ export default function SenderSend() {
       <div style={{ flex: 1, paddingBottom: 120 }}>
         <div style={sectionTitle}>Sending to</div>
         <div style={{ ...section, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
-          <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#E9E9E9', color: TEXT, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>MK</div>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#E9E9E9', color: TEXT, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>M</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700 }}>{RECEIVER}</div>
             <div style={{ fontSize: 13, color: SUBTLE }}>Botswana · receives BWP</div>

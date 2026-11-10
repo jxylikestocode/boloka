@@ -1,7 +1,7 @@
 # Boloka
 
 A dollar savings account for families in Botswana who receive money from relatives abroad
-(Kate in Canada sends via MoneyGram; her parents, Mma Kgosi and family, save it in Boloka).
+(Kate in Canada sends via MoneyGram; her parents, Mom and family, save it in Boloka).
 It targets three problems: the **transfer cap** (P 9,500 per transfer — Remitly's cap;
 Orange Money's own limit is P 10,000), the **cash trip for school fees** (P 24,000 a term vs
 P 3,000 per ATM withdrawal and a P 4,000 card limit), and **the pula losing value** (savings
