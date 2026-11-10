@@ -21,11 +21,21 @@ export const unitsToPula = (units: bigint): number =>
   (Number(units) * PULA_PER_USD * CHAIN_SCALE) / UNITS_PER_USD
 
 /**
- * One month's growth at Blend's real supply rate (measured from the Blend
- * position's b_rate; see server/yieldLeg.ts). Null when not yet measured.
+ * Boloka's share of the interest the pool earns: how Boloka makes money. No
+ * fees on receiving or withdrawing and no margin in the exchange rate.
+ */
+export const YIELD_CUT = 0.2
+
+/** The parents' rate: the pool's real rate less Boloka's cut. */
+export const parentsApr = (apr: number | null) => (apr === null ? null : apr * (1 - YIELD_CUT))
+
+/**
+ * One month's growth for the parents at Blend's real supply rate (measured
+ * from the Blend position's b_rate; see server/yieldLeg.ts), after Boloka's
+ * cut. Null when the rate is not yet measured.
  */
 export const monthlyGrowth = (pula: number, apr: number | null) =>
-  apr === null ? null : (pula * apr) / 12
+  apr === null ? null : (pula * parentsApr(apr)!) / 12
 
 // The numbers the copy uses, in one place.
 /** Per-transfer cap on the sending side (Remitly's cap). */

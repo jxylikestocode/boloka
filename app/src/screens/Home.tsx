@@ -156,14 +156,14 @@ export default function Home() {
           </svg>
           Private
         </Link>}
-        <span aria-label="Help" style={navItem(false)}>
+        <Link to="/help" aria-label="How Boloka works" style={navItem(false)}>
           <svg aria-hidden="true" {...navIcon}>
             <circle cx="12" cy="12" r="9" />
             <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7" />
             <path d="M12 17h.01" />
           </svg>
-          Help
-        </span>
+          How it works
+        </Link>
       </div>
     </Frame>
   )

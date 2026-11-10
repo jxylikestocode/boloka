@@ -10,6 +10,9 @@ held in US dollars, earning interest; other routes hide about 5% in the exchange
 ## Rules
 
 - **Parents' screens never say** USDC, wallet, address, key, blockchain, Stellar, SEP or crypto.
+  One exception, by request: the "?" screen (`/help`, `src/screens/Help.tsx`) explains in plain
+  words that the dollars are USDC on Stellar in one private pool, lent on Blend for the interest,
+  and that Boloka's income is `YIELD_CUT` (money.ts) of that interest.
   They show pula (`P 9,930`), or US dollars (`$ 735.56`) when the parents flip the P / $ switch
   on Home (`src/currency.ts`; balances and history follow it, the payout screen stays in pula
   because the bank and Orange Money receive pula). CAD amounts are written `$ CAD`. Jargon is fine on the MoneyGram

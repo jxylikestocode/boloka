@@ -16,6 +16,7 @@ import Launcher from './screens/Launcher.tsx'
 import OnChainOverlay from './OnChainOverlay.tsx'
 import FloatingProgress from './FlowProgress.tsx'
 import HowItWorks from './screens/HowItWorks.tsx'
+import Help from './screens/Help.tsx'
 import BankApp from './screens/BankApp.tsx'
 
 /** The 390px-wide phone screens, which all need the user's account. */
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="/received" element={<Received />} />
         <Route path="/orange" element={<Send />} />
         <Route path="/prove" element={<ShowLender />} />
+        <Route path="/help" element={<Help />} />
         <Route path="/dev" element={<Dev />} />
       </Route>
     </Routes>
