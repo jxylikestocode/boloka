@@ -1,6 +1,6 @@
 // Demo build: which arrivals the receiver has already opened, so new ones
 // show as a notification.
-const KEY = 'demo.seen'
+const KEY = 'ui.seen' // per browser, not shared: each viewer gets the notification
 
 export const seen = (): Set<string> =>
   new Set(JSON.parse(localStorage.getItem(KEY) ?? '[]') as string[])

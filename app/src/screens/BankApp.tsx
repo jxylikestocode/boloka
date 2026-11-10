@@ -21,7 +21,7 @@ const FONT = '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
 
 /** Balance before any Boloka withdrawals, in pula. */
 const OPENING = 1284.6
-const SEEN_KEY = 'demo.bankSeen'
+const SEEN_KEY = 'ui.bankSeen' // per browser, not shared
 
 type Txn = { id: string; title: string; detail: string; pula: number; date: string; credit: boolean }
 
