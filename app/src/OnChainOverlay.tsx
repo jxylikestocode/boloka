@@ -167,13 +167,24 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
     }
     load()
     const t = setInterval(load, 4000)
+    // A transfer or payout starting opens the strip so its steps are seen.
+    let hadProgress = !!readProgress()
+    const refreshProgress = () => {
+      const p = readProgress()
+      setProgress(p)
+      if (p && !hadProgress) {
+        setOpen(true)
+        setHidden(false)
+      }
+      hadProgress = !!p
+    }
     const onStorage = () => {
-      setProgress(readProgress())
+      refreshProgress()
       // A step just landed: its transaction is on the chain now.
       load()
     }
     window.addEventListener('storage', onStorage)
-    const t2 = setInterval(() => setProgress(readProgress()), 2000)
+    const t2 = setInterval(refreshProgress, 2000)
     return () => {
       live = false
       clearInterval(t)
