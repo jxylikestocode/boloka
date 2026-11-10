@@ -28,8 +28,8 @@ export type StepKey =
 export type Step = {
   key: StepKey
   title: string
-  /** real: a submitted testnet transaction; offchain/read: real but no tx; simulated: not performed. */
-  kind: 'real' | 'offchain' | 'read' | 'simulated'
+  /** real: a submitted testnet transaction; offchain/read: real but no tx; simulated: not performed; failed: attempted, did not complete. */
+  kind: 'real' | 'offchain' | 'read' | 'simulated' | 'failed'
   tx?: string
   note?: string
   data?: Record<string, unknown>
@@ -135,8 +135,21 @@ export async function depositFlow(
 
   // Behind the parents' screen: the anchor refills the float (always at least
   // once, so every transfer has its real anchor leg) while the yield is read.
+  // The parents have been paid, so a refill that fails is recorded, not fatal:
+  // the next transfer finds the float short and funds it first.
+  const refill = topUp('refill').catch((e: unknown) => {
+    const msg = e instanceof Error ? e.message : String(e)
+    log('float refill failed', { error: msg, float: USDC(balance) })
+    rec.step({
+      key: 'sep24-deposit',
+      title: 'SEP-24 deposit: float refill did not complete',
+      kind: 'failed',
+      note: `${msg}. The parents' deposit above went through; the float (${USDC(balance).toFixed(4)} USDC) is refilled by the next transfer.`,
+      data: { float: 'refill', error: msg },
+    })
+  })
   await Promise.all([
-    topUp('refill'),
+    refill,
     yieldLeg.readPosition(cfg, who.yield.publicKey()).then(async (pos) =>
       rec.step({
         key: 'yield-read',

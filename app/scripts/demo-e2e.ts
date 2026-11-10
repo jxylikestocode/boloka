@@ -34,7 +34,7 @@ const rec: Recorder = {
     const step = { ...s, at: new Date().toISOString() }
     steps.push(step)
     void ledger.append({ ...step, flow: 'e2e', flowId: runId })
-    const tag = { real: 'REAL', offchain: 'OFF-CHAIN', read: 'READ', simulated: 'SIMULATED' }[s.kind]
+    const tag = { real: 'REAL', offchain: 'OFF-CHAIN', read: 'READ', simulated: 'SIMULATED', failed: 'FAILED' }[s.kind]
     console.log(`\n${secs()}  ✔ ${s.title}  [${tag}]`)
     if (s.tx) console.log(`        tx ${s.tx}\n        ${explorer(s.tx)}`)
     if (s.note) console.log(`        ${s.note}`)

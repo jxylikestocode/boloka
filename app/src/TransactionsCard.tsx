@@ -11,7 +11,7 @@ type Entry = {
   flow?: 'deposit' | 'payout' | 'e2e'
   key: string
   title: string
-  kind: 'real' | 'offchain' | 'read' | 'simulated'
+  kind: 'real' | 'offchain' | 'read' | 'simulated' | 'failed'
   tx?: string
   note?: string
   data?: Record<string, unknown>
@@ -23,6 +23,7 @@ const KIND: Record<Entry['kind'], { label: string; fg: string; bg: string }> = {
   offchain: { label: 'off-chain', fg: '#1F4E8C', bg: '#E5EEFA' },
   read: { label: 'read-only', fg: '#1F4E8C', bg: '#E5EEFA' },
   simulated: { label: 'simulated', fg: RED, bg: '#FBE9E7' },
+  failed: { label: 'did not complete', fg: RED, bg: '#FBE9E7' },
 }
 
 /** The amount a step moved, if it recorded one. */

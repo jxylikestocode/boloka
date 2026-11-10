@@ -36,13 +36,14 @@ export function ProgressSteps({ progress }: { progress: Progress }) {
         const now = f === current
         return (
           <div key={f.key} style={{ display: 'flex', gap: 8, opacity: s || now ? 1 : 0.5, lineHeight: 1.4 }}>
-            <span style={{ width: 12, flex: 'none', color: s ? '#8EE0B4' : '#F0B96B', display: 'inline-flex', justifyContent: 'center', paddingTop: 2 }}>
-              {s ? '✓' : now ? <span aria-label="in progress" style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', border: '2px solid #F0B96B', borderRightColor: 'transparent', animation: 'strip-spin 0.8s linear infinite' }} /> : '·'}
+            <span style={{ width: 12, flex: 'none', color: s?.kind === 'failed' ? '#F28B82' : s ? '#8EE0B4' : '#F0B96B', display: 'inline-flex', justifyContent: 'center', paddingTop: 2 }}>
+              {s?.kind === 'failed' ? '✕' : s ? '✓' : now ? <span aria-label="in progress" style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', border: '2px solid #F0B96B', borderRightColor: 'transparent', animation: 'strip-spin 0.8s linear infinite' }} /> : '·'}
             </span>
             <span style={{ flex: 1 }}>
               {f.label}
               {now ? '…' : ''}
               {s?.kind === 'simulated' ? ' · simulated at this scale' : ''}
+              {s?.kind === 'failed' ? <span style={{ color: '#F28B82' }}> · did not complete{s.note ? `: ${s.note}` : ''}</span> : ''}
             </span>
             {s?.tx && (
               <a href={`${EXPLORER}/transactions/${s.tx}`} target="_blank" rel="noreferrer" style={{ color: '#8EE0B4', textDecoration: 'none', flex: 'none' }}>

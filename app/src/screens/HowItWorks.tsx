@@ -11,7 +11,7 @@ import { EXPLORER as EXPERT } from '../explorer.ts'
 type Step = {
   key: string
   title: string
-  kind: 'real' | 'offchain' | 'read' | 'simulated'
+  kind: 'real' | 'offchain' | 'read' | 'simulated' | 'failed'
   tx?: string
   note?: string
   data?: Record<string, unknown>
@@ -35,6 +35,7 @@ const KIND: Record<Step['kind'], { label: string; fg: string; bg: string }> = {
   offchain: { label: 'Real, off-chain (no transaction)', fg: '#1F4E8C', bg: '#E5EEFA' },
   read: { label: 'Real, read-only (no transaction)', fg: '#1F4E8C', bg: '#E5EEFA' },
   simulated: { label: 'Simulated', fg: RED, bg: '#FBE9E7' },
+  failed: { label: 'Did not complete', fg: RED, bg: '#FBE9E7' },
 }
 
 /** The 7 stages judges asked for, in the order they run; the Blend withdraw belongs to "pool withdraw". */

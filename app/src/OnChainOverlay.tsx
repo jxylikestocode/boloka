@@ -20,7 +20,7 @@ type Entry = {
   flowId: string
   key: string
   title: string
-  kind: 'real' | 'offchain' | 'read' | 'simulated'
+  kind: 'real' | 'offchain' | 'read' | 'simulated' | 'failed'
   tx?: string
   data?: Record<string, unknown>
 }

@@ -37,9 +37,13 @@ export async function fillInteractiveForm(url: string, opts: { amount: string },
     // Don't wait for the network to go quiet (the page keeps polling); the
     // form fields are what matter.
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 })
-    await page.waitForSelector('input, select', { timeout: 15_000 }).catch(() => {})
+    // A VISIBLE field, not just any input: the page has hidden ones before the
+    // form has rendered, and checking too early would find nothing to fill.
+    const visibleField = 'input:not([type=hidden]), select'
+    await page.waitForSelector(visibleField, { visible: true, timeout: 20_000 }).catch(() => {})
     // Some anchors use more than one page; fill and submit until it shows
     // the transaction summary (or nothing is left to fill).
+    let filledOnce = false
     for (let round = 0; round < 4; round++) {
       await page.waitForSelector('input, select, button', { timeout: 30_000 }).catch(() => {})
       const fields = await page.$$eval('input, select', (els) =>
@@ -48,7 +52,14 @@ export async function fillInteractiveForm(url: string, opts: { amount: string },
           .map((e) => ({ key: (e as HTMLInputElement).name || e.id, tag: e.tagName, type: (e as HTMLInputElement).type, value: (e as HTMLInputElement).value })),
       )
       const empty = fields.filter((f) => f.key && f.type !== 'hidden' && f.type !== 'submit' && f.type !== 'checkbox' && !f.value)
-      if (!empty.length) break
+      if (!empty.length) {
+        if (filledOnce) break
+        // Nothing to fill yet: give the form a moment to appear, once more.
+        const appeared = await page.waitForSelector(visibleField, { visible: true, timeout: 10_000 }).catch(() => null)
+        if (!appeared) throw new Error('the anchor page showed no form to fill')
+        continue
+      }
+      filledOnce = true
       log('anchor form', { fields: empty.map((f) => f.key) })
       for (const f of empty) {
         if (f.tag === 'SELECT') {

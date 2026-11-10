@@ -6,7 +6,7 @@ import { failProgress } from './progress.ts'
 export type FlowStep = {
   key: string
   title: string
-  kind: 'real' | 'offchain' | 'read' | 'simulated'
+  kind: 'real' | 'offchain' | 'read' | 'simulated' | 'failed'
   tx?: string
   note?: string
 }
