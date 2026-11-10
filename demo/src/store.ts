@@ -39,7 +39,9 @@ function read<T>(key: string): T[] {
   }
 }
 
-export const deposits = () => read<DepositRecord>(DEPOSITS)
+export const deposits = () =>
+  // Records saved before the sender was renamed still say "Lerato".
+  read<DepositRecord>(DEPOSITS).map((d) => (d.sender === 'Lerato' ? { ...d, sender: 'Kate' } : d))
 export const withdrawals = () => read<WithdrawalRecord>(WITHDRAWALS)
 
 export function addDeposit(d: DepositRecord) {
