@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Boloka: how the pool works. Animated with CSS; opens in any browser, embeds in HTML with <img> or inline. -->
+<!-- Boloka: how the pool works (src/PoolAnimation.tsx). Animated with CSS; opens in any browser, embeds in HTML inline or with <img>. -->
 <svg class="help-anim" viewBox="0 0 340 214" role="img" aria-label="Dollars from family abroad flow into one shared pool, earn interest there (80% stays in the pool, 20% goes to Boloka), and flow out to the bank as pula" xmlns="http://www.w3.org/2000/svg"><style>
 @keyframes help-in { 0% { transform: translate(-70px, -54px) scale(1); opacity: 0 } 12% { opacity: 1 } 78% { transform: translate(0, 0) scale(1); opacity: 1 } 100% { transform: translate(0, 8px) scale(.45); opacity: 0 } }
 @keyframes help-splash { 0%, 74% { transform: scale(.2); opacity: 0 } 82% { opacity: .9 } 100% { transform: scale(1.8); opacity: 0 } }

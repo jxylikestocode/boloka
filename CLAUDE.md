@@ -115,6 +115,10 @@ cd ../demo && npm run dev:boloka / dev:moneygram / dev:bank   # simulated: :5174
 npx vite --port 5181          # ONE URL for everything: / is the launcher (story + open the three
                               # apps), Boloka at /home, /moneygram, /bank, /lender, /how-it-works
 cargo test -p pool                # contract tests
+npm run export:animation          # re-export the /help pool animation (src/PoolAnimation.tsx) to
+                                  # docs/pool-animation.{svg,gif,mp4} for slides; from the public
+                                  # site, or -- --url http://localhost:5181 for a local build
+                                  # (needs Chrome + ffmpeg)
 ```
 
 `/how-it-works` shows the latest `demo:e2e` run: SEP-10 auth → SEP-24 deposit → pool deposit →

@@ -12,6 +12,7 @@
     "dev:moneygram": "VITE_APP=moneygram vite --port 5177 --strictPort",
     "dev:bank": "VITE_APP=bank vite --port 5178 --strictPort",
     "demo:e2e": "node scripts/demo-e2e.ts",
+    "export:animation": "node scripts/export-animation.mjs",
     "start": "node server/serve.ts"
   },
   "dependencies": {
