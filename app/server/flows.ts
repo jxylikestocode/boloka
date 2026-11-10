@@ -94,7 +94,7 @@ export async function depositFlow(
     title: 'Pool deposit for the parents (commitment only)',
     kind: 'real',
     tx: poolTx,
-    data: { usdc: USDC(units), pool: cfg.poolId },
+    data: { usdc: USDC(units), pool: cfg.poolId, commitment: Buffer.from(commitment).toString('hex') },
   })
 
   const supplyTx = await yieldLeg.supply(cfg, who.yield, units)

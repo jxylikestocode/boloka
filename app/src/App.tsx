@@ -13,6 +13,7 @@ import Admin from './screens/Admin.tsx'
 import Arrival from './Arrival.tsx'
 import { FEATURES } from './features.ts'
 import Launcher from './screens/Launcher.tsx'
+import OnChainOverlay from './OnChainOverlay.tsx'
 import HowItWorks from './screens/HowItWorks.tsx'
 import BankApp from './screens/BankApp.tsx'
 
@@ -23,6 +24,7 @@ function Phone() {
       <div className="phone">
         <Arrival />
         <Gate />
+        <OnChainOverlay />
       </div>
     </SavingsProvider>
   )
@@ -58,7 +60,7 @@ export default function App() {
   if (APP === 'moneygram') {
     return (
       <Routes>
-        <Route path="*" element={<SenderSend />} />
+        <Route path="*" element={<><SenderSend /><OnChainOverlay /></>} />
       </Routes>
     )
   }
@@ -77,7 +79,7 @@ export default function App() {
       {/* Pool admin: lend to and recall from Blend, signed with Freighter. */}
       <Route path="/admin" element={<Admin />} />
       {/* The sender's mock MoneyGram screen, on the sender's own phone. */}
-      {allInOne && <Route path="/moneygram" element={<SenderSend />} />}
+      {allInOne && <Route path="/moneygram" element={<><SenderSend /><OnChainOverlay /></>} />}
       {/* The receiver's bank app (fictional bank), where bank withdrawals land. */}
       {allInOne && <Route path="/bank" element={<BankApp />} />}
       {allInOne && <Route path="/send" element={<Navigate to="/moneygram" replace />} />}

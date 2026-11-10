@@ -26,6 +26,8 @@ export type WithdrawalRecord = {
   date: string
   /** Where it went; older records without one went to Orange Money. */
   dest?: 'bank' | 'orange'
+  /** Hash of the pool withdrawal, once submitted. */
+  tx?: string
 }
 
 const DEPOSITS = 'savings.deposits'
@@ -48,4 +50,11 @@ export function addDeposit(d: DepositRecord) {
 
 export function addWithdrawal(w: WithdrawalRecord) {
   localStorage.setItem(WITHDRAWALS, JSON.stringify([...withdrawals(), w]))
+}
+
+export function setWithdrawalTx(id: string, tx: string) {
+  localStorage.setItem(
+    WITHDRAWALS,
+    JSON.stringify(withdrawals().map((w) => (w.id === id ? { ...w, tx } : w))),
+  )
 }

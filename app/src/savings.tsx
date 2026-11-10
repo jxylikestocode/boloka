@@ -215,6 +215,7 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         // The pool paid the payout account; it now pays out through the
         // anchor (SEP-24 withdrawal), mirrored out of Blend. That runs on in
         // the background: the parents' part is done.
+        store.setWithdrawalTx(toHex(nullifier), res.hash)
         runFlow('/api/flow/payout', { units: units.toString(), withdrawTx: res.hash }).catch(
           (e) => console.error('payout flow', e),
         )

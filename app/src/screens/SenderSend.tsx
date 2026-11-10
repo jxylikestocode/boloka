@@ -172,11 +172,6 @@ function FlowPanel({ steps }: { steps: FlowStep[] }) {
               {f.label}
               {now && '…'}
             </span>
-            {s?.tx && (
-              <a href={`https://stellar.expert/explorer/testnet/tx/${s.tx}`} target="_blank" rel="noreferrer" style={{ color: MG_RED, fontWeight: 700, fontSize: 12 }}>
-                tx
-              </a>
-            )}
           </div>
         )
       })}
