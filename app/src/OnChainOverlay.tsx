@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as store from './store.ts'
 
-const EXPLORER = 'https://stellar.expert/explorer/testnet'
+import { EXPLORER } from './explorer.ts'
 
 type Entry = {
   at: string
@@ -133,7 +133,7 @@ export default function OnChainOverlay() {
         {entries.slice(0, 12).map((e) => (
           <a
             key={e.tx}
-            href={`${EXPLORER}/tx/${e.tx}`}
+            href={`${EXPLORER}/transactions/${e.tx}`}
             target="_blank"
             rel="noreferrer"
             style={{ display: 'flex', gap: 8, alignItems: 'baseline', color: '#D7E6DD', textDecoration: 'none' }}

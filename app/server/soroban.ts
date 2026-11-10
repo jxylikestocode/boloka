@@ -25,7 +25,8 @@ export const u32 = (n: number) => nativeToScVal(n, { type: 'u32' })
 export const i128 = (n: bigint) => nativeToScVal(n, { type: 'i128' })
 export const address = (a: string) => new Address(a).toScVal()
 
-const explorer = (hash: string) => `https://stellar.expert/explorer/testnet/tx/${hash}`
+// stellarchain.io renders testnet Soroban transactions (stellar.expert's pages currently don't).
+const explorer = (hash: string) => `https://testnet.stellarchain.io/transactions/${hash}`
 export { explorer }
 
 async function send(tx: ReturnType<TransactionBuilder['build']>, kp: Keypair): Promise<string> {

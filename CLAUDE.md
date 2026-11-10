@@ -100,5 +100,7 @@ cargo test -p pool                # contract tests
 ```
 
 `/how-it-works` shows the latest `demo:e2e` run: SEP-10 auth → SEP-24 deposit → pool deposit →
-Blend supply → yield read → pool withdraw → SEP-24 withdrawal, each linked to stellar.expert
-testnet, with off-chain / read-only / simulated steps marked.
+Blend supply → yield read → pool withdraw → SEP-24 withdrawal, each linked to the testnet
+explorer (stellarchain.io: stellar.expert's web pages currently fail on testnet transactions its
+API does have; `app/src/explorer.ts` is the one place to change), with off-chain / read-only /
+simulated steps marked.

@@ -8,6 +8,7 @@ import { senderKeypair, setupAccount } from '../chain.ts'
 import { depositForReceiver } from '../deposit.ts'
 import { HIDDEN_COST, ORANGE_LIMIT, PULA_PER_USD, TRANSFER_CAP } from '../money.ts'
 import { usePageMeta } from '../ui.tsx'
+import { EXPLORER } from '../explorer.ts'
 
 const RECEIVER = 'Mma Kgosi'
 const BOLOKA_RATE = 9.93
@@ -194,7 +195,7 @@ function AnchorPanel({ p }: { p: AnchorProgress }) {
         </a>
       )}
       {p.stellarTx && (
-        <a href={`https://stellar.expert/explorer/testnet/tx/${p.stellarTx}`} target="_blank" rel="noreferrer" style={{ color: MG_RED, fontWeight: 700 }}>
+        <a href={`${EXPLORER}/transactions/${p.stellarTx}`} target="_blank" rel="noreferrer" style={{ color: MG_RED, fontWeight: 700 }}>
           View the anchor's payment on Stellar
         </a>
       )}

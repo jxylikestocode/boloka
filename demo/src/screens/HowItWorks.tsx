@@ -1,12 +1,12 @@
 // /how-it-works: for judges, never linked from the parents' screens. Maps one
 // end-to-end run on Stellar testnet (the latest `npm run demo:e2e`) step by
-// step, each with its real transaction on stellar.expert, and marks what is
+// step, each with its real transaction on the chain explorer, and marks what is
 // read-only, off-chain or simulated.
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { BORDER, FONT, GREEN, INK, LINE, MUTED, PANEL, RED, TINT, usePageMeta } from '../ui.tsx'
 import { useYield } from '../yield.ts'
 
-const EXPERT = 'https://stellar.expert/explorer/testnet'
+import { EXPLORER as EXPERT } from '../explorer.ts'
 
 type Step = {
   key: string
@@ -135,7 +135,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
           <h2 style={{ margin: 0, fontSize: 20 }}>One transfer, end to end, on Stellar testnet</h2>
           <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.6 }}>
             SEP-10 auth → SEP-24 deposit → pool deposit → Blend supply → yield read → pool withdraw → SEP-24 withdrawal.
-            Every step below is from one real run of <code>npm run demo:e2e</code> from fresh friendbot accounts; each hash opens on stellar.expert.
+            Every step below is from one real run of <code>npm run demo:e2e</code> from fresh friendbot accounts; each hash opens on the chain explorer.
           </div>
           {run && (
             <div style={{ fontSize: 14, lineHeight: 1.7 }}>
@@ -144,7 +144,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
               <br />
               <span style={{ color: MUTED }}>
                 Run finished {new Date(run.finishedAt).toLocaleString('en-GB')} in {run.seconds}s · anchor <strong>{run.anchor}</strong> ·
-                pool <Link href={`${EXPERT}/contract/${run.pool}`}>{short(run.pool)}</Link>
+                pool <Link href={`${EXPERT}/contracts/${run.pool}`}>{short(run.pool)}</Link>
               </span>
             </div>
           )}
@@ -167,7 +167,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
                           <span style={{ fontWeight: 600, fontSize: 14 }}>{s.title}</span>
                           <span style={{ fontSize: 11, fontWeight: 700, color: KIND[s.kind].fg, background: KIND[s.kind].bg, borderRadius: 999, padding: '2px 8px' }}>{KIND[s.kind].label}</span>
                         </div>
-                        {s.tx && <Link href={`${EXPERT}/tx/${s.tx}`}>{s.tx}</Link>}
+                        {s.tx && <Link href={`${EXPERT}/transactions/${s.tx}`}>{s.tx}</Link>}
                         {s.note && <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5 }}>{s.note}</div>}
                         {s.data && (
                           <div style={{ fontSize: 12, color: MUTED, fontFamily: 'ui-monospace, Menlo, monospace', wordBreak: 'break-all' }}>
@@ -229,7 +229,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, fontSize: 13 }}>
               {Object.entries(run.accounts).map(([role, a]) => (
                 <div key={role}>
-                  <span style={{ color: MUTED, display: 'inline-block', width: 60 }}>{role}</span> <Link href={`${EXPERT}/account/${a}`}>{short(a)}</Link>
+                  <span style={{ color: MUTED, display: 'inline-block', width: 60 }}>{role}</span> <Link href={`${EXPERT}/accounts/${a}`}>{short(a)}</Link>
                 </div>
               ))}
             </div>

@@ -4,7 +4,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { GREEN, INK, LINE, MUTED, PANEL, RED, TINT } from './ui.tsx'
 
-const EXPLORER = 'https://stellar.expert/explorer/testnet'
+import { EXPLORER, EXPLORER_NAME } from './explorer.ts'
 
 type Entry = {
   at: string
@@ -81,8 +81,8 @@ export default function TransactionsCard({ poolId, style }: { poolId: string; st
             payouts, and the Blend mirror. {onChain} on-chain transactions.
           </div>
         </div>
-        <a href={`${EXPLORER}/contract/${poolId}`} target="_blank" rel="noreferrer" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none', fontSize: 14 }}>
-          Pool contract on stellar.expert ↗
+        <a href={`${EXPLORER}/contracts/${poolId}`} target="_blank" rel="noreferrer" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none', fontSize: 14 }}>
+          Pool contract on {EXPLORER_NAME} ↗
         </a>
       </div>
 
@@ -114,7 +114,7 @@ export default function TransactionsCard({ poolId, style }: { poolId: string; st
                   <td style={{ ...td, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{amount(e)}</td>
                   <td style={{ ...td, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 12 }}>
                     {e.tx ? (
-                      <a href={`${EXPLORER}/tx/${e.tx}`} target="_blank" rel="noreferrer" title={e.tx} style={{ color: GREEN, textDecoration: 'none' }}>
+                      <a href={`${EXPLORER}/transactions/${e.tx}`} target="_blank" rel="noreferrer" title={e.tx} style={{ color: GREEN, textDecoration: 'none' }}>
                         {e.tx.slice(0, 8)}…{e.tx.slice(-8)} ↗
                       </a>
                     ) : (

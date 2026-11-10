@@ -8,7 +8,7 @@ import { connectFreighter } from '../freighter.ts'
 import { BORDER, FONT, GREEN, INK, LINE, MUTED, PANEL, RED, TINT, disabledStyle, usePageMeta } from '../ui.tsx'
 
 const UNITS = 10_000_000n
-const EXPLORER = 'https://stellar.expert/explorer/testnet'
+import { EXPLORER } from '../explorer.ts'
 
 /** 1e-7 USDC units → "100.0001341". */
 function usdc(units: bigint, decimals = 7) {
@@ -211,7 +211,7 @@ export default function Admin() {
             <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5 }}>
               Only the pool admin
               {config && (
-                <> (<a href={`${EXPLORER}/account/${config.admin}`} target="_blank" rel="noreferrer" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>{short(config.admin)}</a>)</>
+                <> (<a href={`${EXPLORER}/accounts/${config.admin}`} target="_blank" rel="noreferrer" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>{short(config.admin)}</a>)</>
               )}{' '}
               can move funds. Each move is signed in Freighter.
             </div>
@@ -309,11 +309,11 @@ export default function Admin() {
           )}
 
           <div style={{ marginTop: 'auto', padding: '14px 16px', background: PANEL, borderRadius: 12, fontSize: 13, color: MUTED, lineHeight: 1.6 }}>
-            Pool <a href={`${EXPLORER}/contract/${POOL_ID}`} target="_blank" rel="noreferrer" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>{short(POOL_ID)}</a>
+            Pool <a href={`${EXPLORER}/contracts/${POOL_ID}`} target="_blank" rel="noreferrer" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>{short(POOL_ID)}</a>
             {config && (
               <>
                 {' '}· lends to Blend pool{' '}
-                <a href={`${EXPLORER}/contract/${config.blendPool}`} target="_blank" rel="noreferrer" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>{short(config.blendPool)}</a>
+                <a href={`${EXPLORER}/contracts/${config.blendPool}`} target="_blank" rel="noreferrer" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>{short(config.blendPool)}</a>
               </>
             )}
           </div>
