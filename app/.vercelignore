@@ -1,0 +1,7 @@
+node_modules
+dist
+.accounts.json
+.shared-state.json
+.yield-state.json
+.runs
+.env.vercel.local

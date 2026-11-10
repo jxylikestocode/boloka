@@ -8,16 +8,15 @@
 // interest the parents see is read back from that real Blend position
 // (b_rate × b-tokens). On mainnet, with one USDC, the pool contract's own
 // supply_to_blend / withdraw_from_blend do this directly.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { Keypair, TransactionBuilder, Transaction, xdr, nativeToScVal } from '@stellar/stellar-sdk'
 import { address, invoke, NETWORK, server, simulate } from './soroban.ts'
-import { dataPath } from './paths.ts'
+import { storage } from './storage.ts'
 
 const FAUCET = 'https://ewqw4hx7oa.execute-api.us-east-1.amazonaws.com/getAssets?userId='
 const B_RATE_SCALAR = 1_000_000_000_000n
 const SUPPLY_COLLATERAL = 2
 const WITHDRAW_COLLATERAL = 3
-const STATE_FILE = () => dataPath('.yield-state.json')
+const STATE_FILE = 'yield-state.json'
 
 export type YieldConfig = { blendPool: string; blendUsdcId: string; blendUsdcAsset: string }
 
@@ -63,32 +62,32 @@ export async function readPosition(cfg: YieldConfig, who: string): Promise<Posit
   const col = positions.collateral
   const bTokens = BigInt((col instanceof Map ? col.get(idx) : col[String(idx)]) ?? 0n)
   const bRate = BigInt(reserve.data.b_rate)
-  recordSample(bRate)
+  await recordSample(bRate)
   return { bTokens, bRate, valueUnits: (bTokens * bRate) / B_RATE_SCALAR, at: Date.now() }
 }
 
 type YieldState = { samples: { t: number; bRate: string }[]; principal: Record<string, string> }
 
-function loadState(): YieldState {
-  if (!existsSync(STATE_FILE())) return { samples: [], principal: {} }
-  return JSON.parse(readFileSync(STATE_FILE(), 'utf8')) as YieldState
+async function loadState(): Promise<YieldState> {
+  const raw = await storage.read(STATE_FILE)
+  return raw ? (JSON.parse(raw) as YieldState) : { samples: [], principal: {} }
 }
-const saveState = (s: YieldState) => writeFileSync(STATE_FILE(), JSON.stringify(s))
+const saveState = (s: YieldState) => storage.write(STATE_FILE, JSON.stringify(s))
 
 /** Keeps the first b_rate seen and the latest, to measure Blend's real rate. */
-function recordSample(bRate: bigint) {
-  const s = loadState()
+async function recordSample(bRate: bigint) {
+  const s = await loadState()
   const sample = { t: Date.now(), bRate: bRate.toString() }
   s.samples = s.samples.length ? [s.samples[0], sample] : [sample]
-  saveState(s)
+  await saveState(s)
 }
 
 /**
  * Blend's real supply rate for this reserve, annualised from b_rate growth
  * between the first recorded sample and now. Null until 10 minutes apart.
  */
-export function measuredApr(): number | null {
-  const { samples } = loadState()
+export async function measuredApr(): Promise<number | null> {
+  const { samples } = await loadState()
   if (samples.length < 2) return null
   const [a, b] = samples
   const dt = (b.t - a.t) / 1000
@@ -98,14 +97,14 @@ export function measuredApr(): number | null {
 }
 
 /** Principal supplied by the app's yield account (supplies − withdrawals). */
-export function principal(who: string): bigint {
-  return BigInt(loadState().principal[who] ?? '0')
+export async function principal(who: string): Promise<bigint> {
+  return BigInt((await loadState()).principal[who] ?? '0')
 }
-export function addPrincipal(who: string, delta: bigint) {
-  const s = loadState()
-  const next = principal(who) + delta
+export async function addPrincipal(who: string, delta: bigint) {
+  const s = await loadState()
+  const next = BigInt(s.principal[who] ?? '0') + delta
   s.principal[who] = (next > 0n ? next : 0n).toString()
-  saveState(s)
+  await saveState(s)
 }
 
 /**

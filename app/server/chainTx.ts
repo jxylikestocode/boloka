@@ -76,7 +76,7 @@ export async function forDevice(
     if (c.fn === 'withdraw') found.push({ call: c, key: 'pool-withdraw', amount: c.args[5] })
   }
 
-  const all = ledger.all(2000)
+  const all = await ledger.all(2000)
   const byTx = new Map(all.filter((e) => e.tx).map((e) => [e.tx!, e]))
   const out = new Map<string, LedgerEntry>()
   for (const f of found) {

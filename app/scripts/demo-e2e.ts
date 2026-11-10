@@ -8,7 +8,6 @@
 //
 // Amounts on chain are 1/CHAIN_SCALE of the amounts shown (default 1:1000),
 // so each anchor leg fits the test anchor's 1–10 USDC limits.
-import { mkdirSync, writeFileSync } from 'node:fs'
 import { Keypair } from '@stellar/stellar-sdk'
 import { createRole } from '../server/accounts.ts'
 import { serverConfig } from '../server/config.ts'
@@ -16,8 +15,7 @@ import { depositFlow, payoutFlow, type Recorder, type Step } from '../server/flo
 import { address, bytes32, bytesVec, i128, invoke, poolLeaves, server, u32, explorer } from '../server/soroban.ts'
 import { commitment, merklePath, monthOf, randomBytes32, toHex } from '../src/proof.ts'
 import * as ledger from '../server/ledger.ts'
-import { dataPath } from '../server/paths.ts'
-import { join } from 'node:path'
+import { storage } from '../server/storage.ts'
 
 const cfg = serverConfig()
 const PULA_PER_USD = 13.5
@@ -35,7 +33,7 @@ const rec: Recorder = {
   step(s) {
     const step = { ...s, at: new Date().toISOString() }
     steps.push(step)
-    ledger.append({ ...step, flow: 'e2e', flowId: runId })
+    void ledger.append({ ...step, flow: 'e2e', flowId: runId })
     const tag = { real: 'REAL', offchain: 'OFF-CHAIN', read: 'READ', simulated: 'SIMULATED' }[s.kind]
     console.log(`\n${secs()}  ✔ ${s.title}  [${tag}]`)
     if (s.tx) console.log(`        tx ${s.tx}\n        ${explorer(s.tx)}`)
@@ -110,9 +108,7 @@ const run = {
   accounts,
   steps,
 }
-const runs = dataPath('.runs')
-mkdirSync(runs, { recursive: true })
 const stamp = run.finishedAt.replace(/[:.]/g, '-')
-writeFileSync(join(runs, `${stamp}.json`), JSON.stringify(run, null, 2))
-writeFileSync(join(runs, 'latest.json'), JSON.stringify(run, null, 2))
+await storage.write(`runs/${stamp}.json`, JSON.stringify(run, null, 2))
+await storage.write('runs/latest.json', JSON.stringify(run, null, 2))
 console.log(`\nDone in ${run.seconds}s. Saved to app/.runs/latest.json (shown on /how-it-works).`)

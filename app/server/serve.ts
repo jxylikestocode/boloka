@@ -29,8 +29,9 @@ if (!existsSync(join(DIST_DIR, 'index.html'))) {
 }
 
 createServer((req, res) => {
-  if (handleState(req, res)) return
-  void handle(req, res, () => {
+  void (async () => {
+    if (await handleState(req, res)) return
+    await handle(req, res, () => {
     // Static files, with the SPA's index.html for any app route.
     const path = normalize(decodeURIComponent((req.url ?? '/').split('?')[0])).replace(/^(\.\.[/\\])+/, '')
     let file = join(DIST_DIR, path)
@@ -41,5 +42,6 @@ createServer((req, res) => {
     res.setHeader('Content-Type', TYPES[ext] ?? 'application/octet-stream')
     res.setHeader('Cache-Control', ext === '.html' ? 'no-cache' : path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=300')
     createReadStream(file).pipe(res)
-  })
+    })
+  })()
 }).listen(PORT, () => console.log(`Boloka serving on :${PORT} (data in ${process.env.DATA_DIR ?? 'the app folder'})`))

@@ -28,7 +28,7 @@ function sharedState(): Plugin {
     async configureServer(server) {
       const { handleState } = await import('./server/state.ts')
       server.middlewares.use((req, res, next) => {
-        if (!handleState(req, res)) next()
+        void handleState(req, res).then((done) => done || next())
       })
     },
   }

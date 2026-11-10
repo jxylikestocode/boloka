@@ -7,3 +7,6 @@ dist
 .runs
 .demo-state.json
 *.log
+.env.local
+.env.vercel.local
+.vercel

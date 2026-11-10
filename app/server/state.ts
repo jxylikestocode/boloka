@@ -2,22 +2,18 @@
 // origins (separate browser storage): GET /api/state → {version, items};
 // POST {key, value}. The deposit and withdrawal lists are merged by record
 // id, never replaced: they hold the secrets that open the deposits. Used by
-// the dev server (vite.config.ts) and the production server (serve.ts).
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+// the dev server, the production server and the Vercel function.
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { dataPath } from './paths.ts'
+import { storage } from './storage.ts'
 
 type State = { version: number; items: Record<string, string> }
 const LISTS = new Set(['savings.deposits', 'savings.withdrawals'])
+const FILE = 'shared-state.json'
 
-function file() {
-  return dataPath('.shared-state.json')
-}
-
-export function loadState(): State {
-  if (!existsSync(file())) return { version: 0, items: {} }
+export async function loadState(): Promise<State> {
   try {
-    return JSON.parse(readFileSync(file(), 'utf8')) as State
+    const raw = await storage.read(FILE)
+    return raw ? (JSON.parse(raw) as State) : { version: 0, items: {} }
   } catch {
     return { version: 0, items: {} }
   }
@@ -33,13 +29,20 @@ function mergeLists(a: string | undefined, b: string): string {
   return JSON.stringify([...out.values()])
 }
 
-/** Handles /api/state; returns false for any other URL. */
-export function handleState(req: IncomingMessage, res: ServerResponse): boolean {
-  if (req.url !== '/api/state') return false
+const body = (req: IncomingMessage) =>
+  new Promise<string>((resolve) => {
+    let raw = ''
+    req.on('data', (c) => (raw += c))
+    req.on('end', () => resolve(raw))
+  })
+
+/** Handles /api/state; resolves false for any other URL. */
+export async function handleState(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
+  if ((req.url ?? '').split('?')[0] !== '/api/state') return false
   res.setHeader('Content-Type', 'application/json')
   res.setHeader('Cache-Control', 'no-store')
   if (req.method === 'GET') {
-    res.end(JSON.stringify(loadState()))
+    res.end(JSON.stringify(await loadState()))
     return true
   }
   if (req.method !== 'POST') {
@@ -47,22 +50,18 @@ export function handleState(req: IncomingMessage, res: ServerResponse): boolean 
     res.end('{}')
     return true
   }
-  let raw = ''
-  req.on('data', (c) => (raw += c))
-  req.on('end', () => {
-    try {
-      const { key, value } = JSON.parse(raw) as { key: string; value: string }
-      if (typeof key !== 'string' || !/^(savings|demo)\./.test(key)) throw new Error('key')
-      if (typeof value !== 'string') throw new Error('value')
-      const s = loadState()
-      s.items[key] = LISTS.has(key) ? mergeLists(s.items[key], value) : value
-      s.version++
-      writeFileSync(file(), JSON.stringify(s))
-      res.end(JSON.stringify({ version: s.version }))
-    } catch {
-      res.statusCode = 400
-      res.end('{}')
-    }
-  })
+  try {
+    const { key, value } = JSON.parse(await body(req)) as { key: string; value: string }
+    if (typeof key !== 'string' || !/^(savings|demo)\./.test(key)) throw new Error('key')
+    if (typeof value !== 'string') throw new Error('value')
+    const s = await loadState()
+    s.items[key] = LISTS.has(key) ? mergeLists(s.items[key], value) : value
+    s.version++
+    await storage.write(FILE, JSON.stringify(s))
+    res.end(JSON.stringify({ version: s.version }))
+  } catch {
+    res.statusCode = 400
+    res.end('{}')
+  }
   return true
 }

@@ -98,7 +98,7 @@ export async function depositFlow(
   })
 
   const supplyTx = await yieldLeg.supply(cfg, who.yield, units)
-  yieldLeg.addPrincipal(who.yield.publicKey(), units)
+  await yieldLeg.addPrincipal(who.yield.publicKey(), units)
   rec.step({
     key: 'blend-supply',
     title: 'Blend supply (mirror, Blend mock USDC)',
@@ -118,7 +118,7 @@ export async function depositFlow(
       bTokens: pos.bTokens.toString(),
       bRate: pos.bRate.toString(),
       valueUsdc: USDC(pos.valueUnits),
-      measuredApr: yieldLeg.measuredApr(),
+      measuredApr: await yieldLeg.measuredApr(),
     },
   })
   return { poolTx, supplyTx }
@@ -141,7 +141,7 @@ export async function payoutFlow(
     })
   }
   const withdrawTx = await yieldLeg.withdraw(cfg, who.yield, units)
-  yieldLeg.addPrincipal(who.yield.publicKey(), -units)
+  await yieldLeg.addPrincipal(who.yield.publicKey(), -units)
   rec.step({
     key: 'blend-withdraw',
     title: 'Blend withdraw (mirror)',

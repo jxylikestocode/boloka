@@ -5,13 +5,19 @@ import { existsSync, readFileSync } from 'node:fs'
 const ENV_FILE = new URL('../.env', import.meta.url)
 
 export function readEnv(): Record<string, string> {
-  if (!existsSync(ENV_FILE)) return {}
-  return Object.fromEntries(
-    readFileSync(ENV_FILE, 'utf8')
-      .split('\n')
-      .filter((l) => /^[A-Z0-9_]+=/.test(l))
-      .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
+  const fromFile = existsSync(ENV_FILE)
+    ? Object.fromEntries(
+        readFileSync(ENV_FILE, 'utf8')
+          .split('\n')
+          .filter((l) => /^[A-Z0-9_]+=/.test(l))
+          .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]),
+      )
+    : {}
+  // Environment variables (the cloud's settings) win over the file.
+  const fromEnv = Object.fromEntries(
+    Object.entries(process.env).filter(([k, v]) => k.startsWith('VITE_') && v) as [string, string][],
   )
+  return { ...fromFile, ...fromEnv }
 }
 
 export type ServerConfig = {

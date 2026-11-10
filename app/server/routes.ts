@@ -5,7 +5,6 @@
 //   GET  /api/yield                                  → the real Blend mirror position
 //   GET  /api/runs/latest                            → latest demo:e2e run
 // Flows run one at a time: they share the role accounts' sequence numbers.
-import { existsSync, readFileSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { roles } from './accounts.ts'
 import { serverConfig } from './config.ts'
@@ -14,28 +13,36 @@ import { fromHex } from '../src/proof.ts'
 import * as yieldLeg from './yieldLeg.ts'
 import * as ledger from './ledger.ts'
 import { forDevice } from './chainTx.ts'
-import { dataPath } from './paths.ts'
-import { join } from 'node:path'
+import { storage } from './storage.ts'
+import { waitUntil } from '@vercel/functions'
 
 type Job = { id: string; flow: 'deposit' | 'payout'; status: 'running' | 'done' | 'error'; steps: Step[]; error?: string }
+// Jobs live in memory for the process that runs them and in storage for
+// anyone polling (on serverless the poll may land on another instance).
 const jobs = new Map<string, Job>()
+const saveJob = (job: Job) => storage.write(`jobs/${job.id}.json`, JSON.stringify(job)).catch((e) => console.error('[job]', e))
 let queue: Promise<unknown> = Promise.resolve()
 
 function start(flow: Job['flow'], run: (job: Job) => Promise<unknown>): string {
   const id = Math.random().toString(36).slice(2)
   const job: Job = { id, flow, status: 'running', steps: [] }
   jobs.set(id, job)
-  const next = queue.then(() =>
-    run(job).then(
-      () => (job.status = 'done'),
-      (e: unknown) => {
-        console.error('[flow]', e)
-        job.status = 'error'
-        job.error = e instanceof Error ? e.message : String(e)
-      },
-    ),
-  )
+  const next = queue
+    .then(() => saveJob(job))
+    .then(() =>
+      run(job).then(
+        () => (job.status = 'done'),
+        (e: unknown) => {
+          console.error('[flow]', e)
+          job.status = 'error'
+          job.error = e instanceof Error ? e.message : String(e)
+        },
+      ),
+    )
+    .then(() => saveJob(job))
   queue = next.catch(() => {})
+  // On Vercel the response goes out now and the flow keeps running until done.
+  waitUntil(next)
   return id
 }
 
@@ -43,7 +50,8 @@ const recorder = (job: Job) => ({
   step: (s: Omit<Step, 'at'>) => {
     const step = { ...s, at: new Date().toISOString() }
     job.steps.push(step)
-    ledger.append({ ...step, flow: job.flow, flowId: job.id })
+    void saveJob(job)
+    void ledger.append({ ...step, flow: job.flow, flowId: job.id })
   },
   log: (m: string, d?: Record<string, unknown>) => console.log('[flow]', m, d ? JSON.stringify(d) : ''),
 })
@@ -93,11 +101,12 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
       return send(200, { id: start('payout', async (job) => payoutFlow(cfg, await roles(cfg), units, tx, recorder(job))) })
     }
     if (req.method === 'GET' && url.startsWith('/api/flow/')) {
-      const job = jobs.get(url.slice('/api/flow/'.length))
+      const id = url.slice('/api/flow/'.length).replace(/[^a-z0-9]/g, '')
+      const job = jobs.get(id) ?? (JSON.parse((await storage.read(`jobs/${id}.json`)) ?? 'null') as Job | null)
       return job ? send(200, job) : send(404, { error: 'no such flow' })
     }
     if (req.method === 'GET' && url === '/api/transactions') {
-      return send(200, ledger.all())
+      return send(200, await ledger.all())
     }
     // This device's own transactions, read from the chain (see chainTx.ts).
     if (req.method === 'POST' && url === '/api/transactions/mine') {
@@ -111,7 +120,7 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
       const r = await roles(cfg)
       const who = r.yield.publicKey()
       const pos = await yieldLeg.readPosition(cfg, who)
-      const principal = yieldLeg.principal(who)
+      const principal = await yieldLeg.principal(who)
       return send(200, {
         account: who,
         bTokens: pos.bTokens,
@@ -119,13 +128,13 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
         valueUnits: pos.valueUnits,
         principalUnits: principal,
         earnedUnits: pos.valueUnits > principal ? pos.valueUnits - principal : 0n,
-        apr: yieldLeg.measuredApr(),
+        apr: await yieldLeg.measuredApr(),
       })
     }
     if (req.method === 'GET' && url === '/api/runs/latest') {
-      const f = join(dataPath('.runs'), 'latest.json')
-      if (!existsSync(f)) return send(404, { error: 'no run yet: npm run demo:e2e' })
-      return send(200, JSON.parse(readFileSync(f, 'utf8')))
+      const raw = await storage.read('runs/latest.json')
+      if (!raw) return send(404, { error: 'no run yet: npm run demo:e2e' })
+      return send(200, JSON.parse(raw))
     }
     return send(404, { error: 'not found' })
   } catch (e) {

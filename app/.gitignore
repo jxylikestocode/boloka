@@ -28,3 +28,7 @@ dist-ssr
 .accounts.json
 .yield-state.json
 .runs/
+.vercel
+.env*
+.env.vercel.local
+.env.local
