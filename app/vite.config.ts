@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
+import { readEnv } from './server/config.ts'
 
 /**
  * The money flows (anchor deposit/withdrawal, pool, Blend mirror) and the
@@ -38,12 +39,21 @@ function sharedState(): Plugin {
 // gets its own dependency cache so the three can run side by side.
 const app = process.env.VITE_APP
 
+// Single source of truth: with VITE_API_ORIGIN set (app/.env), the dev server
+// serves only the UI and forwards every /api call to that server (the public
+// deployment), so local shows exactly production's accounts, ledger and
+// yield. Remove the line to run the backend locally.
+const apiOrigin = process.env.VITE_API_ORIGIN ?? readEnv().VITE_API_ORIGIN
+
 // https://vite.dev/config/
 export default defineConfig(() => {
   return {
-    plugins: [react(), flows(), sharedState()],
+    plugins: apiOrigin ? [react()] : [react(), flows(), sharedState()],
     cacheDir: app ? `node_modules/.vite-${app}` : undefined,
     // Synced on every change; never a reason to reload a page.
-    server: { watch: { ignored: ['**/.shared-state.json', '**/.yield-state.json', '**/.accounts.json', '**/.runs/**'] } },
+    server: {
+      watch: { ignored: ['**/.shared-state.json', '**/.yield-state.json', '**/.accounts.json', '**/.runs/**'] },
+      proxy: apiOrigin ? { '/api': { target: apiOrigin, changeOrigin: true } } : undefined,
+    },
   }
 })

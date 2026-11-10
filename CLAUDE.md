@@ -94,6 +94,9 @@ npm run dev:boloka    -- --host <tailscale-ip>   # :5173  Boloka (+ /lender /adm
 npm run dev:moneygram -- --host <tailscale-ip>   # :5177  MoneyGram (sender)
 npm run dev:bank      -- --host <tailscale-ip>   # :5178  Kalahari Bank (fictional; credits = confirmed payouts)
 cd ../demo && npm run dev:boloka / dev:moneygram / dev:bank   # simulated: :5174 / :5175 / :5176
+# Single source of truth: with VITE_API_ORIGIN=https://boloka.fly.dev in app/.env (the default),
+# every local dev server forwards /api to the public deployment, so local numbers ARE production's.
+# Remove that line to run the backend (flows, ledger, yield, shared state) locally instead.
 npx vite --port 5181          # ONE URL for everything: / is the launcher (story + open the three
                               # apps), Boloka at /home, /moneygram, /bank, /lender, /how-it-works
 cargo test -p pool                # contract tests
