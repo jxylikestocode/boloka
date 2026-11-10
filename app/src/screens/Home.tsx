@@ -78,7 +78,7 @@ export default function Home() {
   const apr = useYield()?.apr ?? null
   const growth = loading ? null : monthlyGrowth(s.balance, apr)
   const navigate = useNavigate()
-  const { cur, symbol, m } = useMoney()
+  const { symbol, m } = useMoney()
 
   return (
     <Frame gap={20}>
@@ -111,7 +111,6 @@ export default function Home() {
             m(s.balance, { whole: true })
           )}
         </div>
-        <div style={{ fontSize: 13, opacity: 0.85 }}>{cur === 'USD' ? 'Held in US dollars · shown in dollars' : 'Held in US dollars · shown in pula'}</div>
         <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.16)', borderRadius: 999, padding: '6px 12px', fontSize: 13, fontWeight: 600, width: 'fit-content' }}>
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 16l6-6 4 4 6-6" />
