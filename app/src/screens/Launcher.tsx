@@ -118,6 +118,7 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
               ))}
             </div>
             <div style={{ textAlign: 'center', fontSize: 13, color: MUTED }}>On a wider screen the three apps appear side by side.</div>
+            {floating}
           </>
         )}
       </div>
