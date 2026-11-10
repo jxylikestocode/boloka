@@ -15,11 +15,6 @@ import { FEATURES } from './features.ts'
 import Launcher from './screens/Launcher.tsx'
 import OnChainOverlay from './OnChainOverlay.tsx'
 import FloatingProgress from './FlowProgress.tsx'
-
-/** The homepage's single under-the-hood strip, for all three phones. */
-function HomeStrip() {
-  return <OnChainOverlay inline />
-}
 import HowItWorks from './screens/HowItWorks.tsx'
 import BankApp from './screens/BankApp.tsx'
 
@@ -94,7 +89,8 @@ export default function App() {
       {/* For judges, not linked from the parents' screens. */}
       <Route path="/how-it-works" element={<HowItWorks mode="testnet" />} />
       {/* One URL for everything: the root explains the demo; Boloka's home is /home. */}
-      {allInOne && <Route index element={<Launcher mode="testnet" strip={<HomeStrip />} floating={<FloatingProgress />} />} />}
+      {/* The homepage shows the floating progress card only; every transaction with its link is in Pool admin. */}
+      {allInOne && <Route index element={<Launcher mode="testnet" floating={<FloatingProgress />} />} />}
       <Route element={<Phone />}>
         {allInOne ? <Route path="/home" element={<Home />} /> : <Route index element={<Home />} />}
         <Route path="/received" element={<Received />} />

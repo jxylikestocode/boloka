@@ -1,7 +1,8 @@
 // The root of the single-URL build. On a wide screen the three apps run side
 // by side as phones (MoneyGram, Boloka, the bank), so money sent in one is
-// seen arriving in the next without switching windows; one under-the-hood
-// strip sits below them. Narrow screens get the three apps as cards to open.
+// seen arriving in the next without switching windows; the floating progress
+// card appears above the acting phone while a transfer or payout runs.
+// Narrow screens get the three apps as cards to open.
 // Not a parents' screen.
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { FONT, GREEN, INK, LINE, MUTED, PANEL, usePageMeta } from '../ui.tsx'
