@@ -262,7 +262,7 @@ export default function SenderSend() {
         // the sender stays in MoneyGram and sees MoneyGram's own receipt.
         await depositForReceiver(
           pulaToUnits(cad * BOLOKA_RATE),
-          { sender: 'Lerato', via: 'MoneyGram' },
+          { sender: 'Kate', via: 'MoneyGram' },
           (s) => addProgress(s),
         )
       } else {

@@ -28,7 +28,7 @@ export default function Dev() {
   return (
     <div className="screen">
       <TopBar title="Dev" />
-      <p className="muted">Simulates a transfer from Lerato landing in savings.</p>
+      <p className="muted">Simulates a transfer from Kate landing in savings.</p>
       <p className="muted small">Current savings: {formatP(s.balance)}</p>
       <button className="btn primary full" disabled={busy} onClick={arrive}>
         {busy ? 'Arriving…' : 'MoneyGram arrived'}

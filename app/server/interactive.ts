@@ -14,7 +14,7 @@ function valueFor(key: string, amount: string): string {
   const k = key.toLowerCase()
   if (k.includes('amount')) return amount
   if (k.includes('surname') || k.includes('last')) return 'Test'
-  if (k === 'name' || k.includes('first')) return 'Lerato'
+  if (k === 'name' || k.includes('first')) return 'Kate'
   if (k.includes('email')) return 'lerato.test@example.com'
   if (k.includes('routing') || k.includes('bank_number') || k.includes('branch')) return '021000021'
   if (k.includes('account')) return '1234567890'

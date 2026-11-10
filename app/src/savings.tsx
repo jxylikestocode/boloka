@@ -67,7 +67,7 @@ export function useSavings() {
 }
 
 /** The deposit a MoneyGram arrival simulates on the dev page. */
-const ARRIVAL = { pula: 9900, sender: 'Lerato', via: 'MoneyGram' }
+const ARRIVAL = { pula: 9900, sender: 'Kate', via: 'MoneyGram' }
 
 type Snapshot = {
   leaves: Uint8Array[]

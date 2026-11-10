@@ -59,7 +59,7 @@ export default function Private() {
             </svg>
           }
         >
-          Nobody can see that Lerato sends you money, or how much, or how often.
+          Nobody can see that Kate sends you money, or how much, or how often.
         </Point>
         <Point
           title="You choose what to prove"

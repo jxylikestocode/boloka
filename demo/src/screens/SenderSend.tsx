@@ -336,7 +336,7 @@ export default function SenderSend() {
     setAnchor({ amount, status: 'kyc' })
     // The sender's MoneyGram profile (test details).
     await sendCustomer(a, token, kp.publicKey(), {
-      first_name: 'Lerato',
+      first_name: 'Kate',
       last_name: 'Test',
       email_address: 'lerato.test@example.com',
       address_country_code: 'CAN',
@@ -365,7 +365,7 @@ export default function SenderSend() {
         await depositForReceiver(
           kp,
           BigInt(Math.round(cad * USD_PER_CAD * 1e7)),
-          { sender: 'Lerato', via: 'MoneyGram' },
+          { sender: 'Kate', via: 'MoneyGram' },
         )
       } else {
         setBusy('Sending…')

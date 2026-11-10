@@ -50,7 +50,7 @@ export function useSavings() {
 }
 
 /** The deposit a MoneyGram arrival simulates on the dev page. */
-const ARRIVAL = { pula: 9900, sender: 'Lerato', via: 'MoneyGram' }
+const ARRIVAL = { pula: 9900, sender: 'Kate', via: 'MoneyGram' }
 
 const sum = (xs: { amount: string }[]) => xs.reduce((n, x) => n + BigInt(x.amount), 0n)
 
