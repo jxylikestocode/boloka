@@ -117,7 +117,15 @@ function amountText(e: Entry, usdc: number | undefined) {
 }
 
 /** `facts` is an extra block shown at the top of the strip (Boloka's balance facts). */
-export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
+/** Inside a frame on the homepage the strip is hidden: the page shows one strip for all three apps. */
+const EMBEDDED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('embed')
+
+/**
+ * `facts` is an extra block shown at the top of the strip (Boloka's balance
+ * facts). `inline` renders it as a normal block (the homepage, under the
+ * three phones) instead of a draggable floating strip.
+ */
+export default function OnChainOverlay({ facts, inline = false }: { facts?: ReactNode; inline?: boolean }) {
   const [entries, setEntries] = useState<Entry[]>([])
   const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
@@ -163,16 +171,13 @@ export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
     }
   }, [])
 
-  if ((!entries.length && !facts) || hidden) return null
+  if (EMBEDDED || (!entries.length && !facts) || hidden) return null
 
   const place: CSSProperties = pos
     ? { left: pos.x, top: pos.y }
     : { left: '50%', transform: 'translateX(-50%)', bottom: 'calc(env(safe-area-inset-bottom) + 10px)' }
   const base: CSSProperties = {
-    position: 'fixed',
-    ...place,
-    zIndex: 60,
-    width: `min(${WIDTH}px, calc(100% - 16px))`,
+    ...(inline ? { position: 'relative', width: '100%' } : { position: 'fixed', ...place, zIndex: 60, width: `min(${WIDTH}px, calc(100% - 16px))` }),
     fontFamily: MONO,
     fontSize: 11,
     color: '#D7E6DD',
@@ -185,7 +190,7 @@ export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
 
   const grab: CSSProperties = { cursor: 'grab', touchAction: 'none', userSelect: 'none' }
 
-  if (!open) {
+  if (!open && !inline) {
     return (
       <button
         type="button"
@@ -201,19 +206,23 @@ export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
 
   return (
     <div data-strip="" style={{ ...base, padding: '10px 12px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div {...handle} title="Drag to move" style={{ ...grab, display: 'flex', alignItems: 'center', gap: 8, margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
+      <div {...(inline ? {} : handle)} title={inline ? undefined : 'Drag to move'} style={{ ...(inline ? {} : grab), display: 'flex', alignItems: 'center', gap: 8, margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
         <span style={{ fontWeight: 700, color: '#8EE0B4', letterSpacing: 0.4 }}>⛓ DEMO · UNDER THE HOOD</span>
-        <span style={{ flex: 1, opacity: 0.7 }}>not part of the app · drag me</span>
-        <button type="button" onClick={() => setOpen(false)} aria-label="Fold" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
-          ▾
-        </button>
-        <button type="button" onClick={() => setHidden(true)} aria-label="Hide" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
-          ✕
-        </button>
+        <span style={{ flex: 1, opacity: 0.7 }}>{inline ? 'not part of the apps · real Stellar testnet transactions behind the three phones' : 'not part of the app · drag me'}</span>
+        {!inline && (
+          <>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Fold" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
+              ▾
+            </button>
+            <button type="button" onClick={() => setHidden(true)} aria-label="Hide" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
+              ✕
+            </button>
+          </>
+        )}
       </div>
       {facts}
       {entries.length > 0 && <div style={{ opacity: 0.75 }}>Real Stellar testnet transactions behind this screen:</div>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: inline ? 260 : 150, overflowY: 'auto' }}>
         {entries.slice(0, 12).map((e) => (
           <a
             key={e.tx}

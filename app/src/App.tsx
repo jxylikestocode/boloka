@@ -15,6 +15,15 @@ import { FEATURES } from './features.ts'
 import Launcher from './screens/Launcher.tsx'
 import OnChainOverlay from './OnChainOverlay.tsx'
 import SavingsFacts from './SavingsFacts.tsx'
+
+/** The homepage's single under-the-hood strip, for all three phones. */
+function HomeStrip() {
+  return (
+    <SavingsProvider>
+      <OnChainOverlay inline facts={<SavingsFacts />} />
+    </SavingsProvider>
+  )
+}
 import HowItWorks from './screens/HowItWorks.tsx'
 import BankApp from './screens/BankApp.tsx'
 
@@ -90,7 +99,7 @@ export default function App() {
       {/* For judges, not linked from the parents' screens. */}
       <Route path="/how-it-works" element={<HowItWorks mode="testnet" />} />
       {/* One URL for everything: the root explains the demo; Boloka's home is /home. */}
-      {allInOne && <Route index element={<Launcher mode="testnet" />} />}
+      {allInOne && <Route index element={<Launcher mode="testnet" strip={<HomeStrip />} />} />}
       <Route element={<Phone />}>
         {allInOne ? <Route path="/home" element={<Home />} /> : <Route index element={<Home />} />}
         <Route path="/received" element={<Received />} />
