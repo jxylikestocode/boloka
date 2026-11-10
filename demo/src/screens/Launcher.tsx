@@ -16,8 +16,10 @@ const APPS: { n: number; name: string; who: string; href: string; icon: string; 
 
 const PHONE_W = 390
 const PHONE_H = 760
+/** The sender's and the bank's phones are shown smaller: Boloka is the app. */
+const SIDE_SCALE = 0.82
 /** Three phones, gaps and margins. */
-const WIDE = 3 * PHONE_W + 2 * 28 + 48
+const WIDE = PHONE_W + 2 * PHONE_W * SIDE_SCALE + 2 * 28 + 48
 
 const card: CSSProperties = { background: '#FFFFFF', borderRadius: 18, border: `1px solid ${LINE}`, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }
 
@@ -31,10 +33,12 @@ function useWide() {
   return wide
 }
 
-/** A phone-shaped frame running one of the apps. */
-function Phone({ app }: { app: (typeof APPS)[number] }) {
+/** A phone-shaped frame running one of the apps; side apps at a smaller scale. */
+function Phone({ app, scale = 1 }: { app: (typeof APPS)[number]; scale?: number }) {
+  const w = (PHONE_W + 16) * scale
+  const h = (PHONE_H + 16) * scale
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: w, opacity: scale < 1 ? 0.92 : 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, alignSelf: 'stretch' }}>
         <img src={app.icon} alt="" width={30} height={30} style={{ borderRadius: 8 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -45,12 +49,14 @@ function Phone({ app }: { app: (typeof APPS)[number] }) {
           own window ↗
         </a>
       </div>
-      <div style={{ width: PHONE_W + 16, height: PHONE_H + 16, padding: 8, borderRadius: 40, background: '#0F1412', boxShadow: '0 20px 50px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.08)' }}>
-        <iframe
-          title={app.name}
-          src={`${app.href}?embed=1`}
-          style={{ width: PHONE_W, height: PHONE_H, border: 'none', borderRadius: 32, background: '#FFFFFF', display: 'block' }}
-        />
+      <div style={{ width: w, height: h }}>
+        <div style={{ width: PHONE_W + 16, height: PHONE_H + 16, padding: 8, borderRadius: 40, background: '#0F1412', boxShadow: scale < 1 ? '0 12px 30px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.08)' : '0 24px 60px rgba(14,124,91,0.28), inset 0 0 0 1px rgba(255,255,255,0.08)', transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          <iframe
+            title={app.name}
+            src={`${app.href}?embed=1`}
+            style={{ width: PHONE_W, height: PHONE_H, border: 'none', borderRadius: 32, background: '#FFFFFF', display: 'block' }}
+          />
+        </div>
       </div>
     </div>
   )
@@ -84,9 +90,9 @@ export default function Launcher({ mode, strip }: { mode: Mode; strip?: ReactNod
 
         {wide ? (
           <>
-            <div style={{ display: 'flex', gap: 28, justifyContent: 'center', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: 28, justifyContent: 'center', alignItems: 'center' }}>
               {APPS.map((a) => (
-                <Phone key={a.name} app={a} />
+                <Phone key={a.name} app={a} scale={a.name === 'Boloka' ? 1 : SIDE_SCALE} />
               ))}
             </div>
             {strip}

@@ -193,7 +193,8 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
     }
   }, [])
 
-  if (EMBEDDED || (!entries.length && !facts && !progress) || hidden) return null
+  // The homepage's inline strip is always there; the floating one only when it has something.
+  if (EMBEDDED || hidden || (!inline && !entries.length && !facts && !progress)) return null
 
   const place: CSSProperties = pos
     ? { left: pos.x, top: pos.y }
@@ -270,6 +271,7 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
         )
       })()}
       {entries.length > 0 && <div style={{ opacity: 0.75 }}>Real Stellar testnet transactions behind this screen:</div>}
+      {entries.length === 0 && !progress && <div style={{ opacity: 0.75 }}>No transactions yet. Send money in MoneyGram and they appear here, each linked to the chain explorer.</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: inline ? 260 : 150, overflowY: 'auto' }}>
         {entries.slice(0, 12).map((e) => (
           <a
