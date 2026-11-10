@@ -125,8 +125,22 @@ const EMBEDDED = typeof window !== 'undefined' && new URLSearchParams(window.loc
  * facts). `inline` renders it as a normal block (the homepage, under the
  * three phones) instead of a draggable floating strip.
  */
+type Progress = { at: number; flow: { key: string; label: string }[]; steps: { key: string; tx?: string }[] }
+
+/** The transfer MoneyGram is running right now, if any (published by its screen). */
+function readProgress(): Progress | null {
+  try {
+    const p = JSON.parse(localStorage.getItem('ui.flowProgress') ?? 'null') as Progress | null
+    // Stale after 10 minutes (a closed tab mid-transfer).
+    return p && Date.now() - p.at < 10 * 60_000 ? p : null
+  } catch {
+    return null
+  }
+}
+
 export default function OnChainOverlay({ facts, inline = false }: { facts?: ReactNode; inline?: boolean }) {
   const [entries, setEntries] = useState<Entry[]>([])
+  const [progress, setProgress] = useState<Progress | null>(readProgress)
   const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
   const known = useRef<Set<string>>(new Set())
@@ -165,13 +179,22 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
     }
     load()
     const t = setInterval(load, 4000)
+    const onStorage = () => {
+      setProgress(readProgress())
+      // A step just landed: its transaction is on the chain now.
+      load()
+    }
+    window.addEventListener('storage', onStorage)
+    const t2 = setInterval(() => setProgress(readProgress()), 2000)
     return () => {
       live = false
       clearInterval(t)
+      clearInterval(t2)
+      window.removeEventListener('storage', onStorage)
     }
   }, [])
 
-  if (EMBEDDED || (!entries.length && !facts) || hidden) return null
+  if (EMBEDDED || (!entries.length && !facts && !progress) || hidden) return null
 
   const place: CSSProperties = pos
     ? { left: pos.x, top: pos.y }
@@ -221,6 +244,30 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
         )}
       </div>
       {facts}
+      {progress && (() => {
+        const done = new Set(progress.steps.map((s) => s.key))
+        const current = progress.flow.find((f) => !done.has(f.key))
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingBottom: 6, borderBottom: '1px dashed rgba(120, 220, 170, 0.35)' }}>
+            <div style={{ fontWeight: 700, color: '#8EE0B4' }}>{current ? 'right now · transfer in progress' : 'transfer settled'}</div>
+            {progress.flow.map((f) => {
+              const s = progress.steps.find((x) => x.key === f.key)
+              const now = f === current
+              return (
+                <div key={f.key} style={{ display: 'flex', gap: 8, opacity: s || now ? 1 : 0.5 }}>
+                  <span style={{ width: 12, flex: 'none', color: s ? '#8EE0B4' : '#F0B96B' }}>{s ? '✓' : now ? '›' : '·'}</span>
+                  <span style={{ flex: 1 }}>{f.label}{now ? '…' : ''}</span>
+                  {s?.tx && (
+                    <a href={`${EXPLORER}/transactions/${s.tx}`} target="_blank" rel="noreferrer" style={{ color: '#8EE0B4', textDecoration: 'none', flex: 'none' }}>
+                      {s.tx.slice(0, 6)}… ↗
+                    </a>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
       {entries.length > 0 && <div style={{ opacity: 0.75 }}>Real Stellar testnet transactions behind this screen:</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: inline ? 260 : 150, overflowY: 'auto' }}>
         {entries.slice(0, 12).map((e) => (

@@ -2,22 +2,37 @@
 // A separate app, so it deliberately shares nothing visual with Boloka: its
 // own palette, font, shapes, title and tab icon. Copy, rates and the
 // over-the-limit rule follow docs/moneygram-send-1000.html / -10000.html.
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { depositForReceiver, type FlowStep } from '../deposit.ts'
 import { HIDDEN_COST, ORANGE_LIMIT, TRANSFER_CAP, pulaToUnits } from '../money.ts'
 import { usePageMeta } from '../ui.tsx'
 
 const RECEIVER = 'Mma Kgosi'
+
+/**
+ * Progress of the current Boloka transfer, for the demo's under-the-hood
+ * strip (same browser, any tab or frame): the ordered steps and which have
+ * landed. `null` steps clears it; a step appends. Not shown in this UI.
+ */
+function publishProgress(reset: FlowStep[] | null, step?: FlowStep) {
+  const KEY = 'ui.flowProgress'
+  if (reset === null && !step) {
+    localStorage.removeItem(KEY)
+    return
+  }
+  const cur = reset ?? ((JSON.parse(localStorage.getItem(KEY) ?? 'null') as { steps: FlowStep[] } | null)?.steps ?? [])
+  const steps = step ? [...cur, step] : cur
+  localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), flow: FLOW, steps }))
+}
 const BOLOKA_RATE = 9.93
 const ORANGE_RATE = 9.87
 const CASH_RATE = 9.51
 /** The per-transfer cap on remittances into Orange Money (Remitly's cap), in pula. */
 const PER_TRANSFER_LIMIT = TRANSFER_CAP
 
-/** The anchor's settlement anchor: from app/.env, swapped by config. */
-const ANCHOR_DOMAIN = (import.meta.env.VITE_ANCHOR_DOMAIN as string | undefined) ?? 'the anchor'
 
 /** The steps of a Boloka transfer, in order, as the flow reports them. */
+/** Published to localStorage for the under-the-hood strip (see publishProgress). */
 const FLOW: { key: string; label: string }[] = [
   { key: 'sep10', label: 'Signed in with the anchor (SEP-10)' },
   { key: 'sep24-deposit', label: 'Anchor settled the deposit in USDC (SEP-24)' },
@@ -153,35 +168,6 @@ function MethodRow(props: {
   )
 }
 
-/** Live progress of a Boloka transfer: each real step, linked to its transaction. */
-function FlowPanel({ steps }: { steps: FlowStep[] }) {
-  // Keep the progress on screen: it appears below the payment options.
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [])
-  const done = new Map(steps.map((s) => [s.key, s]))
-  const current = FLOW.find((f) => !done.has(f.key))
-  return (
-    <div ref={ref} style={{ margin: '14px 16px 0', padding: '12px 14px', background: '#FFFFFF', border: `1px solid ${RULE}`, borderLeft: `4px solid ${current ? MG_RED : '#2E7D32'}`, display: 'flex', flexDirection: 'column', gap: 7, fontSize: 13 }}>
-      <div style={{ fontWeight: 700 }}>Settling through {ANCHOR_DOMAIN}</div>
-      {FLOW.map((f) => {
-        const s = done.get(f.key)
-        const now = f === current
-        return (
-          <div key={f.key} style={{ display: 'flex', gap: 8, alignItems: 'baseline', color: s ? TEXT : now ? TEXT : SUBTLE }}>
-            <span style={{ width: 14, flex: 'none', color: s ? '#2E7D32' : MG_RED, fontWeight: 700 }}>{s ? '✓' : now ? '›' : '·'}</span>
-            <span style={{ flex: 1, fontWeight: now ? 700 : 500 }}>
-              {f.label}
-              {now && '…'}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 type Receipt = {
   method: Method
   cad: number
@@ -278,7 +264,7 @@ export default function SenderSend() {
   const [error, setError] = useState('')
   const [sent, setSent] = useState<Receipt | null>(null)
   const [editing, setEditing] = useState(false)
-  const [steps, setSteps] = useState<FlowStep[] | null>(null)
+  const [sending, setSending] = useState(false)
 
   const cad = parseCad(text)
   const arrives = cad * BOLOKA_RATE
@@ -290,18 +276,19 @@ export default function SenderSend() {
 
   async function send() {
     setError('')
-    setSteps(null)
+    publishProgress(null)
     try {
       if (method === 'boloka') {
         setBusy('Sending…')
-        setSteps([])
+        setSending(true)
+        publishProgress([])
         // A real anchor deposit (SEP-24) settles the money in USDC, which
         // goes into the Boloka pool for the receiver: a different app, so
         // the sender stays in MoneyGram and sees MoneyGram's own receipt.
         await depositForReceiver(
           pulaToUnits(cad * BOLOKA_RATE),
           { sender: 'Lerato', via: 'MoneyGram' },
-          (s) => setSteps((prev) => [...(prev ?? []), s]),
+          (s) => publishProgress(null, s),
         )
       } else {
         setBusy('Sending…')
@@ -318,6 +305,7 @@ export default function SenderSend() {
       )
     } finally {
       setBusy('')
+      setSending(false)
     }
   }
 
@@ -457,7 +445,11 @@ export default function SenderSend() {
           />
         </div>
 
-        {steps && <FlowPanel steps={steps} />}
+        {sending && (
+          <div style={{ margin: '14px 16px 0', fontSize: 13, color: SUBTLE, lineHeight: 1.5 }}>
+            Processing your transfer. This usually takes a minute or two.
+          </div>
+        )}
 
         {error && (
           <div style={{ margin: '14px 16px 0', padding: '10px 12px', background: MG_TINT, borderLeft: `4px solid ${MG_RED}`, fontSize: 13, fontWeight: 700, color: MG_RED_DARK }}>
