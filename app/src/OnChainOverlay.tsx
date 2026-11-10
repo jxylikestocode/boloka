@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent, type ReactNode } from 'react'
 import * as store from './store.ts'
 import { keypair } from './chain.ts'
+import { readProgress, type Progress } from './progress.ts'
 import { CHAIN_SCALE, PULA_PER_USD } from './money.ts'
 
 import { EXPLORER } from './explorer.ts'
@@ -125,19 +126,6 @@ const EMBEDDED = typeof window !== 'undefined' && new URLSearchParams(window.loc
  * facts). `inline` renders it as a normal block (the homepage, under the
  * three phones) instead of a draggable floating strip.
  */
-type Progress = { at: number; flow: { key: string; label: string }[]; steps: { key: string; tx?: string }[] }
-
-/** The transfer MoneyGram is running right now, if any (published by its screen). */
-function readProgress(): Progress | null {
-  try {
-    const p = JSON.parse(localStorage.getItem('ui.flowProgress') ?? 'null') as Progress | null
-    // Stale after 10 minutes (a closed tab mid-transfer).
-    return p && Date.now() - p.at < 10 * 60_000 ? p : null
-  } catch {
-    return null
-  }
-}
-
 export default function OnChainOverlay({ facts, inline = false }: { facts?: ReactNode; inline?: boolean }) {
   const [entries, setEntries] = useState<Entry[]>([])
   const [progress, setProgress] = useState<Progress | null>(readProgress)
@@ -249,7 +237,7 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
         const current = progress.flow.find((f) => !done.has(f.key))
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingBottom: 6, borderBottom: '1px dashed rgba(120, 220, 170, 0.35)' }}>
-            <div style={{ fontWeight: 700, color: '#8EE0B4' }}>{current ? 'right now · transfer in progress' : 'transfer settled'}</div>
+            <div style={{ fontWeight: 700, color: '#8EE0B4' }}>{current ? `right now · ${progress.title}` : progress.title.replace(' in progress', ' settled')}</div>
             {progress.flow.map((f) => {
               const s = progress.steps.find((x) => x.key === f.key)
               const now = f === current
@@ -258,7 +246,7 @@ export default function OnChainOverlay({ facts, inline = false }: { facts?: Reac
                   <span style={{ width: 12, flex: 'none', color: s ? '#8EE0B4' : '#F0B96B', display: 'inline-flex', justifyContent: 'center' }}>
                     {s ? '✓' : now ? <span aria-label="in progress" style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', border: '2px solid #F0B96B', borderRightColor: 'transparent', animation: 'strip-spin 0.8s linear infinite' }} /> : '·'}
                   </span>
-                  <span style={{ flex: 1 }}>{f.label}{now ? '…' : ''}</span>
+                  <span style={{ flex: 1 }}>{f.label}{now ? '…' : ''}{s?.kind === 'simulated' ? ' · simulated at this scale' : ''}</span>
                   {s?.tx && (
                     <a href={`${EXPLORER}/transactions/${s.tx}`} target="_blank" rel="noreferrer" style={{ color: '#8EE0B4', textDecoration: 'none', flex: 'none' }}>
                       {s.tx.slice(0, 6)}… ↗

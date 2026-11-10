@@ -19,6 +19,7 @@ import {
   u32,
 } from './chain.ts'
 import { depositForReceiver, runFlow } from './deposit.ts'
+import { addProgress, PAYOUT_FLOW, startProgress } from './progress.ts'
 import {
   encodeProof,
   fromHex,
@@ -216,7 +217,11 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         // anchor (SEP-24 withdrawal), mirrored out of Blend. That runs on in
         // the background: the parents' part is done.
         store.setWithdrawalTx(toHex(nullifier), res.hash)
-        runFlow('/api/flow/payout', { units: units.toString(), withdrawTx: res.hash }).catch(
+        // For the demo's under-the-hood strip: the pool step is done, the rest follows.
+        startProgress('payout in progress', PAYOUT_FLOW, [
+          { key: 'pool-withdraw', title: 'Pool withdraw', kind: 'real', tx: res.hash },
+        ])
+        runFlow('/api/flow/payout', { units: units.toString(), withdrawTx: res.hash }, (s) => addProgress(s)).catch(
           (e) => console.error('payout flow', e),
         )
         break

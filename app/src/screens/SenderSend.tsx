@@ -3,42 +3,17 @@
 // own palette, font, shapes, title and tab icon. Copy, rates and the
 // over-the-limit rule follow docs/moneygram-send-1000.html / -10000.html.
 import { useState, type CSSProperties, type ReactNode } from 'react'
-import { depositForReceiver, type FlowStep } from '../deposit.ts'
+import { depositForReceiver } from '../deposit.ts'
+import { addProgress, clearProgress, DEPOSIT_FLOW, startProgress } from '../progress.ts'
 import { HIDDEN_COST, ORANGE_LIMIT, TRANSFER_CAP, pulaToUnits } from '../money.ts'
 import { usePageMeta } from '../ui.tsx'
 
 const RECEIVER = 'Mma Kgosi'
-
-/**
- * Progress of the current Boloka transfer, for the demo's under-the-hood
- * strip (same browser, any tab or frame): the ordered steps and which have
- * landed. `null` steps clears it; a step appends. Not shown in this UI.
- */
-function publishProgress(reset: FlowStep[] | null, step?: FlowStep) {
-  const KEY = 'ui.flowProgress'
-  if (reset === null && !step) {
-    localStorage.removeItem(KEY)
-    return
-  }
-  const cur = reset ?? ((JSON.parse(localStorage.getItem(KEY) ?? 'null') as { steps: FlowStep[] } | null)?.steps ?? [])
-  const steps = step ? [...cur, step] : cur
-  localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), flow: FLOW, steps }))
-}
 const BOLOKA_RATE = 9.93
 const ORANGE_RATE = 9.87
 const CASH_RATE = 9.51
 /** The per-transfer cap on remittances into Orange Money (Remitly's cap), in pula. */
 const PER_TRANSFER_LIMIT = TRANSFER_CAP
-
-
-/** The steps of a Boloka transfer, in order, as the flow reports them. */
-/** Published to localStorage for the under-the-hood strip (see publishProgress). */
-const FLOW: { key: string; label: string }[] = [
-  { key: 'sep10', label: 'Signed in with the anchor (SEP-10)' },
-  { key: 'sep24-deposit', label: 'Anchor settled the deposit in USDC (SEP-24)' },
-  { key: 'pool-deposit', label: 'Paid into Boloka' },
-  { key: 'blend-supply', label: 'Put to work earning interest' },
-]
 
 type Method = 'boloka' | 'orange' | 'cash'
 const NAMES: Record<Method, string> = {
@@ -276,19 +251,19 @@ export default function SenderSend() {
 
   async function send() {
     setError('')
-    publishProgress(null)
+    clearProgress()
     try {
       if (method === 'boloka') {
         setBusy('Sending…')
         setSending(true)
-        publishProgress([])
+        startProgress('transfer in progress', DEPOSIT_FLOW)
         // A real anchor deposit (SEP-24) settles the money in USDC, which
         // goes into the Boloka pool for the receiver: a different app, so
         // the sender stays in MoneyGram and sees MoneyGram's own receipt.
         await depositForReceiver(
           pulaToUnits(cad * BOLOKA_RATE),
           { sender: 'Lerato', via: 'MoneyGram' },
-          (s) => publishProgress(null, s),
+          (s) => addProgress(s),
         )
       } else {
         setBusy('Sending…')
