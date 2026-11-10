@@ -3,7 +3,7 @@
 // Shown floating beside the phones on the homepage, and inside the strip.
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { EXPLORER } from './explorer.ts'
-import { readProgress, type Progress } from './progress.ts'
+import { fmtDuration, readProgress, stepDurations, type Progress } from './progress.ts'
 import { clampPos, useDraggable, type Pos } from './useDraggable.ts'
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace'
@@ -22,13 +22,32 @@ export function useProgress(): Progress | null {
   return progress
 }
 
+/** Re-renders four times a second while a step is running, for the live timers. */
+function useTicker(running: boolean) {
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!running) return
+    const t = setInterval(() => setTick((n) => n + 1), 250)
+    return () => clearInterval(t)
+  }, [running])
+}
+
 export function ProgressSteps({ progress }: { progress: Progress }) {
   const done = new Set(progress.steps.map((s) => s.key))
   const current = progress.failed ? undefined : progress.flow.find((f) => !done.has(f.key))
+  useTicker(!!current)
+  // Timers: each landed step shows how long it took (since the previous
+  // landing); the running step counts up live; the title carries the total.
+  const { byKey, lastDone } = stepDurations(progress)
+  const total = current ? Date.now() - progress.id : lastDone - progress.id
+  const timer: CSSProperties = { flex: 'none', minWidth: 46, textAlign: 'right', opacity: 0.8, fontVariantNumeric: 'tabular-nums' }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{ fontWeight: 700, color: progress.failed ? '#F28B82' : '#8EE0B4' }}>
-        {progress.failed ? progress.title.replace(' in progress', ' failed') : current ? `right now · ${progress.title}` : progress.title.replace(' in progress', ' settled')}
+      <div style={{ display: 'flex', gap: 8, fontWeight: 700, color: progress.failed ? '#F28B82' : '#8EE0B4' }}>
+        <span style={{ flex: 1 }}>
+          {progress.failed ? progress.title.replace(' in progress', ' failed') : current ? `right now · ${progress.title}` : progress.title.replace(' in progress', ' settled')}
+        </span>
+        <span style={{ ...timer, opacity: 1 }} title="Total time since the tap">{fmtDuration(total)}</span>
       </div>
       {progress.failed && <div style={{ color: '#F28B82' }}>✕ {progress.failed}</div>}
       {progress.flow.map((f) => {
@@ -49,6 +68,13 @@ export function ProgressSteps({ progress }: { progress: Progress }) {
               <a href={`${EXPLORER}/transactions/${s.tx}`} target="_blank" rel="noreferrer" style={{ color: '#8EE0B4', textDecoration: 'none', flex: 'none' }}>
                 {s.tx.slice(0, 6)}… ↗
               </a>
+            )}
+            {s?.doneAt && byKey.has(f.key) ? (
+              <span style={timer} title="Time this step took">{fmtDuration(byKey.get(f.key)!)}</span>
+            ) : now ? (
+              <span style={{ ...timer, color: '#F0B96B' }} title="Running for">{fmtDuration(Date.now() - lastDone)}</span>
+            ) : (
+              <span style={timer} />
             )}
           </div>
         )

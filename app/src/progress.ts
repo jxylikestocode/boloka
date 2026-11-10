@@ -4,7 +4,10 @@
 import type { FlowStep } from './deposit.ts'
 
 export type FlowDef = { key: string; label: string }[]
-export type Progress = { id: number; at: number; title: string; flow: FlowDef; steps: FlowStep[]; failed?: string }
+/** A flow step as the card knows it: the server's step plus when this browser saw it land. */
+export type TimedStep = FlowStep & { doneAt?: number }
+/** `id` doubles as the start time (ms); `at` is the last update, for staleness. */
+export type Progress = { id: number; at: number; title: string; flow: FlowDef; steps: TimedStep[]; failed?: string }
 
 const KEY = 'ui.flowProgress'
 
@@ -30,12 +33,40 @@ export function startProgress(title: string, flow: FlowDef, steps: FlowStep[] = 
   localStorage.setItem(KEY, JSON.stringify({ id: Date.now(), at: Date.now(), title, flow, steps } satisfies Progress))
 }
 
-/** Appends a step (one per key: the server may repeat a step the browser already added). */
+/**
+ * Appends a step, stamped with the time it landed (one per key: the server
+ * may repeat a step the browser already added; the first landing time stays).
+ */
 export function addProgress(step: FlowStep) {
   const cur = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Progress | null
   if (!cur) return
-  const steps = cur.steps.some((s) => s.key === step.key) ? cur.steps.map((s) => (s.key === step.key ? { ...s, ...step } : s)) : [...cur.steps, step]
+  const steps = cur.steps.some((s) => s.key === step.key)
+    ? cur.steps.map((s) => (s.key === step.key ? { ...s, ...step, doneAt: s.doneAt } : s))
+    : [...cur.steps, { ...step, doneAt: Date.now() }]
   localStorage.setItem(KEY, JSON.stringify({ ...cur, at: Date.now(), steps }))
+}
+
+/** "6.7 s", "1 m 05 s". */
+export function fmtDuration(ms: number): string {
+  const s = Math.max(0, ms) / 1000
+  if (s < 60) return `${s.toFixed(1)} s`
+  return `${Math.floor(s / 60)} m ${String(Math.round(s % 60)).padStart(2, '0')} s`
+}
+
+/**
+ * How long each step took: the time from the previous landing (or the start)
+ * to its own, in the order they landed. Parallel steps that land together
+ * show the second as ~0 s. Returns ms by step key, and the last landing time.
+ */
+export function stepDurations(p: Progress): { byKey: Map<string, number>; lastDone: number } {
+  const done = p.steps.filter((s) => s.doneAt).sort((a, b) => a.doneAt! - b.doneAt!)
+  const byKey = new Map<string, number>()
+  let prev = p.id
+  for (const s of done) {
+    byKey.set(s.key, s.doneAt! - prev)
+    prev = s.doneAt!
+  }
+  return { byKey, lastDone: prev }
 }
 
 export const clearProgress = () => localStorage.removeItem(KEY)
