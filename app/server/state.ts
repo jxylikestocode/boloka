@@ -2,7 +2,7 @@
 // origins (separate browser storage): GET /api/state → {version, items};
 // POST {key, value}. The deposit and withdrawal lists are merged by record
 // id, never replaced: they hold the secrets that open the deposits. Used by
-// the dev server, the production server and the Vercel function.
+// the dev server and the production server.
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { readEnv } from './config.ts'
 import { storage } from './storage.ts'

@@ -24,13 +24,8 @@ function valueFor(key: string, amount: string): string {
   return 'Test'
 }
 
-/** Desktop/container Chrome locally; the serverless Chromium build on Vercel or Lambda. */
-async function launchChrome() {
-  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    const chromium = (await import('@sparticuz/chromium')).default
-    return puppeteer.launch({ executablePath: await chromium.executablePath(), args: chromium.args, headless: true })
-  }
-  // --no-sandbox: Chrome runs as root inside the Docker container.
+/** Desktop Chrome locally, Chromium in the container (--no-sandbox: it runs as root there). */
+function launchChrome() {
   return puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-first-run', '--no-sandbox', '--disable-dev-shm-usage'] })
 }
 

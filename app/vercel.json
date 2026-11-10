@@ -1,6 +1,0 @@
-{
-  "buildCommand": "npx vite build",
-  "outputDirectory": "dist",
-  "functions": { "api/**/*.ts": { "maxDuration": 300 } },
-  "rewrites": [{ "source": "/((?!api/|assets/|icons/|runs/).*)", "destination": "/index.html" }]
-}

@@ -14,11 +14,10 @@ import * as yieldLeg from './yieldLeg.ts'
 import * as ledger from './ledger.ts'
 import { forDevice } from './chainTx.ts'
 import { storage } from './storage.ts'
-import { waitUntil } from '@vercel/functions'
 
 type Job = { id: string; flow: 'deposit' | 'payout'; status: 'running' | 'done' | 'error'; steps: Step[]; error?: string }
-// Jobs live in memory for the process that runs them and in storage for
-// anyone polling (on serverless the poll may land on another instance).
+// Jobs live in memory for the process that runs them and in storage, so a
+// poll still finds them after a restart.
 const jobs = new Map<string, Job>()
 const saveJob = (job: Job) => storage.write(`jobs/${job.id}.json`, JSON.stringify(job)).catch((e) => console.error('[job]', e))
 let queue: Promise<unknown> = Promise.resolve()
@@ -41,8 +40,6 @@ function start(flow: Job['flow'], run: (job: Job) => Promise<unknown>): string {
     )
     .then(() => saveJob(job))
   queue = next.catch(() => {})
-  // On Vercel the response goes out now and the flow keeps running until done.
-  waitUntil(next)
   return id
 }
 
