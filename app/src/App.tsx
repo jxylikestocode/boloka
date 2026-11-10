@@ -17,6 +17,7 @@ import OnChainOverlay from './OnChainOverlay.tsx'
 import FloatingProgress from './FlowProgress.tsx'
 import HowItWorks from './screens/HowItWorks.tsx'
 import Help from './screens/Help.tsx'
+import Settings from './screens/Settings.tsx'
 import BankApp from './screens/BankApp.tsx'
 
 /** The 390px-wide phone screens, which all need the user's account. */
@@ -86,7 +87,8 @@ export default function App() {
       {allInOne && <Route path="/send" element={<Navigate to="/moneygram" replace />} />}
       {/* Receiver screens that need no balance open without waiting. */}
       {FEATURES.drip && <Route path="/drip" element={<Drip />} />}
-      {FEATURES.privacy && <Route path="/private" element={<Private />} />}
+      {/* Reachable from Settings always; the flag only decides whether Home's bar links to it. */}
+      <Route path="/private" element={<Private />} />
       {/* For judges, not linked from the parents' screens. */}
       <Route path="/how-it-works" element={<HowItWorks mode="testnet" />} />
       {/* One URL for everything: the root explains the demo; Boloka's home is /home. */}
@@ -98,6 +100,7 @@ export default function App() {
         <Route path="/orange" element={<Send />} />
         <Route path="/prove" element={<ShowLender />} />
         <Route path="/help" element={<Help />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/dev" element={<Dev />} />
       </Route>
     </Routes>

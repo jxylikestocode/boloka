@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useSavings, type SendReceipt } from '../savings.tsx'
 import { DESTINATIONS, type Destination } from '../money.ts'
+import { settings } from '../settings.ts'
 import {
   BORDER, FONT, GREEN, INK, MUTED, RED, TINT,
   amt, BackHeader, BankIcon, button, disabledStyle, Frame, OrangeMoneyIcon, Row, Rows,
@@ -50,8 +51,8 @@ function DestinationRow({ d, on, onPick }: { d: Destination; on: boolean; onPick
 export default function Send() {
   const s = useSavings()
   const [params] = useSearchParams()
-  const [dest, setDest] = useState<Destination>(params.get('to') === 'orange' ? 'orange' : 'bank')
-  // The bank is the default; "Change" opens the other option.
+  // The default payout is a setting (the bank unless changed); "Change" opens the other option.
+  const [dest, setDest] = useState<Destination>(params.get('to') === 'orange' ? 'orange' : params.get('to') === 'bank' ? 'bank' : settings().payoutDefault)
   const [picking, setPicking] = useState(false)
   const [text, setText] = useState(amt(DESTINATIONS[dest].start))
   const [busy, setBusy] = useState(false)
