@@ -10,6 +10,7 @@ import { useMoney } from '../currency.ts'
 import { FEATURES } from '../features.ts'
 import { HIDDEN_COST, PULA_PER_USD, YIELD_CUT, parentsApr } from '../money.ts'
 import { GREEN, LINE, MUTED, PANEL, TINT, BackHeader, Frame, usePageMeta } from '../ui.tsx'
+import PoolAnimation from '../PoolAnimation.tsx'
 
 const icon = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: GREEN, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
 
@@ -57,6 +58,8 @@ export default function Help() {
           Money sent to you is kept in US dollars, earns interest, and comes out as pula whenever you need it.
         </div>
       </div>
+
+      <PoolAnimation />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <Point
