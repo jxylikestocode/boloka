@@ -64,6 +64,13 @@ change of that value.
   1 USDC minimum (any Orange Money payout, ≤ P 10,000) get a real pool withdrawal but a
   **simulated** anchor leg, recorded as such.
 
+## Soroban RPC
+
+`src/rpc.ts`: a list of public testnet RPCs with failover (`VITE_RPC_URLS` overrides), used by
+the browser and the server. gateway.fm and Ankr first: they answer in ~0.1–0.3 s; the SDF
+`soroban-testnet.stellar.org` endpoint took 0.04–8 s per call at random (measured 10 Nov 2026
+from Fly and a laptop) and made every flow step 10–25 s. Horizon stays SDF's (it was fast).
+
 ## USDC: Circle's vs Blend's (read before touching yield)
 
 - The anchor pays **Circle's testnet USDC** (`USDC:GBBD47…LA5`, SAC `CBIELT…DAMA`). The pool holds that.
