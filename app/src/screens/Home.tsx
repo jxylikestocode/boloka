@@ -5,10 +5,13 @@ import { useSavings, type Activity } from '../savings.tsx'
 import { monthlyGrowth } from '../money.ts'
 import { FEATURES } from '../features.ts'
 import { useYield } from '../yield.ts'
-import { GREEN, INK, LINE, MUTED, PANEL, TINT, amt, button, Frame, sectionLabel, when, usePageMeta, HOME } from '../ui.tsx'
+import { GREEN, INK, LINE, MUTED, PANEL, TINT, button, Frame, sectionLabel, when, usePageMeta, HOME } from '../ui.tsx'
+import { useMoney } from '../currency.ts'
+import CurrencyToggle from '../CurrencyToggle.tsx'
 
 function RecentItem({ a }: { a: Activity }) {
   const incoming = a.kind === 'in'
+  const { m } = useMoney()
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: PANEL, borderRadius: 14 }}>
       <div
@@ -45,7 +48,7 @@ function RecentItem({ a }: { a: Activity }) {
         </div>
       </div>
       <div style={{ fontSize: 15, fontWeight: 600, color: incoming ? GREEN : undefined }}>
-        {incoming ? '+' : '−'}P {amt(a.pula)}
+        {incoming ? '+' : '−'}{m(a.pula)}
       </div>
     </div>
   )
@@ -75,7 +78,7 @@ export default function Home() {
   const apr = useYield()?.apr ?? null
   const growth = loading ? null : monthlyGrowth(s.balance, apr)
   const navigate = useNavigate()
-  const whole = (n: number) => Math.round(n).toLocaleString('en-US')
+  const { cur, symbol, m } = useMoney()
 
   return (
     <Frame gap={20}>
@@ -95,16 +98,25 @@ export default function Home() {
       </div>
 
       <div style={{ background: GREEN, borderRadius: 20, padding: '24px 22px', color: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, opacity: 0.85 }}>Dollar savings</div>
-        <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -0.5 }}>
-          P {loading ? <span style={{ opacity: 0.45, animation: 'soft-pulse 1.2s ease-in-out infinite' }}>· · ·</span> : whole(s.balance)}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 13, fontWeight: 500, opacity: 0.85 }}>Dollar savings</div>
+          <CurrencyToggle light />
         </div>
-        <div style={{ fontSize: 13, opacity: 0.85 }}>Held in US dollars · shown in pula</div>
+        <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -0.5 }}>
+          {loading ? (
+            <>
+              {symbol} <span style={{ opacity: 0.45, animation: 'soft-pulse 1.2s ease-in-out infinite' }}>· · ·</span>
+            </>
+          ) : (
+            m(s.balance, { whole: true })
+          )}
+        </div>
+        <div style={{ fontSize: 13, opacity: 0.85 }}>{cur === 'USD' ? 'Held in US dollars · shown in dollars' : 'Held in US dollars · shown in pula'}</div>
         <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.16)', borderRadius: 999, padding: '6px 12px', fontSize: 13, fontWeight: 600, width: 'fit-content' }}>
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 16l6-6 4 4 6-6" />
           </svg>
-          {growth === null ? 'Growing' : `+P ${whole(growth)} this month`}
+          {growth === null ? 'Growing' : `+${m(growth, { whole: true })} this month`}
         </div>
       </div>
 

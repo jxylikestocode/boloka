@@ -10,7 +10,9 @@ held in US dollars, earning interest; other routes hide about 5% in the exchange
 ## Rules
 
 - **Parents' screens never say** USDC, wallet, address, key, blockchain, Stellar, SEP or crypto.
-  They show pula (`P 9,930`). CAD amounts are written `$ CAD`. Jargon is fine on the MoneyGram
+  They show pula (`P 9,930`), or US dollars (`$ 735.56`) when the parents flip the P / $ switch
+  on Home (`src/currency.ts`; balances and history follow it, the payout screen stays in pula
+  because the bank and Orange Money receive pula). CAD amounts are written `$ CAD`. Jargon is fine on the MoneyGram
   screen, `/admin` and `/how-it-works` (judges only, not linked from the parents' screens).
 - Every pula ↔ chain-unit conversion goes through `app/src/money.ts`; the copy's numbers
   (caps, limits, school fee, hidden cost) are constants there.

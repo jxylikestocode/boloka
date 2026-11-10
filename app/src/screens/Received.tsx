@@ -3,11 +3,13 @@ import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { markSeen } from '../seen.ts'
 import { useSavings } from '../savings.tsx'
-import { GREEN, INK, LINE, MUTED, TINT, amt, BackHeader, button, Frame, Row, Rows, when, usePageMeta, HOME } from '../ui.tsx'
+import { GREEN, INK, LINE, MUTED, TINT, BackHeader, button, Frame, Row, Rows, when, usePageMeta, HOME } from '../ui.tsx'
+import { useMoney } from '../currency.ts'
 
 export default function Received() {
   usePageMeta('Boloka — Money received')
   const s = useSavings()
+  const { m } = useMoney()
   const navigate = useNavigate()
   const id = (useLocation().state as { id?: string } | null)?.id
   // The deposit just made, or else the latest one.
@@ -43,13 +45,13 @@ export default function Received() {
         <div style={{ fontSize: 15, color: MUTED }}>
           Money from <strong style={{ color: INK }}>{item.title}</strong> {item.pending ? 'is on its way' : 'arrived'}
         </div>
-        <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: -0.5 }}>P {amt(item.pula)}</div>
+        <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: -0.5 }}>{m(item.pula)}</div>
         <div style={{ fontSize: 13, color: MUTED }}>{when(item.date)} · Sent from Canada{item.pending ? ' · arrives in a moment' : ''}</div>
       </div>
 
       <Rows>
         <Row label="Added to" value="Dollar savings" />
-        <Row label={item.pending ? 'Balance once it arrives' : 'New balance'} value={`P ${amt(item.pending ? s.balance + item.pula : s.balance)}`} />
+        <Row label={item.pending ? 'Balance once it arrives' : 'New balance'} value={m(item.pending ? s.balance + item.pula : s.balance)} />
         <Row label="Sent via" value={item.detail} />
         <Row label="Limit" value="None" valueStyle={{ color: GREEN }} last />
       </Rows>

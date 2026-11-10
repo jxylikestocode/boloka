@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSavings } from './savings.tsx'
 import { markSeen, seen } from './seen.ts'
-import { amt, FONT, GREEN, INK, MUTED } from './ui.tsx'
+import { FONT, GREEN, INK, MUTED } from './ui.tsx'
+import { useMoney } from './currency.ts'
 
 export default function Arrival() {
   const s = useSavings()
@@ -19,6 +20,7 @@ export default function Arrival() {
 
   // Re-check every few seconds so a stale notification goes away.
   const [, tick] = useState(0)
+  const { m } = useMoney()
   useEffect(() => {
     const t = setInterval(() => tick((n) => n + 1), 5000)
     return () => clearInterval(t)
@@ -67,7 +69,7 @@ export default function Arrival() {
           <span>now</span>
         </div>
         <div style={{ fontWeight: 700, marginTop: 2 }}>Money from {latest.title} {latest.pending ? 'is on its way' : 'arrived'}</div>
-        <div style={{ fontSize: 13, color: MUTED }}>P {amt(latest.pula)} {latest.pending ? 'arriving in' : 'added to'} your dollar savings</div>
+        <div style={{ fontSize: 13, color: MUTED }}>{m(latest.pula)} {latest.pending ? 'arriving in' : 'added to'} your dollar savings</div>
       </div>
       <button
         type="button"
