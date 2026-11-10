@@ -13,6 +13,7 @@ import { depositFlow, payoutFlow, type Step } from './flows.ts'
 import { fromHex } from '../src/proof.ts'
 import * as yieldLeg from './yieldLeg.ts'
 import * as ledger from './ledger.ts'
+import { forDevice } from './chainTx.ts'
 
 type Job = { id: string; flow: 'deposit' | 'payout'; status: 'running' | 'done' | 'error'; steps: Step[]; error?: string }
 const jobs = new Map<string, Job>()
@@ -63,7 +64,7 @@ const UNITS = /^[1-9]\d{0,15}$/
 
 export async function handle(req: IncomingMessage, res: ServerResponse, next: () => void) {
   const url = req.url ?? ''
-  if (!url.startsWith('/api/flow') && !url.startsWith('/api/yield') && !url.startsWith('/api/runs') && url !== '/api/transactions') {
+  if (!url.startsWith('/api/flow') && !url.startsWith('/api/yield') && !url.startsWith('/api/runs') && !url.startsWith('/api/transactions')) {
     return next()
   }
   const send = (code: number, data: unknown) => {
@@ -95,6 +96,14 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
     }
     if (req.method === 'GET' && url === '/api/transactions') {
       return send(200, ledger.all())
+    }
+    // This device's own transactions, read from the chain (see chainTx.ts).
+    if (req.method === 'POST' && url === '/api/transactions/mine') {
+      const b = await body(req)
+      if (typeof b.account !== 'string' || !/^G[A-Z2-7]{55}$/.test(b.account)) return send(400, { error: 'account' })
+      const commitments = Array.isArray(b.commitments) ? b.commitments.filter((c): c is string => typeof c === 'string' && /^[0-9a-f]{64}$/.test(c)) : []
+      const r = await roles(cfg)
+      return send(200, await forDevice(cfg.poolId, r.sender.publicKey(), b.account, new Set(commitments)))
     }
     if (req.method === 'GET' && url === '/api/yield') {
       const r = await roles(cfg)

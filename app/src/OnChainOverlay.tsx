@@ -5,6 +5,7 @@
 // parents' screens themselves stay free of chain words.
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent, type ReactNode } from 'react'
 import * as store from './store.ts'
+import { keypair } from './chain.ts'
 import { CHAIN_SCALE, PULA_PER_USD } from './money.ts'
 
 import { EXPLORER } from './explorer.ts'
@@ -115,25 +116,6 @@ function amountText(e: Entry, usdc: number | undefined) {
   return `${text} ≈ P ${Math.round(pula).toLocaleString('en-US')}`
 }
 
-/**
- * Transactions belonging to this device's transfers: every flow that holds a
- * pool deposit for one of its commitments, or a pool withdrawal it made.
- */
-function mine(all: Entry[]): Entry[] {
-  const commitments = new Set(store.deposits().map((d) => d.commitment))
-  const withdrawTxs = new Set(store.withdrawals().map((w) => w.tx).filter(Boolean))
-  const flows = new Set(
-    all
-      .filter(
-        (e) =>
-          (e.key === 'pool-deposit' && commitments.has(String(e.data?.commitment ?? ''))) ||
-          (e.key === 'pool-withdraw' && e.tx && withdrawTxs.has(e.tx)),
-      )
-      .map((e) => e.flowId),
-  )
-  return all.filter((e) => e.tx && flows.has(e.flowId)).sort((a, b) => b.at.localeCompare(a.at))
-}
-
 /** `facts` is an extra block shown at the top of the strip (Boloka's balance facts). */
 export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
   const [entries, setEntries] = useState<Entry[]>([])
@@ -146,7 +128,12 @@ export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
     let live = true
     const load = async () => {
       try {
-        const r = await fetch('/api/transactions', { cache: 'no-store' })
+        // Found on the chain: deposits by this device's commitments, withdrawals by its account.
+        const r = await fetch('/api/transactions/mine', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account: keypair().publicKey(), commitments: store.deposits().map((d) => d.commitment) }),
+        })
         if (!r.ok || !(r.headers.get('content-type') ?? '').includes('json')) return
         const all = (await r.json()) as Entry[]
         // Withdrawals submitted from this device show up before the ledger has them.
@@ -154,7 +141,7 @@ export default function OnChainOverlay({ facts }: { facts?: ReactNode }) {
           .withdrawals()
           .filter((w) => w.tx && !all.some((e) => e.tx === w.tx))
           .map((w) => ({ at: w.date, flowId: `local-${w.id}`, key: 'pool-withdraw', title: '', kind: 'real', tx: w.tx, usdc: Number(w.amount) / 1e7 }))
-        const next = [...local, ...mine(all)].sort((a, b) => b.at.localeCompare(a.at))
+        const next = [...local, ...all].sort((a, b) => b.at.localeCompare(a.at))
         if (!live) return
         setEntries(next)
         // A new transaction opens the strip; the viewer can fold it again.
