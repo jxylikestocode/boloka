@@ -1,7 +1,7 @@
 // The transfer or payout running right now, as a step list: ✓ done (with its
 // transaction link), a spinner for the step in progress, · for the rest.
 // Shown floating beside the phones on the homepage, and inside the strip.
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { EXPLORER } from './explorer.ts'
 import { readProgress, type Progress } from './progress.ts'
 import { clampPos, useDraggable, type Pos } from './useDraggable.ts'
@@ -60,14 +60,17 @@ export function ProgressSteps({ progress }: { progress: Progress }) {
 const CARD_W = 380
 
 /**
- * Where a new flow's card goes: just right of the phone where the action
- * happened (MoneyGram for a transfer, Boloka for a payout), a little below its
- * top; bottom-right of the window when that phone isn't on the page.
+ * Where a new flow's card goes: just ABOVE the phone where the action happened
+ * (MoneyGram for a transfer, Boloka for a payout), over the page's headline,
+ * aligned to that phone's left edge. Never beside it: the phone to its right
+ * is where the effect shows (the money arriving, the bank credit), and the
+ * card must not cover it. Bottom-right of the window when that phone isn't
+ * on the page.
  */
-function anchorFor(progress: Progress): Pos {
+function anchorFor(progress: Progress, cardHeight = 150): Pos {
   const app = progress.title.startsWith('payout') ? '/home' : '/moneygram'
   const r = document.querySelector(`[data-app="${app}"]`)?.getBoundingClientRect()
-  if (r && r.width > 0) return clampPos({ x: r.right + 12, y: r.top + 120 }, CARD_W)
+  if (r && r.width > 0) return clampPos({ x: r.left, y: Math.max(0, r.top - cardHeight - 10) }, CARD_W)
   return clampPos({ x: window.innerWidth - CARD_W - 16, y: window.innerHeight - 200 }, CARD_W)
 }
 
@@ -81,10 +84,12 @@ export default function FloatingProgress() {
   const progress = useProgress()
   const [dismissed, setDismissed] = useState<number | null>(null)
   const { pos, setPos, handle } = useDraggable({ key: null, width: CARD_W, defaultPos: () => null })
-  // A new flow re-anchors the card next to its phone (a drag moves it until the next flow).
+  const ref = useRef<HTMLDivElement>(null)
+  // A new flow re-anchors the card above its phone, using the card's real
+  // height once rendered (a drag moves it until the next flow).
   const flowId = progress?.id ?? null
   useEffect(() => {
-    if (progress) setPos(anchorFor(progress))
+    if (progress) setPos(anchorFor(progress, ref.current?.getBoundingClientRect().height))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flowId])
   if (!progress || dismissed === progress.id) return null
@@ -110,7 +115,7 @@ export default function FloatingProgress() {
     animation: 'arrival-in 320ms ease-out',
   }
   return (
-    <div style={style} data-progress="" data-strip="">
+    <div ref={ref} style={style} data-progress="" data-strip="">
       <div {...handle} title="Drag to move" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'grab', touchAction: 'none', userSelect: 'none', margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
         <span style={{ fontWeight: 700, color: '#8EE0B4', letterSpacing: 0.4 }}>⛓ DEMO · UNDER THE HOOD</span>
         <span style={{ flex: 1, opacity: 0.7 }}>not part of the apps · drag me</span>
