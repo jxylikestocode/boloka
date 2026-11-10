@@ -4,7 +4,7 @@
 import type { FlowStep } from './deposit.ts'
 
 export type FlowDef = { key: string; label: string }[]
-export type Progress = { at: number; title: string; flow: FlowDef; steps: FlowStep[] }
+export type Progress = { id: number; at: number; title: string; flow: FlowDef; steps: FlowStep[] }
 
 const KEY = 'ui.flowProgress'
 
@@ -24,7 +24,7 @@ export const PAYOUT_FLOW: FlowDef = [
 ]
 
 export function startProgress(title: string, flow: FlowDef, steps: FlowStep[] = []) {
-  localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), title, flow, steps } satisfies Progress))
+  localStorage.setItem(KEY, JSON.stringify({ id: Date.now(), at: Date.now(), title, flow, steps } satisfies Progress))
 }
 
 /** Appends a step (one per key: the server may repeat a step the browser already added). */

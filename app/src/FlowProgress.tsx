@@ -4,6 +4,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { EXPLORER } from './explorer.ts'
 import { readProgress, type Progress } from './progress.ts'
+import { clampPos, useDraggable, type Pos } from './useDraggable.ts'
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace'
 
@@ -52,41 +53,64 @@ export function ProgressSteps({ progress }: { progress: Progress }) {
   )
 }
 
+const CARD_W = 380
+
 /**
- * Floats at the bottom right of the homepage while a transfer or payout runs,
- * so the steps are seen without scrolling to the strip. Same console look as
- * the strip: clearly not part of the apps.
+ * Where a new flow's card goes: just right of the phone where the action
+ * happened (MoneyGram for a transfer, Boloka for a payout), a little below its
+ * top; bottom-right of the window when that phone isn't on the page.
+ */
+function anchorFor(progress: Progress): Pos {
+  const app = progress.title.startsWith('payout') ? '/home' : '/moneygram'
+  const r = document.querySelector(`[data-app="${app}"]`)?.getBoundingClientRect()
+  if (r && r.width > 0) return clampPos({ x: r.right + 12, y: r.top + 120 }, CARD_W)
+  return clampPos({ x: window.innerWidth - CARD_W - 16, y: window.innerHeight - 200 }, CARD_W)
+}
+
+/**
+ * Floats next to the app being used while a transfer or payout runs, so the
+ * steps are seen without scrolling to the strip. Draggable by its title bar,
+ * slightly see-through, and in the same console look as the strip: clearly
+ * not part of the apps.
  */
 export default function FloatingProgress() {
   const progress = useProgress()
   const [dismissed, setDismissed] = useState<number | null>(null)
-  if (!progress || dismissed === progress.at) return null
+  const { pos, setPos, handle } = useDraggable({ key: null, width: CARD_W, defaultPos: () => null })
+  // A new flow re-anchors the card next to its phone (a drag moves it until the next flow).
+  const flowId = progress?.id ?? null
+  useEffect(() => {
+    if (progress) setPos(anchorFor(progress))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowId])
+  if (!progress || dismissed === progress.id) return null
+  const at = pos ?? anchorFor(progress)
   const style: CSSProperties = {
     position: 'fixed',
-    right: 16,
-    bottom: 16,
+    left: at.x,
+    top: at.y,
     zIndex: 60,
-    width: 380,
+    width: CARD_W,
     padding: '10px 12px',
     fontFamily: MONO,
     fontSize: 11,
     color: '#D7E6DD',
-    background: 'rgba(12, 18, 16, 0.94)',
+    background: 'rgba(12, 18, 16, 0.78)',
     border: '1px dashed rgba(120, 220, 170, 0.55)',
     borderRadius: 10,
-    boxShadow: '0 8px 28px rgba(0,0,0,0.35)',
-    backdropFilter: 'blur(8px)',
+    boxShadow: '0 8px 28px rgba(0,0,0,0.3)',
+    backdropFilter: 'blur(6px)',
     display: 'flex',
     flexDirection: 'column',
     gap: 6,
     animation: 'arrival-in 320ms ease-out',
   }
   return (
-    <div style={style} data-progress="">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div style={style} data-progress="" data-strip="">
+      <div {...handle} title="Drag to move" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'grab', touchAction: 'none', userSelect: 'none', margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
         <span style={{ fontWeight: 700, color: '#8EE0B4', letterSpacing: 0.4 }}>⛓ DEMO · UNDER THE HOOD</span>
-        <span style={{ flex: 1, opacity: 0.7 }}>not part of the apps</span>
-        <button type="button" onClick={() => setDismissed(progress.at)} aria-label="Hide" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
+        <span style={{ flex: 1, opacity: 0.7 }}>not part of the apps · drag me</span>
+        <button type="button" onClick={() => setDismissed(progress.id)} aria-label="Hide" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
           ✕
         </button>
       </div>

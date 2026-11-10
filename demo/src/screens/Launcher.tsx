@@ -38,7 +38,7 @@ function Phone({ app, scale = 1 }: { app: (typeof APPS)[number]; scale?: number 
   const w = (PHONE_W + 16) * scale
   const h = (PHONE_H + 16) * scale
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: w, opacity: scale < 1 ? 0.92 : 1 }}>
+    <div data-app={app.href} style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: w, opacity: scale < 1 ? 0.92 : 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, alignSelf: 'stretch' }}>
         <img src={app.icon} alt="" width={30} height={30} style={{ borderRadius: 8 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
