@@ -81,6 +81,31 @@ export function setupAccount(kp: Keypair, assetSpec = ASSET): Promise<void> {
 }
 
 /**
+ * Readies an outside wallet for the pool: creates the account with friendbot
+ * if it does not exist yet (testnet), and adds the pool asset's trustline if
+ * missing (one signature). Returns true if a trustline was added.
+ */
+export async function ensureWalletReady(signer: Signer, assetSpec = ASSET): Promise<boolean> {
+  try {
+    await server.getAccount(signer.address)
+  } catch {
+    await server.fundAddress(signer.address)
+  }
+  const [code, issuer] = assetSpec.split(':')
+  const asset = new Asset(code, issuer)
+  const key = xdr.LedgerKey.trustline(
+    new xdr.LedgerKeyTrustLine({ accountId: Keypair.fromPublicKey(signer.address).xdrAccountId(), asset: asset.toTrustLineXDRObject() }),
+  )
+  const has = (await server.getLedgerEntries(key)).entries.length > 0
+  if (has) return false
+  await submit(signer, await build(signer.address, Operation.changeTrust({ asset })))
+  return true
+}
+
+/** An outside wallet's balance of the pool's token (1e-7 USDC units). */
+export const walletUnits = (walletAddress: string) => simulate('balance', [address(walletAddress)], TOKEN_ID) as Promise<bigint>
+
+/**
  * Something that can sign transactions for `address`: a local keypair, or a
  * wallet extension such as Freighter.
  */

@@ -25,6 +25,7 @@ dollars earning interest, and the P 24,000 school fee goes straight to the schoo
 | **Boloka** | Her parents ("Mom"), in Botswana | The money arrives in seconds, shown in pula or dollars, growing at Blend's real rate; **Send to family** moves some to Neo's Boloka privately, inside the pool; **Withdraw** pays the school fee to the bank or Orange Money |
 | **Boloka · Neo** | Kate's sister, with her own Boloka | Mom's transfer arrives in seconds, still in dollars (`/as/neo/home`) |
 | **Kalahari Bank** (fictional) | Mom's bank account | The payout lands; from there the school fee is paid |
+| **Send from a wallet** (`/wallet`, own window) | Thabo, with his own Stellar wallet | Signs in with Freighter (or a test wallet), gives to a Boloka ID under any name; the transfer is relayed by Boloka, so nobody can name him |
 
 The homepage shows two phones at a time: Mom's Boloka, and beside it whichever phone the
 money involves right now (MoneyGram while Kate sends, Neo when Mom sends to family, the bank
@@ -42,6 +43,10 @@ long it took. **Pool admin** (`/admin`) lists all transactions; **How it works**
 - **Savings:** a Soroban **pool contract** holds Circle's testnet USDC. Each deposit is a
   **note**: a Poseidon commitment to (amount, owner key, blinding) in a Merkle tree, plus a memo
   only the owner's phone can decrypt. Nobody can look up a balance or who sends to whom.
+- **Anonymous giving:** an outside wallet funds a private pocket in the pool (`deposit_note`), the
+  browser proves a transfer to the recipient's note, and the server's **relayer** (`POST /api/relay`)
+  submits it from Boloka's account, so the giver's wallet never signs the transfer. A testnet faucet
+  (`POST /api/faucet`) pays a visitor's wallet 1 USDC from the settlement float.
 - **Private transfers:** sending to another Boloka account is a **zero-knowledge spend**
   (Groth16, `circuits/spend.circom`, proved in the browser in about 1.5 s): the pool checks the
   proof and records two nullifiers and two new notes, learning neither the owners nor the

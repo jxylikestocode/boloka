@@ -32,6 +32,8 @@ export type ServerConfig = {
   anchorDomain: string
   /** Blend testnet pool and Blend's own mock USDC (the yield mirror's token). */
   blendPool: string
+  /** The account pool withdrawals are paid to; a relayed transfer binds it as a dummy recipient. */
+  payoutAddress: string
   blendUsdcId: string
   blendUsdcAsset: string
   /** On-chain amounts are 1/scale of the amounts the screens show. */
@@ -51,6 +53,7 @@ export function serverConfig(env = readEnv()): ServerConfig {
     asset: need('VITE_ASSET'),
     anchorDomain: need('VITE_ANCHOR_DOMAIN'),
     blendPool: need('VITE_BLEND_POOL'),
+    payoutAddress: need('VITE_PAYOUT_ADDRESS'),
     blendUsdcId: need('VITE_BLEND_USDC_ID'),
     blendUsdcAsset: need('VITE_BLEND_USDC_ASSET'),
     scale: Number(env.VITE_CHAIN_SCALE ?? '1000'),

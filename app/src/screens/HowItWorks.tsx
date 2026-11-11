@@ -69,6 +69,7 @@ const STORY: [string, ReactNode][] = [
   ['Boloka · Mom', <>Tap <b>Private transfer</b> → <b>Neo</b> (Kate's sister) → P 3,000 → <b>Send</b>. The homepage switches to Neo's phone beside Mom's.</>],
   ['Boloka · Neo', <><b>Money from Mom arrived · P 3,000</b> within seconds. The dollars never left the pool; the chain shows two nullifiers and two new notes, not the amount or the two people.</>],
   ['Boloka · Mom', <>Tap <b>Withdraw to cash</b> → <b>Pay to bank / school</b> → P 24,000 → <b>Pay</b>.</>],
+  ['Thabo · own window', <>Open <a href="/wallet" target="boloka-wallet" style={{ color: GREEN }}>send from a wallet</a>: sign in with Freighter (or a test wallet), pick Mom, give P 20,000 as "A friend". Mom's phone shows <b>Money from A friend</b>; neither Mom, Kate, Boloka nor the chain can name the giver.</>],
   ['Kalahari Bank', <>The balance counts up and the credit appears at the top, marked <b>NEW</b>.</>],
   ['Boloka → Lender', <>Open <a href="/prove" style={{ color: GREEN }}>Show a lender</a>, copy the code, paste it in the <a href="/lender" style={{ color: GREEN }}>lender portal</a> and tap Verify → <b>APPROVED</b>.</>],
 ]
@@ -225,6 +226,11 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
             the new notes are well formed, value is conserved, and any payout goes to this address. The chain records two nullifiers and two
             commitments: not which notes were spent, not the owners, and for a transfer not the amount. The dollars never leave the pool and
             keep earning. A send needing more than two notes first combines them, two at a time, with spends that pay nothing out.
+            <br />
+            <strong>Anonymous giving from an outside wallet</strong> (<a href="/wallet" target="boloka-wallet" style={{ color: GREEN }}>/wallet</a>): the wallet
+            funds a private pocket with <code>deposit_note</code> (public: that wallet paid the pool), the browser proves a transfer from the pocket to the
+            recipient's note, and <strong>Boloka's relayer</strong> (<code>POST /api/relay</code>) submits it from Boloka's own account, so the giver's
+            wallet never signs the transfer. The relayer checks shapes and that nothing is paid out; it learns neither party nor the amount.
           </div>
           <LatestTransfers />
         </div>

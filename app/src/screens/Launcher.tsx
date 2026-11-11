@@ -198,6 +198,10 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
         </a>
       ))}
       <span style={{ width: 1, height: 14, background: LINE }} />
+      <a href="/wallet" target="boloka-wallet" title="Give to a Boloka ID from an ordinary Stellar wallet, anonymously" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>
+        🤫 Thabo · send from a wallet ↗
+      </a>
+      <span style={{ width: 1, height: 14, background: LINE }} />
       <a href="/how-it-works" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>How it works →</a>
       <a href="/admin" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>Pool admin →</a>
     </div>

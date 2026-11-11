@@ -20,6 +20,7 @@ import HowItWorks from './screens/HowItWorks.tsx'
 import Help from './screens/Help.tsx'
 import Settings from './screens/Settings.tsx'
 import BankApp from './screens/BankApp.tsx'
+import Wallet from './screens/Wallet.tsx'
 
 /** The 390px-wide phone screens, which all need the user's account. */
 function Phone() {
@@ -81,6 +82,8 @@ export default function App() {
       <Route path="/lender" element={<Lender />} />
       {/* Pool admin: lend to and recall from Blend, signed with Freighter. */}
       <Route path="/admin" element={<Admin />} />
+      {/* A sender with an ordinary wallet gives to a Boloka ID anonymously (own window). */}
+      <Route path="/wallet" element={<Wallet />} />
       {/* The sender's mock MoneyGram screen, on the sender's own phone. */}
       {allInOne && <Route path="/moneygram" element={<><SenderSend /><OnChainOverlay /></>} />}
       {/* The receiver's bank app (fictional bank), where bank withdrawals land. */}

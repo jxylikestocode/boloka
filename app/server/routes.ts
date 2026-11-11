@@ -10,12 +10,14 @@ import { roles } from './accounts.ts'
 import { serverConfig } from './config.ts'
 import { depositFlow, payoutFlow, type Step } from './flows.ts'
 import { fromHex } from '../src/proof.ts'
+import { fieldScVal, fieldsScVal, memosScVal, proofScVal } from '../src/notes.ts'
+import { address, i128, invoke, payAsset } from './soroban.ts'
 import * as yieldLeg from './yieldLeg.ts'
 import * as ledger from './ledger.ts'
 import { forDevice } from './chainTx.ts'
 import { storage } from './storage.ts'
 
-type Job = { id: string; flow: 'deposit' | 'payout'; status: 'running' | 'done' | 'error'; steps: Step[]; error?: string }
+type Job = { id: string; flow: 'deposit' | 'payout' | 'relay'; status: 'running' | 'done' | 'error'; steps: Step[]; error?: string }
 // Jobs live in memory for the process that runs them and in storage, so a
 // poll still finds them after a restart.
 const jobs = new Map<string, Job>()
@@ -104,7 +106,7 @@ async function loadDirectory(): Promise<DirectoryEntry[]> {
 
 export async function handle(req: IncomingMessage, res: ServerResponse, next: () => void) {
   const url = req.url ?? ''
-  if (!url.startsWith('/api/flow') && !url.startsWith('/api/yield') && !url.startsWith('/api/runs') && !url.startsWith('/api/transactions') && !url.startsWith('/api/directory')) {
+  if (!url.startsWith('/api/flow') && !url.startsWith('/api/yield') && !url.startsWith('/api/runs') && !url.startsWith('/api/transactions') && !url.startsWith('/api/directory') && !url.startsWith('/api/relay') && !url.startsWith('/api/faucet')) {
     return next()
   }
   const send = (code: number, data: unknown) => {
@@ -125,6 +127,55 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
       const memo = typeof b.memo === 'string' ? fromHex(b.memo) : undefined
       const units = BigInt(b.units)
       return send(200, { id: start('deposit', async (job) => depositFlow(cfg, await roles(cfg), commitment, units, recorder(job), memo)) })
+    }
+    // The relayer: submits a zero-knowledge transfer inside the pool from
+    // Boloka's own account, so the sender's wallet never touches it (/wallet,
+    // src/give.ts). Transfers only: the public amount is always 0, and `to`
+    // (bound into the proof) must be the pool's payout address.
+    if (req.method === 'POST' && url === '/api/relay') {
+      const b = await body(req)
+      const HEX = (n: number) => new RegExp(`^[0-9a-f]{${n * 2}}$`)
+      const pr = b.proof as { a?: unknown; b?: unknown; c?: unknown } | undefined
+      if (!pr || typeof pr.a !== 'string' || !HEX(64).test(pr.a) || typeof pr.b !== 'string' || !HEX(128).test(pr.b) || typeof pr.c !== 'string' || !HEX(64).test(pr.c)) return send(400, { error: 'proof' })
+      const two = (v: unknown, n: number) => Array.isArray(v) && v.length === 2 && v.every((x) => typeof x === 'string' && HEX(n).test(x))
+      if (typeof b.root !== 'string' || !HEX(32).test(b.root)) return send(400, { error: 'root' })
+      if (!two(b.nullifiers, 32) || !two(b.commitments, 32)) return send(400, { error: 'nullifiers/commitments' })
+      if (!Array.isArray(b.memos) || b.memos.length !== 2 || !b.memos.every((m) => typeof m === 'string' && /^([0-9a-f]{2}){0,256}$/.test(m))) return send(400, { error: 'memos' })
+      if (b.to !== cfg.payoutAddress) return send(400, { error: 'to must be the payout address' })
+      const fe = (h: string) => BigInt('0x' + h)
+      const args = [
+        proofScVal({ a: fromHex(pr.a), b: fromHex(pr.b), c: fromHex(pr.c) }),
+        fieldScVal(fe(b.root)),
+        fieldsScVal((b.nullifiers as string[]).map(fe)),
+        fieldsScVal((b.commitments as string[]).map(fe)),
+        memosScVal((b.memos as string[]).map(fromHex)),
+        i128(0n),
+        address(cfg.payoutAddress),
+      ]
+      return send(200, {
+        id: start('relay', async (job) => {
+          const rec = recorder(job)
+          const t0 = Date.now()
+          const tx = await invoke((await roles(cfg)).sender, cfg.poolId, 'spend', args)
+          rec.step({
+            key: 'pool-transfer',
+            title: 'Pool spend: transfer into a Boloka account, relayed (zero-knowledge)',
+            kind: 'real',
+            tx,
+            note: `Submitted by Boloka's relayer for a sender's wallet; the relayer saw a proof, two nullifiers and two commitments, nothing else. ${((Date.now() - t0) / 1000).toFixed(1)} s.`,
+          })
+        }),
+      })
+    }
+    // Testnet only: a little of the pool's USDC for a visitor's wallet, from
+    // the settlement float (the anchor refills it on the next transfer).
+    if (req.method === 'POST' && url === '/api/faucet') {
+      const b = await body(req)
+      if (typeof b.account !== 'string' || !/^G[A-Z2-7]{55}$/.test(b.account)) return send(400, { error: 'account' })
+      const amount = '1.00'
+      const r = await roles(cfg)
+      const tx = await payAsset(r.sender, b.account, cfg.asset, amount)
+      return send(200, { tx, amount })
     }
     // Who can be paid: each phone registers its profile, name and Boloka ID (notes.ts) when it opens.
     if (url === '/api/directory') {

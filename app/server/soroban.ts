@@ -86,6 +86,16 @@ export async function prepareAccount(kp: Keypair, assets: string[]) {
 }
 
 /** Token balance of `who` on a token contract, in 1e-7 units. */
+/** Pays `amount` (a decimal string) of the classic asset "CODE:ISSUER" from `kp` to `to`. */
+export async function payAsset(kp: Keypair, to: string, assetSpec: string, amount: string) {
+  const [code, issuer] = assetSpec.split(':')
+  const tx = new TransactionBuilder(await server.getAccount(kp.publicKey()), { fee: BASE_FEE, networkPassphrase: NETWORK })
+    .addOperation(Operation.payment({ destination: to, asset: new Asset(code, issuer), amount }))
+    .setTimeout(120)
+    .build()
+  return send(tx, kp)
+}
+
 export async function tokenBalance(tokenId: string, who: string, source = who): Promise<bigint> {
   return BigInt(await simulate(tokenId, 'balance', [address(who)], source))
 }
