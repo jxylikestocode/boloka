@@ -8,7 +8,7 @@
 //            the parents see the money in ~10 s, the anchor settlement completes behind it.
 //            An empty float (first run) is funded by the anchor first, then refilled.
 //   payout:  pool withdraw (done in the parent's browser) → Blend withdraw → SEP-10 → SEP-24 withdrawal
-import { Keypair } from '@stellar/stellar-sdk'
+import { Keypair, xdr } from '@stellar/stellar-sdk'
 import { AnchorClient } from './anchor.ts'
 import type { ServerConfig } from './config.ts'
 import type { Roles } from './accounts.ts'
@@ -24,6 +24,8 @@ export type StepKey =
   | 'pool-withdraw'
   | 'blend-withdraw'
   | 'sep24-withdraw'
+  // Done in the parents' browser, recorded for the admin page.
+  | 'pool-transfer'
 
 export type Step = {
   key: StepKey
@@ -50,6 +52,8 @@ export async function depositFlow(
   commitment: Uint8Array,
   units: bigint,
   rec: Recorder,
+  /** The note's encrypted memo: with it, the deposit is a note in the note tree (deposit_note). */
+  memo?: Uint8Array,
 ) {
   const anchor = new AnchorClient({ homeDomain: cfg.anchorDomain, assetCode: cfg.asset.split(':')[0] })
   const { min, max } = await anchor.asset()
@@ -104,17 +108,22 @@ export async function depositFlow(
   }
 
   // The parents' deposit and its Blend mirror run together (different accounts).
+  const poolCall = memo
+    ? invoke(sender, cfg.poolId, 'deposit_note', [address(sender.publicKey()), bytes32(commitment), i128(units), xdr.ScVal.scvBytes(Buffer.from(memo))])
+    : invoke(sender, cfg.poolId, 'deposit', [address(sender.publicKey()), bytes32(commitment), i128(units)])
   const [poolTx, supplyTx] = await Promise.all([
-    invoke(sender, cfg.poolId, 'deposit', [address(sender.publicKey()), bytes32(commitment), i128(units)]).then((tx) => {
+    poolCall.then((tx) => {
       rec.step({
         key: 'pool-deposit',
-        title: 'Pool deposit for the parents (commitment only)',
+        title: memo ? 'Pool deposit for the parents (a note: commitment and encrypted memo)' : 'Pool deposit for the parents (commitment only)',
         kind: 'real',
         tx,
-        note: funded
-          ? 'Paid from the settlement float straight away (pre-funded, as a remittance payout partner is); the anchor refills the float below.'
-          : undefined,
-        data: { usdc: USDC(units), pool: cfg.poolId, commitment: Buffer.from(commitment).toString('hex'), float: funded ? 'pre-funded' : 'funded first' },
+        note:
+          (funded
+            ? 'Paid from the settlement float straight away (pre-funded, as a remittance payout partner is); the anchor refills the float below. '
+            : '') +
+          (memo ? "The chain holds the commitment Poseidon(amount, owner, blinding) and a memo only the owner's phone can open." : ''),
+        data: { usdc: USDC(units), pool: cfg.poolId, commitment: Buffer.from(commitment).toString('hex'), float: funded ? 'pre-funded' : 'funded first', note: !!memo },
       })
       return tx
     }),

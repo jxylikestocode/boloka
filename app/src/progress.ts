@@ -6,8 +6,8 @@ import type { FlowStep } from './deposit.ts'
 export type FlowDef = { key: string; label: string }[]
 /** A flow step as the card knows it: the server's step plus when this browser saw it land. */
 export type TimedStep = FlowStep & { doneAt?: number }
-/** `id` doubles as the start time (ms); `at` is the last update, for staleness. */
-export type Progress = { id: number; at: number; title: string; flow: FlowDef; steps: TimedStep[]; failed?: string }
+/** `id` doubles as the start time (ms); `at` is the last update, for staleness; `app` is the acting phone's path. */
+export type Progress = { id: number; at: number; title: string; flow: FlowDef; steps: TimedStep[]; failed?: string; app?: string }
 
 const KEY = 'ui.flowProgress'
 
@@ -22,15 +22,22 @@ export const DEPOSIT_FLOW: FlowDef = [
   { key: 'sep24-deposit', label: 'Settlement behind the scenes: anchor refills the float in USDC (SEP-24)' },
 ]
 
-/** Boloka → bank / Orange Money. */
+/** Boloka → bank / Orange Money: a zero-knowledge spend of the parents' notes, then the fiat leg. */
 export const PAYOUT_FLOW: FlowDef = [
+  { key: 'zk-proof', label: 'Zero-knowledge proof made on the phone (which notes, whose: not revealed)' },
   { key: 'pool-withdraw', label: 'Paid out of the savings pool · the app shows success here' },
   { key: 'blend-withdraw', label: 'Settlement behind the scenes: taken back from Blend (yield)' },
   { key: 'sep24-withdraw', label: 'Settlement behind the scenes: anchor pays out in local money (SEP-24)' },
 ]
 
-export function startProgress(title: string, flow: FlowDef, steps: FlowStep[] = []) {
-  localStorage.setItem(KEY, JSON.stringify({ id: Date.now(), at: Date.now(), title, flow, steps } satisfies Progress))
+/** Boloka → another Boloka: the dollars never leave the pool. */
+export const TRANSFER_FLOW: FlowDef = [
+  { key: 'zk-proof', label: 'Zero-knowledge proof made on the phone (which notes, whose, how much: not revealed)' },
+  { key: 'pool-transfer', label: 'Notes swapped inside the pool: two nullifiers in, two new notes out · the other phone shows arrival here' },
+]
+
+export function startProgress(title: string, flow: FlowDef, steps: FlowStep[] = [], app?: string) {
+  localStorage.setItem(KEY, JSON.stringify({ id: Date.now(), at: Date.now(), title, flow, steps, app } satisfies Progress))
 }
 
 /**

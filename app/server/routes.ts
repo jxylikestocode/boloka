@@ -92,9 +92,19 @@ function body(req: IncomingMessage): Promise<Record<string, unknown>> {
 
 const UNITS = /^[1-9]\d{0,15}$/
 
+const DIRECTORY = 'directory.json'
+type DirectoryEntry = { profile: string; name: string; id: string }
+async function loadDirectory(): Promise<DirectoryEntry[]> {
+  try {
+    return JSON.parse((await storage.read(DIRECTORY)) ?? '[]') as DirectoryEntry[]
+  } catch {
+    return []
+  }
+}
+
 export async function handle(req: IncomingMessage, res: ServerResponse, next: () => void) {
   const url = req.url ?? ''
-  if (!url.startsWith('/api/flow') && !url.startsWith('/api/yield') && !url.startsWith('/api/runs') && !url.startsWith('/api/transactions')) {
+  if (!url.startsWith('/api/flow') && !url.startsWith('/api/yield') && !url.startsWith('/api/runs') && !url.startsWith('/api/transactions') && !url.startsWith('/api/directory')) {
     return next()
   }
   const send = (code: number, data: unknown) => {
@@ -109,9 +119,25 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
       const b = await body(req)
       if (typeof b.commitment !== 'string' || !/^[0-9a-f]{64}$/.test(b.commitment)) return send(400, { error: 'commitment' })
       if (typeof b.units !== 'string' || !UNITS.test(b.units)) return send(400, { error: 'units' })
+      // With a memo the deposit is a note in the note tree (deposit_note); without, a leaf of the original tree.
+      if (b.memo !== undefined && (typeof b.memo !== 'string' || !/^([0-9a-f]{2}){0,256}$/.test(b.memo))) return send(400, { error: 'memo' })
       const commitment = fromHex(b.commitment)
+      const memo = typeof b.memo === 'string' ? fromHex(b.memo) : undefined
       const units = BigInt(b.units)
-      return send(200, { id: start('deposit', async (job) => depositFlow(cfg, await roles(cfg), commitment, units, recorder(job))) })
+      return send(200, { id: start('deposit', async (job) => depositFlow(cfg, await roles(cfg), commitment, units, recorder(job), memo)) })
+    }
+    // Who can be paid: each phone registers its profile, name and Boloka ID (notes.ts) when it opens.
+    if (url === '/api/directory') {
+      if (req.method === 'GET') return send(200, await loadDirectory())
+      if (req.method !== 'POST') return send(405, {})
+      const b = await body(req)
+      if (typeof b.profile !== 'string' || !/^[a-z0-9-]{0,24}$/.test(b.profile)) return send(400, { error: 'profile' })
+      if (typeof b.name !== 'string' || b.name.length === 0 || b.name.length > 40) return send(400, { error: 'name' })
+      if (typeof b.id !== 'string' || !/^BLK[A-Za-z0-9_-]{86}$/.test(b.id)) return send(400, { error: 'id' })
+      const entries = (await loadDirectory()).filter((e) => e.profile !== b.profile)
+      entries.push({ profile: b.profile, name: b.name, id: b.id })
+      await storage.write(DIRECTORY, JSON.stringify(entries))
+      return send(200, { ok: true })
     }
     if (req.method === 'POST' && url === '/api/flow/payout') {
       const b = await body(req)
@@ -127,6 +153,24 @@ export async function handle(req: IncomingMessage, res: ServerResponse, next: ()
     }
     if (req.method === 'GET' && url === '/api/transactions') {
       return send(200, await ledger.all())
+    }
+    // A spend the parents' browser submitted itself (a transfer inside the
+    // pool runs no server flow): listed on the admin page by its hash.
+    if (req.method === 'POST' && url === '/api/transactions/record') {
+      const b = await body(req)
+      if (typeof b.tx !== 'string' || !/^[0-9a-f]{64}$/.test(b.tx)) return send(400, { error: 'tx' })
+      if (b.kind !== 'transfer') return send(400, { error: 'kind' })
+      await ledger.append({
+        key: 'pool-transfer',
+        title: 'Pool spend: transfer between two Boloka accounts inside the pool (zero-knowledge)',
+        kind: 'real',
+        tx: b.tx,
+        note: 'Two nullifiers in, two new notes out; the chain learns neither the amount nor the two owners. Submitted by the sender’s phone.',
+        at: new Date().toISOString(),
+        flow: 'transfer',
+        flowId: b.tx.slice(0, 8),
+      })
+      return send(200, { ok: true })
     }
     // This device's own transactions, read from the chain (see chainTx.ts).
     if (req.method === 'POST' && url === '/api/transactions/mine') {

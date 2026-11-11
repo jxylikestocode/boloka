@@ -117,6 +117,53 @@ export type Proof = {
   items: { secret: Uint8Array; amount: bigint; index: number; path: Uint8Array[] }[]
 }
 
+/**
+ * A proof code over notes in the note tree: the owner's public key once, and
+ * for each note its opening (amount, blinding) and leaf index. The lender
+ * recomputes each commitment and asks the pool whether that is the note at
+ * that index, and reads the note's time for the month (verify.ts).
+ */
+export type NoteProof = {
+  claim: number
+  month: number
+  pk: bigint
+  items: { amount: bigint; blinding: bigint; index: number }[]
+}
+
+const PREFIX2 = 'SAV2.'
+const HEX64 = /^[0-9a-f]{64}$/
+
+export const isNoteProof = (code: string) => code.startsWith(PREFIX2)
+
+export function encodeNoteProof(p: NoteProof): string {
+  const hex = (n: bigint) => n.toString(16).padStart(64, '0')
+  const json = JSON.stringify({
+    c: p.claim,
+    m: p.month,
+    k: hex(p.pk),
+    d: p.items.map((it) => ({ a: it.amount.toString(), b: hex(it.blinding), i: it.index })),
+  })
+  return PREFIX2 + toB64(new TextEncoder().encode(json))
+}
+
+/** Throws if `code` is not a well-formed note proof code. */
+export function decodeNoteProof(code: string): NoteProof {
+  if (!code.startsWith(PREFIX2)) throw new Error('bad prefix')
+  const o = JSON.parse(new TextDecoder().decode(fromB64(code.slice(PREFIX2.length))))
+  if (typeof o.c !== 'number' || !Number.isInteger(o.m) || typeof o.k !== 'string' || !HEX64.test(o.k) || !Array.isArray(o.d)) {
+    throw new Error('bad fields')
+  }
+  return {
+    claim: o.c,
+    month: o.m,
+    pk: BigInt('0x' + o.k),
+    items: o.d.map((d: { a: string; b: string; i: number }) => {
+      if (!/^\d+$/.test(d.a) || typeof d.b !== 'string' || !HEX64.test(d.b) || !Number.isInteger(d.i) || d.i < 0) throw new Error('bad item')
+      return { amount: BigInt(d.a), blinding: BigInt('0x' + d.b), index: d.i }
+    }),
+  }
+}
+
 const PREFIX = 'SAV1.'
 
 export function encodeProof(p: Proof): string {

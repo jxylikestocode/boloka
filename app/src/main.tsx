@@ -8,13 +8,15 @@ import '@fontsource/inter/700.css'
 import './index.css'
 import App from './App.tsx'
 import { startSync } from './sync.ts'
+import { BASENAME } from './profile.ts'
 
 // Load the state shared with the other apps before the first screen reads it.
 await startSync()
 
+// A second phone runs under /as/<profile>/…: same screens, its own account (profile.ts).
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={BASENAME}>
       <App />
     </BrowserRouter>
   </StrictMode>,

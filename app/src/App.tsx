@@ -3,6 +3,7 @@ import { SavingsProvider, useSavings } from './savings.tsx'
 import Home from './screens/Home.tsx'
 import Received from './screens/Received.tsx'
 import Send from './screens/Send.tsx'
+import SendBoloka from './screens/SendBoloka.tsx'
 import Drip from './screens/Drip.tsx'
 import Private from './screens/Private.tsx'
 import ShowLender from './screens/ShowLender.tsx'
@@ -98,6 +99,8 @@ export default function App() {
         {allInOne ? <Route path="/home" element={<Home />} /> : <Route index element={<Home />} />}
         <Route path="/received" element={<Received />} />
         <Route path="/orange" element={<Send />} />
+        {/* To another Boloka account: a private transfer inside the pool. */}
+        <Route path="/send-boloka" element={<SendBoloka />} />
         <Route path="/prove" element={<ShowLender />} />
         <Route path="/help" element={<Help />} />
         <Route path="/settings" element={<Settings />} />

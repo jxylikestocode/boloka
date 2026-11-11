@@ -12,26 +12,36 @@ type Mode = 'testnet' | 'demo'
 const APPS: { n: number; name: string; who: string; href: string; icon: string; bg: string }[] = [
   { n: 1, name: 'MoneyGram', who: 'Kate sends $10,000 CAD from Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C' },
   { n: 2, name: 'Boloka', who: 'Her parents save it in dollars, in Botswana', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { n: 3, name: 'Kalahari Bank', who: 'The school fee lands in the bank', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
+  { n: 3, name: 'Boloka · Neo', who: "Kate's sister has her own Boloka: Mom sends her some, privately", href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
+  { n: 4, name: 'Kalahari Bank', who: 'The school fee lands in the bank', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
 ]
 
 const PHONE_W = 390
 const PHONE_H = 760
-/** The sender's and the bank's phones are shown smaller: Boloka is the app. */
+const GAP = 28
+const MARGIN = 48
+/** The other phones are shown smaller: Mom's Boloka is the app. At most this scale; less on a narrower screen. */
 const SIDE_SCALE = 0.82
-/** Three phones, gaps and margins. */
-const WIDE = PHONE_W + 2 * PHONE_W * SIDE_SCALE + 2 * 28 + 48
+/** Below this scale the side phones are too small to read: show the apps as cards instead. */
+const MIN_SIDE_SCALE = 0.58
+const SIDES = APPS.length - 1
+
+/** The side phones' scale that fits the window, or null when none does. */
+function sideScaleFor(width: number): number | null {
+  const scale = Math.min(SIDE_SCALE, (width - MARGIN - SIDES * GAP - (PHONE_W + 16)) / (SIDES * (PHONE_W + 16)))
+  return scale >= MIN_SIDE_SCALE ? scale : null
+}
 
 const card: CSSProperties = { background: '#FFFFFF', borderRadius: 18, border: `1px solid ${LINE}`, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }
 
-function useWide() {
-  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= WIDE)
+function useSideScale() {
+  const [scale, setScale] = useState(() => (typeof window !== 'undefined' ? sideScaleFor(window.innerWidth) : null))
   useEffect(() => {
-    const on = () => setWide(window.innerWidth >= WIDE)
+    const on = () => setScale(sideScaleFor(window.innerWidth))
     window.addEventListener('resize', on)
     return () => window.removeEventListener('resize', on)
   }, [])
-  return wide
+  return scale
 }
 
 /** A phone-shaped frame running one of the apps; side apps at a smaller scale. */
@@ -65,7 +75,9 @@ function Phone({ app, scale = 1 }: { app: (typeof APPS)[number]; scale?: number 
 
 export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?: ReactNode; floating?: ReactNode }) {
   usePageMeta('Boloka — Demo')
-  const wide = useWide()
+  const sideScale = useSideScale()
+  const wide = sideScale !== null
+  const WIDE = PHONE_W + 16 + SIDES * (PHONE_W + 16) * (sideScale ?? SIDE_SCALE) + SIDES * GAP + MARGIN
   return (
     <div style={{ minHeight: '100vh', background: PANEL, fontFamily: FONT, color: INK, display: 'flex', flexDirection: 'column' }}>
       <div style={{ background: '#FFFFFF', borderBottom: `1px solid ${LINE}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -85,15 +97,17 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
             Dollar savings for families in Botswana receiving money from abroad
           </h1>
           <div style={{ fontSize: 15, color: MUTED }}>
-            {wide ? 'Three apps, live, left to right: send in MoneyGram, watch it arrive in Boloka, pay the school fee into the bank.' : 'Three apps. Open them in order.'}
+            {wide
+              ? 'Four phones, live, left to right: send in MoneyGram, watch it arrive in Boloka, send some to Neo without leaving the pool, pay the school fee into the bank.'
+              : 'Four apps. Open them in order.'}
           </div>
         </div>
 
         {wide ? (
           <>
-            <div style={{ display: 'flex', gap: 28, justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: GAP, justifyContent: 'center', alignItems: 'center' }}>
               {APPS.map((a) => (
-                <Phone key={a.name} app={a} scale={a.name === 'Boloka' ? 1 : SIDE_SCALE} />
+                <Phone key={a.name} app={a} scale={a.href === '/home' ? 1 : sideScale} />
               ))}
             </div>
             {strip}

@@ -8,7 +8,8 @@ import { readEnv } from './config.ts'
 import { storage } from './storage.ts'
 
 type State = { version: number; items: Record<string, string> }
-const LISTS = new Set(['savings.deposits', 'savings.withdrawals'])
+// Merged by record id (never replaced): the deposit, withdrawal, note and spend lists of any profile.
+const LISTS = /^savings\.(?:[a-z0-9-]+\.)?(deposits|withdrawals|notes|spends)$/
 const FILE = 'shared-state.json'
 
 export async function loadState(): Promise<State> {
@@ -62,7 +63,7 @@ export async function handleState(req: IncomingMessage, res: ServerResponse): Pr
     if (typeof key !== 'string' || !/^(savings|demo)\./.test(key)) throw new Error('key')
     if (typeof value !== 'string') throw new Error('value')
     const s = await loadState()
-    s.items[key] = LISTS.has(key) ? mergeLists(s.items[key], value) : value
+    s.items[key] = LISTS.test(key) ? mergeLists(s.items[key], value) : value
     s.version++
     await storage.write(FILE, JSON.stringify(s))
     res.end(JSON.stringify({ version: s.version }))

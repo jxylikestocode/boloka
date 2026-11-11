@@ -17,6 +17,8 @@ import {
 import { ASSET, NETWORK_PASSPHRASE, POOL_ID, RPC_URLS, TOKEN_ID } from './config.ts'
 import { rpcServer } from './rpc.ts'
 import { toHex } from './proof.ts'
+import { scoped } from './profile.ts'
+import { fieldScVal, fieldsScVal, memosScVal, proofScVal, type Groth16Proof } from './notes.ts'
 
 const server = rpcServer(RPC_URLS)
 const pool = new Contract(POOL_ID)
@@ -37,8 +39,8 @@ function storedKeypair(storageKey: string): Keypair {
   return kp
 }
 
-/** The receiver's keypair: the person using the savings screens. */
-export const keypair = () => storedKeypair('savings.key')
+/** The receiver's keypair: the person using the savings screens (this phone's profile). */
+export const keypair = () => storedKeypair(scoped('savings.key'))
 /** The sender's keypair, used by the mock MoneyGram flow at /send. */
 export const senderKeypair = () => storedKeypair('savings.senderKey')
 
@@ -281,4 +283,79 @@ export async function readPool(nullifiers: Uint8Array[]) {
     }
   }
   return { leaves, used }
+}
+
+// ----- The note tree (contracts/pool: deposit_note / spend) -----
+
+const noteLeavesKey = xdr.ScVal.scvVec([xdr.ScVal.scvSymbol('NoteLeaves')])
+const noteKey = (i: number) => xdr.ScVal.scvVec([xdr.ScVal.scvSymbol('Note'), u32(i)])
+const spentKey = (n: Uint8Array) => xdr.ScVal.scvVec([xdr.ScVal.scvSymbol('Spent'), bytes32(n)])
+
+/** Reads persistent entries by key, in batches; absent keys are simply missing from the result. */
+async function readEntries(keys: xdr.ScVal[]): Promise<Map<string, xdr.ScVal>> {
+  const out = new Map<string, xdr.ScVal>()
+  for (let at = 0; at < keys.length; at += 200) {
+    const res = await server.getLedgerEntries(...keys.slice(at, at + 200).map(ledgerKey))
+    for (const e of res.entries) {
+      if (e.val.type !== 'contractData') continue
+      out.set(e.val.contractData.key.toXdr('base64'), e.val.contractData.val)
+    }
+  }
+  return out
+}
+
+/** Every note commitment in the note tree, in leaf order. */
+export async function readNoteLeaves(): Promise<Uint8Array[]> {
+  const got = await readEntries([noteLeavesKey])
+  const v = got.get(noteLeavesKey.toXdr('base64'))
+  if (!v) return []
+  if (v.type !== 'scvVec') throw new Error('unexpected note leaves value')
+  return (v.vec ?? []).map((x) => {
+    if (x.type !== 'scvBytes') throw new Error('unexpected note leaf')
+    return x.bytes.toBytes()
+  })
+}
+
+export type NoteEntry = { commitment: Uint8Array; memo: Uint8Array; at: number }
+
+/** The stored notes (commitment, memo, time) at these leaf indexes. */
+export async function readNotes(indexes: number[]): Promise<Map<number, NoteEntry>> {
+  const keys = indexes.map(noteKey)
+  const got = await readEntries(keys)
+  const out = new Map<number, NoteEntry>()
+  indexes.forEach((i, k) => {
+    const v = got.get(keys[k].toXdr('base64'))
+    if (!v) return
+    const n = scValToNative(v) as { commitment: Uint8Array; memo: Uint8Array; at: bigint }
+    out.set(i, { commitment: new Uint8Array(n.commitment), memo: new Uint8Array(n.memo), at: Number(n.at) })
+  })
+  return out
+}
+
+/** Which of these nullifiers the pool has seen spent (hex). */
+export async function readSpent(nullifiers: Uint8Array[]): Promise<Set<string>> {
+  if (nullifiers.length === 0) return new Set()
+  const keys = nullifiers.map(spentKey)
+  const got = await readEntries(keys)
+  return new Set(nullifiers.filter((_, k) => got.has(keys[k].toXdr('base64'))).map(toHex))
+}
+
+/**
+ * Submits a spend: the proof and its public values, the memos of the two new
+ * notes, what the pool pays out (0 for a transfer) and to whom. Resolves on
+ * submission; `confirmed` settles when it is in a ledger.
+ */
+export function spendNotes(
+  kp: Keypair,
+  s: { proof: Groth16Proof; root: bigint; nullifiers: bigint[]; commitments: bigint[]; memos: Uint8Array[]; amount: bigint; to: string },
+) {
+  return invokeAsync(kp, 'spend', [
+    proofScVal(s.proof),
+    fieldScVal(s.root),
+    fieldsScVal(s.nullifiers),
+    fieldsScVal(s.commitments),
+    memosScVal(s.memos),
+    i128(s.amount),
+    address(s.to),
+  ])
 }

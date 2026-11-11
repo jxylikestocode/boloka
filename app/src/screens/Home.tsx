@@ -8,6 +8,7 @@ import { useYield } from '../yield.ts'
 import { GREEN, INK, LINE, MUTED, PANEL, TINT, button, Frame, sectionLabel, when, usePageMeta, HOME } from '../ui.tsx'
 import { useMoney } from '../currency.ts'
 import CurrencyToggle from '../CurrencyToggle.tsx'
+import { ME } from '../profile.ts'
 
 function RecentItem({ a }: { a: Activity }) {
   const incoming = a.kind === 'in'
@@ -85,9 +86,9 @@ export default function Home() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: '50%', background: GREEN, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16 }}>
-            M
+            {ME.initial}
           </div>
-          <div style={{ fontSize: 16, fontWeight: 600 }}>Dumela, Mom</div>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>Dumela, {ME.name}</div>
         </div>
         <Link to="/settings" aria-label="Settings" style={{ width: 44, height: 44, border: 'none', background: PANEL, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round">
@@ -119,10 +120,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* One action: Withdraw (to bank / school or Orange Money, chosen next). */}
-      <button type="button" style={{ ...button.dark, width: '100%' }} onClick={() => navigate('/orange')}>
-        Withdraw
-      </button>
+      {/* Withdraw (to bank / school or Orange Money, chosen next), or send to family's Boloka. */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button type="button" style={{ ...button.dark, flex: 1 }} onClick={() => navigate('/orange')}>
+          Withdraw
+        </button>
+        <button type="button" style={{ ...button.outline, flex: 1 }} onClick={() => navigate('/send-boloka')}>
+          Send to family
+        </button>
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={sectionLabel}>Recent</div>

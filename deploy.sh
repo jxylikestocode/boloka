@@ -46,16 +46,23 @@ stellar contract build --package pool >&2
 TOKEN_ID=$(stellar contract id asset --asset "$ASSET" --network "$NETWORK")
 ADMIN=$(stellar keys public-key "$SOURCE")
 
-# Reuse the pool from app/.env only if it was set up for this same asset and
-# still exists on the network (testnet is reset periodically).
+# Reuse the pool from app/.env only if it was set up for this same asset, still
+# exists on the network (testnet is reset periodically) and can be upgraded
+# in place (a pool from before the note tree cannot: deploy a new one).
+WASM=target/wasm32v1-none/release/pool.wasm
 POOL_ID=$(get_env VITE_POOL_ID)
 if [[ -n "$POOL_ID" && "$(get_env VITE_ASSET)" == "$ASSET" ]] &&
-  stellar contract fetch --id "$POOL_ID" --network "$NETWORK" >/dev/null 2>&1; then
-  log "Reusing pool $POOL_ID from $ENV_FILE"
+  stellar contract info interface --id "$POOL_ID" --network "$NETWORK" 2>/dev/null | grep -q 'fn upgrade'; then
+  log "Reusing pool $POOL_ID from $ENV_FILE; upgrading its code if it changed"
+  # upload is idempotent: the same wasm gives the same hash, and upgrading to
+  # the code already running is harmless.
+  WASM_HASH=$(stellar contract upload --wasm "$WASM" --source-account "$SOURCE" --network "$NETWORK")
+  stellar contract invoke --id "$POOL_ID" --source-account "$SOURCE" --network "$NETWORK" \
+    -- upgrade --wasm_hash "$WASM_HASH" >&2
 else
   log "Deploying pool"
   POOL_ID=$(stellar contract deploy \
-    --wasm target/wasm32v1-none/release/pool.wasm \
+    --wasm "$WASM" \
     --source-account "$SOURCE" --network "$NETWORK")
 fi
 
@@ -72,6 +79,17 @@ if ! INIT_OUT=$(stellar contract invoke --id "$POOL_ID" \
     echo "$INIT_OUT" >&2
     exit 1
   fi
+fi
+
+# The spend circuit's verification key (circuits/build.sh → circuits/build/vk.json).
+# Without it the pool refuses spends (transfers and payouts of notes).
+VK_JSON=circuits/build/vk.json
+if [[ -f "$VK_JSON" ]]; then
+  log "Setting the spend circuit's verification key"
+  stellar contract invoke --id "$POOL_ID" --source-account "$SOURCE" --network "$NETWORK" \
+    -- set_verifier --vk "$(cat "$VK_JSON")" >&2
+else
+  log "No $VK_JSON: run circuits/build.sh and deploy again, or spends will be refused (NoVerifier)"
 fi
 
 BLEND_USDC_ID=$(stellar contract id asset --asset "$BLEND_USDC_ASSET" --network "$NETWORK")

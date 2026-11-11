@@ -9,7 +9,8 @@ crate-type = ["lib", "cdylib"]
 doctest = false
 
 [dependencies]
-soroban-sdk = { workspace = true }
+# hazmat-crypto: the Poseidon permutation host function (poseidon.rs).
+soroban-sdk = { workspace = true, features = ["hazmat-crypto"] }
 
 [dev-dependencies]
-soroban-sdk = { workspace = true, features = ["testutils"] }
+soroban-sdk = { workspace = true, features = ["hazmat-crypto", "testutils"] }

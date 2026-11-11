@@ -8,6 +8,8 @@ import { DESTINATIONS, type Destination } from '../money.ts'
 import { updateSettings, useSettings, type Settings as S } from '../settings.ts'
 import CurrencyToggle from '../CurrencyToggle.tsx'
 import { useCurrency } from '../currency.ts'
+import { ME } from '../profile.ts'
+import { useSavings } from '../savings.tsx'
 import { BORDER, GREEN, INK, LINE, MUTED, PANEL, TINT, BackHeader, Frame, button, sectionLabel, usePageMeta, when } from '../ui.tsx'
 
 const rowStyle: CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderBottom: `1px solid ${LINE}`, fontSize: 14 }
@@ -81,8 +83,10 @@ const Chip = ({ children }: { children: ReactNode }) => (
 export default function Settings() {
   usePageMeta('Boloka — Settings')
   const s = useSettings()
+  const s2 = useSavings()
   const cur = useCurrency()
   const [justBacked, setJustBacked] = useState(false)
+  const [copied, setCopied] = useState(false)
   const set = (patch: Partial<S>) => updateSettings(patch)
   const payout = (d: Destination) => DESTINATIONS[d]
 
@@ -91,12 +95,35 @@ export default function Settings() {
       <BackHeader title="Settings" />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: GREEN, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 20 }}>M</div>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: GREEN, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 20 }}>{ME.initial}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>Mom</div>
-          <div style={{ fontSize: 13, color: MUTED }}>+267 71 234 567 · Gaborone</div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{ME.name}</div>
+          <div style={{ fontSize: 13, color: MUTED }}>{[ME.phone, ME.town].filter(Boolean).join(' · ')}</div>
         </div>
       </div>
+
+      <Section
+        title="Your Boloka ID"
+        note="Give this to family who have Boloka: they can send money straight into your savings, in dollars, with no fee. It says nothing about your balance."
+      >
+        <Line
+          label={<span style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 12, wordBreak: 'break-all', fontWeight: 500 }}>{s2.myId}</span>}
+          right={
+            <button
+              type="button"
+              onClick={() => {
+                void navigator.clipboard?.writeText(s2.myId)
+                setCopied(true)
+                setTimeout(() => setCopied(false), 1500)
+              }}
+              style={{ ...button.outline, height: 36, padding: '0 14px', fontSize: 13, width: 'auto', flex: 'none' }}
+            >
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          }
+          last
+        />
+      </Section>
 
       <Section
         title="Back up & recovery"

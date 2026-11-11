@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { unitsToPula } from '../money.ts'
 import * as store from '../store.ts'
-import { readPool } from '../chain.ts'
+import { readPool, readSpent } from '../chain.ts'
 import { fromHex } from '../proof.ts'
 import { usePageMeta } from '../ui.tsx'
 
@@ -46,18 +46,25 @@ function history(): Txn[] {
  * pool has paid out (their nullifier is used on chain).
  */
 async function credits(): Promise<Txn[]> {
+  // Payouts of notes (spends) and, from before the note tree, withdrawals.
   const mine = store.withdrawals().filter((w) => w.dest === 'bank')
-  const { used } = await readPool(mine.map((w) => fromHex(w.nullifier)))
-  return mine
-    .filter((w) => used.has(w.nullifier))
-    .map((w) => ({
-      id: w.id,
-      title: 'Boloka Dollar Savings',
-      detail: `EFT credit · Ref ${w.reference}`,
-      pula: unitsToPula(BigInt(w.amount)) - w.fee,
-      date: w.date,
-      credit: true,
-    }))
+  const paid = store.spends().filter((s) => s.kind === 'payout' && s.dest === 'bank')
+  const [{ used }, spent] = await Promise.all([
+    readPool(mine.map((w) => fromHex(w.nullifier))),
+    readSpent(paid.flatMap((s) => s.nullifiers).map(fromHex)),
+  ])
+  const txn = (w: { id: string; reference: string; amount: string; fee: number; date: string }): Txn => ({
+    id: w.id,
+    title: 'Boloka Dollar Savings',
+    detail: `EFT credit · Ref ${w.reference}`,
+    pula: unitsToPula(BigInt(w.amount)) - w.fee,
+    date: w.date,
+    credit: true,
+  })
+  return [
+    ...mine.filter((w) => used.has(w.nullifier)).map(txn),
+    ...paid.filter((s) => s.nullifiers.every((n) => spent.has(n))).map(txn),
+  ]
 }
 
 const p2 = (n: number) =>

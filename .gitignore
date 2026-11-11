@@ -1,3 +1,10 @@
 target/
 node_modules/
 .DS_Store
+# The circuit build: powers of tau, proving key (shipped as app/public/zk/spend.zkey), r1cs.
+# The verification key stays: deploy.sh installs it in the pool.
+circuits/build/*
+!circuits/build/vk.json
+!circuits/build/verification_key.json
+app/directory.json
+app/jobs/

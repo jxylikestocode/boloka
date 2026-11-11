@@ -8,7 +8,7 @@ const LEDGER = 'runs/ledger.jsonl'
 
 export type LedgerEntry = Step & {
   /** Which flow the step belongs to. */
-  flow: 'deposit' | 'payout' | 'e2e'
+  flow: 'deposit' | 'payout' | 'transfer' | 'e2e'
   flowId: string
 }
 

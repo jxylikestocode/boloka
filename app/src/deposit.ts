@@ -1,5 +1,7 @@
 // Starting the server-side money flows (server/flows.ts) and following them.
-import { commitment, monthOf, randomBytes32, toHex } from './proof.ts'
+import { commitmentOf, randomField, sealMemo, toBytes32, toHex, type Recipient } from './notes.ts'
+import { PROFILE } from './profile.ts'
+import { recipientFor } from './wallet.ts'
 import * as store from './store.ts'
 import { failProgress } from './progress.ts'
 
@@ -45,37 +47,45 @@ export async function runFlow(
   return followFlow(await startFlow(path, body), onStep)
 }
 
+/** Which Boloka account MoneyGram pays: the main one ("Mom"). */
+export const RECEIVER_PROFILE = ''
+
 /**
- * Money for the parents: the secret and commitment are made HERE and the
- * secret never leaves this device (saved first, so it is never lost). The
- * server-side flow then runs the anchor's SEP-24 deposit into the sender's
- * settlement account and deposits that USDC into the pool under this
- * commitment, then mirrors it into Blend. Resolves once the server has
- * accepted the transfer; settlement continues and is reported via onStep.
+ * Money for the parents, as a note in the pool's note tree: a commitment to
+ * (amount, the receiver's key, a fresh blinding) and a memo with the amount
+ * and blinding that only the receiver's phone can open, so it finds the note
+ * by scanning the tree; nobody else can tell whose it is. The server-side
+ * flow pays the pool from the settlement float under that note, mirrors it
+ * into Blend and settles with the anchor behind it. Resolves once the server
+ * has accepted the transfer; settlement is reported via onStep.
  */
 export async function depositForReceiver(
   units: bigint,
   from: { sender: string; via: string },
   onStep?: (s: FlowStep) => void,
-): Promise<store.DepositRecord> {
-  const month = monthOf()
-  const secret = randomBytes32()
-  const leaf = await commitment(secret, units, month)
-  const rec: store.DepositRecord = {
-    id: toHex(leaf),
-    secret: toHex(secret),
+  to?: { name: string; recipient: Recipient; profile: string },
+): Promise<store.NoteRecord> {
+  const target = to ?? (await recipientFor(RECEIVER_PROFILE).then((r) => r && { ...r, profile: RECEIVER_PROFILE }))
+  if (!target) throw new Error('Boloka has no account to pay yet: open Boloka once first.')
+  const blinding = randomField()
+  const commitment = commitmentOf({ amount: units, pk: target.recipient.pk, blinding })
+  const memo = sealMemo(units, blinding, `${from.sender}|${from.via}`, target.recipient.memoPk)
+  const rec: store.NoteRecord = {
+    id: toHex(toBytes32(commitment)),
     amount: units.toString(),
-    month,
-    commitment: toHex(leaf),
-    sender: from.sender,
+    blinding: toHex(toBytes32(blinding)),
+    from: from.sender,
     via: from.via,
     date: new Date().toISOString(),
   }
-  store.addDeposit(rec)
-  const id = await startFlow('/api/flow/deposit', { commitment: toHex(leaf), units: units.toString() })
+  // On the receiver's own phone (the single-URL demo shares its storage) the
+  // note shows as on its way at once; elsewhere the receiver's scan finds it.
+  const local = target.profile === PROFILE
+  if (local) store.putNote(rec)
+  const id = await startFlow('/api/flow/deposit', { commitment: rec.id, units: units.toString(), memo: toHex(memo) })
   followFlow(id, onStep).catch((e) => {
     console.error('deposit flow', e)
-    store.markDepositFailed(rec.id)
+    if (local) store.markNoteFailed(rec.id)
     failProgress(e instanceof Error ? e.message : String(e))
   })
   return rec

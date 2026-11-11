@@ -8,7 +8,8 @@
 // hold the secrets that open the deposits, so losing one loses that money),
 // and any key only this browser has is uploaded rather than dropped.
 const SHARED = /^(savings|demo)\./
-const LISTS = new Set(['savings.deposits', 'savings.withdrawals'])
+// Merged by record id (never replaced): the deposit, withdrawal, note and spend lists of any profile.
+const LISTS = /^savings\.(?:[a-z0-9-]+\.)?(deposits|withdrawals|notes|spends)$/
 const setItem = Storage.prototype.setItem
 let version = -1
 let pending = 0
@@ -61,7 +62,7 @@ async function pull() {
     const local = localStorage.getItem(k)
     const remote = k in s.items ? s.items[k] : null
     let next: string | null
-    if (LISTS.has(k)) {
+    if (LISTS.test(k)) {
       next = mergeLists(local, remote)
       if (next !== remote) uploads.push(send(k, next))
     } else if (remote !== null) {

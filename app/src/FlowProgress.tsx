@@ -94,7 +94,7 @@ const CARD_W = 380
  * on the page.
  */
 function anchorFor(progress: Progress, cardHeight = 150): Pos {
-  const app = progress.title.startsWith('payout') ? '/home' : '/moneygram'
+  const app = progress.app ?? (progress.title.startsWith('payout') || progress.title.startsWith('sending') ? '/home' : '/moneygram')
   const r = document.querySelector(`[data-app="${app}"]`)?.getBoundingClientRect()
   // Kept within the phone's own columns: a phone narrower than the card gets the card right-aligned.
   if (r && r.width > 0) return clampPos({ x: Math.max(0, Math.min(r.left, r.right - CARD_W)), y: Math.max(0, r.top - cardHeight - 10) }, CARD_W)

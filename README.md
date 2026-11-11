@@ -22,10 +22,11 @@ dollars earning interest, and the P 24,000 school fee goes straight to the schoo
 | App | Who | What you see |
 |---|---|---|
 | **MoneyGram** (mock) | Kate, in Canada | Sends $10,000 CAD; Boloka is the only option with no cap |
-| **Boloka** | Her parents ("Mom"), in Botswana | The money arrives in seconds, shown in pula or dollars, growing at Blend's real rate; **Withdraw** pays the school fee to the bank or Orange Money |
+| **Boloka** | Her parents ("Mom"), in Botswana | The money arrives in seconds, shown in pula or dollars, growing at Blend's real rate; **Send to family** moves some to Neo's Boloka privately, inside the pool; **Withdraw** pays the school fee to the bank or Orange Money |
+| **Boloka · Neo** | Kate's sister, with her own Boloka | Mom's transfer arrives in seconds, still in dollars (`/as/neo/home`) |
 | **Kalahari Bank** (fictional) | The school's bank | The payout lands |
 
-The homepage shows the three as phones side by side. While a transfer or payout runs, a
+The homepage shows the four as phones side by side. While a transfer or payout runs, a
 floating **under the hood** card lists every step with its testnet transaction link and how
 long it took. **Pool admin** (`/admin`) lists all transactions; **How it works**
 (`/how-it-works`) tells the story for judges.
@@ -37,8 +38,13 @@ long it took. **Pool admin** (`/admin`) lists all transactions; **How it works**
   amount is mirrored into **Blend** for yield, and a Stellar **anchor** (SEP-10 / SEP-24,
   `testanchor.stellar.org`) then refills the float with USDC behind the scenes.
 - **Savings:** a Soroban **pool contract** holds Circle's testnet USDC. Each deposit is a
-  commitment; the secret stays on the parents' phone, so nobody can look up a balance or
-  who sends to whom. Withdrawals prove ownership with a Merkle path and a nullifier.
+  **note**: a Poseidon commitment to (amount, owner key, blinding) in a Merkle tree, plus a memo
+  only the owner's phone can decrypt. Nobody can look up a balance or who sends to whom.
+- **Private transfers:** sending to another Boloka account is a **zero-knowledge spend**
+  (Groth16, `circuits/spend.circom`, proved in the browser in about 1.5 s): the pool checks the
+  proof and records two nullifiers and two new notes, learning neither the owners nor the
+  amount. The dollars never leave the pool. A payout to the bank is the same spend with a
+  public amount, so withdrawals need the secret too.
 - **Yield:** the parents' "growing" figure is Blend's real supply rate, measured from the
   Blend position; Boloka keeps a share of the interest (`YIELD_CUT`, 20%) and charges no
   fees.
@@ -53,11 +59,15 @@ screens are in [CLAUDE.md](CLAUDE.md).
 ## Repository layout
 
 ```
-contracts/pool/   Soroban savings pool (Rust, soroban-sdk 29): deposit, withdraw, Blend hooks
+contracts/pool/   Soroban savings pool (Rust, soroban-sdk 29): notes + zero-knowledge spend (Groth16
+                  over BN254, Poseidon via host functions), the original deposit/withdraw, Blend hooks
+circuits/         spend.circom, build.sh (circom + snarkjs → proving key, verification key, fixtures)
 app/              the real app (React + Vite front end, Node server, testnet)
-  src/            screens: Boloka, MoneyGram mock, bank mock, lender portal, admin, how-it-works
-  server/         anchor client (SEP-1/10/24), flows, Blend yield mirror, ledger, API
-  scripts/        demo-e2e (whole flow from fresh accounts), setup-accounts, export-animation
+  src/            screens: Boloka, MoneyGram mock, bank mock, lender portal, admin, how-it-works;
+                  notes.ts (keys, memos, proving) and wallet.ts (this phone's Boloka ID)
+  public/zk/      the spend circuit's wasm + proving key the phones prove with (14 MB)
+  server/         anchor client (SEP-1/10/24), flows, Blend yield mirror, ledger, directory, API
+  scripts/        demo-e2e (whole flow from fresh accounts), setup-accounts, export-animation, zk-fixture
   Dockerfile, fly.toml   the public deployment (Fly.io)
 demo/             a simulated copy of the screens (no network) for recording video
 docs/             original HTML designs; the pool animation as SVG / GIF / MP4 / HTML
@@ -94,8 +104,11 @@ Prerequisites:
 - Node 24 and npm.
 
 ```bash
-./deploy.sh                       # builds + deploys the pool (or reuses the one in app/.env),
-                                  # creates sender / payout / yield accounts, writes app/.env
+circuits/build.sh                 # once, or after changing the circuit: proving key → app/public/zk,
+                                  # verification key → circuits/build/vk.json, test fixtures (~2 min)
+./deploy.sh                       # builds + deploys the pool (or upgrades the one in app/.env in place),
+                                  # installs the verification key, creates sender / payout / yield
+                                  # accounts, writes app/.env
 cd app
 npm install
 sed -i '' '/^VITE_API_ORIGIN=/d' .env     # use the local backend instead of boloka.fly.dev
@@ -107,7 +120,9 @@ npx vite --port 5181              # the app, now with the backend running in the
 `VERBOSE=1 npm run demo:e2e` also prints anchor statuses; `SEND_CAD=1000 SCHOOL_FEE=24000`
 vary the amounts. Role accounts are written to `app/.accounts.json` (gitignored; testnet keys).
 
-Contract tests: `cargo test -p pool`.
+Contract tests: `cargo test -p pool` (they replay real proofs from `contracts/pool/src/fixtures`,
+made by `circuits/build.sh`). The committed `app/public/zk/spend.zkey` and the pool's verification
+key belong together: after `circuits/build.sh`, run `./deploy.sh` so the pool accepts the new proofs.
 
 ## Configuration (`app/.env`, written by `deploy.sh`)
 
@@ -152,9 +167,13 @@ with `cd app && npm run export:animation` (needs Chrome and ffmpeg).
 
 ## Known limitations
 
-- The pool contract's withdrawal authorisation is a placeholder: the Merkle proof is
-  checked, but the proof-of-knowledge of the deposit secret is not, so anyone who can
-  read the chain could withdraw. The real zero-knowledge proof is the next step.
+- The Groth16 setup is a one-party developer ceremony (`circuits/build.sh`); a real deployment
+  needs a multi-party one. The circuit and contract are unaudited.
+- Deposits and payouts are visible on chain with their amounts (they move USDC); only transfers
+  inside the pool hide the amount. The fee-paying account of a spend is the phone's testnet key.
+- A spend uses at most two notes, so a send larger than the two biggest notes must be split.
+- The original SHA-256 tree (`deposit` / `withdraw`) is kept for savings from before the note
+  tree; its withdraw checks membership only, not knowledge of the secret.
 - Testnet only; the test anchor's KYC is auto-completed with fictional details. A production
   anchor's KYC is done by the customer or the sending app.
 - On testnet the pool never lends its own USDC (Blend lists a different mock USDC); a yield
