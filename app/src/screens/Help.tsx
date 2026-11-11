@@ -98,6 +98,21 @@ export default function Help() {
         </Point>
 
         <Point
+          title="Private transfer: dollars to family, inside the pool"
+          glyph={
+            <svg aria-hidden="true" {...icon}>
+              <path d="M4 12h12" />
+              <path d="M12 8l4 4-4 4" />
+              <circle cx="19" cy="12" r="2" />
+            </svg>
+          }
+        >
+          Send to anyone with Boloka from Home: the dollars never leave the pool, so there is no fee, no limit and nothing
+          to turn into pula. Your phone seals a new note that only their phone can open and proves the dollars were yours
+          without pointing at any note. Outsiders see that the pool was used, not who paid whom or how much. Give family
+          your Boloka ID (in Settings) so they can send to you the same way.
+        </Point>
+        <Point
           title="Where the interest comes from"
           glyph={
             <svg aria-hidden="true" {...icon}>

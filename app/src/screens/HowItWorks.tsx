@@ -62,14 +62,43 @@ function Link({ href, children }: { href: string; children: ReactNode }) {
 
 type Mode = 'testnet' | 'demo'
 
-/** The demo, as a visitor follows it across the three apps. */
+/** The demo, as a visitor follows it across the phones on the homepage. */
 const STORY: [string, ReactNode][] = [
   ['MoneyGram', <>Type <b>10,000</b> CAD. Orange Money and cash pickup grey out (over the P 9,500 per-transfer cap); Boloka stays available. Tap <b>Continue</b>.</>],
-  ['Boloka', <>A notification drops in: <b>Money from Kate arrived · P 99,300</b>. Tap it.</>],
-  ['Boloka', <>Tap <b>Withdraw to cash</b> → <b>Pay to bank / school</b> → P 24,000 → <b>Pay</b>.</>],
+  ['Boloka · Mom', <>A notification drops in: <b>Money from Kate arrived · P 99,300</b>. Tap it.</>],
+  ['Boloka · Mom', <>Tap <b>Private transfer</b> → <b>Neo</b> (Kate's sister) → P 3,000 → <b>Send</b>. The homepage switches to Neo's phone beside Mom's.</>],
+  ['Boloka · Neo', <><b>Money from Mom arrived · P 3,000</b> within seconds. The dollars never left the pool; the chain shows two nullifiers and two new notes, not the amount or the two people.</>],
+  ['Boloka · Mom', <>Tap <b>Withdraw to cash</b> → <b>Pay to bank / school</b> → P 24,000 → <b>Pay</b>.</>],
   ['Kalahari Bank', <>The balance counts up and the credit appears at the top, marked <b>NEW</b>.</>],
   ['Boloka → Lender', <>Open <a href="/prove" style={{ color: GREEN }}>Show a lender</a>, copy the code, paste it in the <a href="/lender" style={{ color: GREEN }}>lender portal</a> and tap Verify → <b>APPROVED</b>.</>],
 ]
+
+type Ledger = { key: string; kind: Step['kind']; tx?: string; title: string; at: string; flow: string }
+
+/** The last private transfers the phones submitted (recorded by the server when they confirm), newest first. */
+function LatestTransfers() {
+  const [rows, setRows] = useState<Ledger[] | null>(null)
+  useEffect(() => {
+    fetch('/api/transactions')
+      .then((r) => (r.ok ? (r.json() as Promise<Ledger[]>) : []))
+      .then((all) => setRows(all.filter((e) => e.key === 'pool-transfer').slice(0, 5)))
+      .catch(() => setRows([]))
+  }, [])
+  if (!rows) return null
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+      <div style={{ fontWeight: 700 }}>Latest private transfers on this deployment</div>
+      {rows.length === 0 && <div style={{ color: MUTED }}>None yet: make one from Mom's phone on the homepage.</div>}
+      {rows.map((e) => (
+        <div key={e.tx ?? e.at} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ color: MUTED }}>{new Date(e.at).toLocaleString('en-GB')}</span>
+          {e.tx && <Link href={`${EXPERT}/transactions/${e.tx}`}>{e.tx}</Link>}
+          <span style={{ fontSize: 11, fontWeight: 700, color: KIND.real.fg, background: KIND.real.bg, borderRadius: 999, padding: '2px 8px' }}>{KIND.real.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
   usePageMeta('Boloka — How it works')
@@ -103,10 +132,10 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
           <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.6 }}>
             Kate in Canada sends her parents $10,000 CAD. Transfer apps cap at P 9,500 per transfer, an ATM gives P 3,000 at a
             time (a card P 4,000), other routes hide about 5% in the exchange rate, and the pula keeps losing value. With Boloka
-            the whole amount arrives, sits in US dollars earning interest, and the P 24,000 school fee goes straight to the
-            school's bank — no cash trip.
+            the whole amount arrives, sits in US dollars earning interest, part of it goes to her sister Neo's Boloka privately,
+            inside the pool, and the P 24,000 school fee goes straight to the bank — no cash trip.
           </div>
-          <div style={{ fontSize: 15, fontWeight: 700, marginTop: 6 }}>Follow the story across the three apps</div>
+          <div style={{ fontSize: 15, fontWeight: 700, marginTop: 6 }}>Follow the story across the phones</div>
           <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {STORY.map(([app, text], i) => (
               <li key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -120,7 +149,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
           </ol>
           <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, borderTop: `1px solid ${LINE}`, paddingTop: 10 }}>
             {mode === 'testnet'
-              ? 'Every step runs on Stellar testnet: a Stellar anchor settles the money in and out, and the savings pool and yield are real contracts. A transfer reaches the parents in about 10 seconds (paid from a pre-funded settlement float); the anchor settlement completes behind it within a minute or two. Best on a laptop with the three apps side by side.'
+              ? 'Every step runs on Stellar testnet: a Stellar anchor settles the money in and out, and the savings pool and yield are real contracts. A transfer reaches the parents in about 10 seconds (paid from a pre-funded settlement float); the anchor settlement completes behind it within a minute or two. Best on a laptop: the homepage shows Mom\u2019s phone and, beside it, whichever phone the money involves.'
               : 'This build is simulated so the flow is instant; nothing goes on chain here. The run below is the real testnet rehearsal behind it, with every transaction.'}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
@@ -137,6 +166,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
           <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.6 }}>
             Pool deposit (from the settlement float) → Blend supply → SEP-10 auth → SEP-24 deposit (refills the float) → yield read → pool withdraw → SEP-24 withdrawal.
             Every step below is from one real run of <code>npm run demo:e2e</code> from fresh friendbot accounts; each hash opens on the chain explorer.
+            Private transfers between two Boloka accounts are not in this run (they happen on the phones); the latest ones are listed further down.
           </div>
           {run && (
             <div style={{ fontSize: 14, lineHeight: 1.7 }}>
@@ -184,6 +214,21 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
           </div>
         )}
 
+        <div style={{ ...card, gap: 10 }}>
+          <h2 style={{ margin: 0, fontSize: 20 }}>Private transfers: a zero-knowledge spend inside the pool</h2>
+          <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.6 }}>
+            Every deposit is a <strong>note</strong> in the pool's Merkle tree: Poseidon(amount, owner key, blinding), plus a memo with the
+            amount and blinding sealed to the owner (NaCl box), so only the owner's phone can find and open its notes.
+            A <strong>Private transfer</strong> (and a payout) is one <code>spend</code> call with a Groth16 proof (BN254,{' '}
+            <code>circuits/spend.circom</code>, two notes in, two out), made in the browser in about 1.5 s and verified by the contract through
+            the host's pairing. The proof says: the input notes are in the tree at a recent root, I own them, these are their nullifiers,
+            the new notes are well formed, value is conserved, and any payout goes to this address. The chain records two nullifiers and two
+            commitments: not which notes were spent, not the owners, and for a transfer not the amount. The dollars never leave the pool and
+            keep earning. A send needing more than two notes first combines them, two at a time, with spends that pay nothing out.
+          </div>
+          <LatestTransfers />
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
           <div style={card}>
             <div style={{ fontWeight: 700 }}>Two USDCs on testnet (and why there's a mirror)</div>
@@ -220,6 +265,11 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
               <li>
                 <strong>Small payouts.</strong> A payout below the anchor's 1 USDC minimum at this scale (e.g. Orange Money's P 3,000) gets a
                 real pool withdrawal but a simulated anchor leg, marked above when it happens.
+              </li>
+              <li>
+                <strong>Zero-knowledge spends.</strong> Real on chain: the pool verifies each Groth16 proof with the BN254 host functions
+                (Protocol 25+) and hashes the note tree with the Poseidon host function. The proving key comes from a one-party developer
+                setup (<code>circuits/build.sh</code>); production needs a multi-party ceremony.
               </li>
               <li>
                 <strong>Swapping anchors.</strong> Only <code>VITE_ANCHOR_DOMAIN</code> in app/.env names the anchor; MoneyGram, Yellow Card or any
