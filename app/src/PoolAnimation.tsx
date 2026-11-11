@@ -94,7 +94,7 @@ export default function PoolAnimation() {
         <text x="290" y="18" textAnchor="middle" fontSize="11" fontWeight="600" fill={INK} fontFamily={FONT}>To your bank</text>
         <text x="290" y="31" textAnchor="middle" fontSize="10" fill={MUTED} fontFamily={FONT}>paid out in pula</text>
         <text x="170" y="61" textAnchor="middle" fontSize="10.5" fontWeight="600" fill={GREEN} fontFamily={FONT}>Private transfer</text>
-        <text x="170" y="73" textAnchor="middle" fontSize="9" fill={MUTED} fontFamily={FONT}>nobody sees who or how much</text>
+        <text x="170" y="73" textAnchor="middle" fontSize="9" fill={MUTED} fontFamily={FONT}>nobody sees it</text>
 
         {/* The arcs the coins travel */}
         <path d="M58 42 C 80 70, 100 80, 128 92" fill="none" stroke={GREEN} strokeOpacity="0.35" strokeWidth="1.5" strokeDasharray="3 4" />
@@ -158,9 +158,9 @@ export default function PoolAnimation() {
             <Plus key={d} className="coin-cut" delay={d} r={5.5} />
           ))}
         </g>
-        <g transform="translate(246 184)">
-          <rect width="84" height="24" rx="12" fill={GREEN} />
-          <text x="42" y="16" textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#FFFFFF" fontFamily={FONT}>{pct(YIELD_CUT)} to Boloka</text>
+        <g transform="translate(172 184)">
+          <rect width="158" height="24" rx="12" fill={GREEN} />
+          <text x="79" y="16" textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#FFFFFF" fontFamily={FONT}>{pct(YIELD_CUT)} yield income to Boloka</text>
         </g>
       </svg>
     </div>
