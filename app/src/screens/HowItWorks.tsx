@@ -66,7 +66,7 @@ type Mode = 'testnet' | 'demo'
 const STORY: [string, ReactNode][] = [
   ['MoneyGram', <>Type <b>10,000</b> CAD. Orange Money and cash pickup grey out (over the P 9,500 per-transfer cap); Boloka stays available. Tap <b>Continue</b>.</>],
   ['Boloka', <>A notification drops in: <b>Money from Kate arrived · P 99,300</b>. Tap it.</>],
-  ['Boloka', <>Tap <b>Withdraw</b> → <b>Pay to bank / school</b> → P 24,000 → <b>Pay</b>.</>],
+  ['Boloka', <>Tap <b>Withdraw to cash</b> → <b>Pay to bank / school</b> → P 24,000 → <b>Pay</b>.</>],
   ['Kalahari Bank', <>The balance counts up and the credit appears at the top, marked <b>NEW</b>.</>],
   ['Boloka → Lender', <>Open <a href="/prove" style={{ color: GREEN }}>Show a lender</a>, copy the code, paste it in the <a href="/lender" style={{ color: GREEN }}>lender portal</a> and tap Verify → <b>APPROVED</b>.</>],
 ]

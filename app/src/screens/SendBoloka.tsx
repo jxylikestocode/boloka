@@ -56,7 +56,7 @@ export default function SendBoloka() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [receipt, setReceipt] = useState<TransferReceipt | null>(null)
-  usePageMeta(receipt ? 'Boloka — Sent' : 'Boloka — Send to Boloka')
+  usePageMeta(receipt ? 'Boloka — Sent' : 'Boloka — Private transfer')
 
   // Family with Boloka, as the demo's directory knows them (everyone but this phone).
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function SendBoloka() {
 
   return (
     <Frame gap={20}>
-      <BackHeader title="Send to Boloka" />
+      <BackHeader title="Private transfer" />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>To</div>

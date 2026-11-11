@@ -120,13 +120,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Withdraw (to bank / school or Orange Money, chosen next), or send to family's Boloka. */}
+      {/* Withdraw to cash (to bank / school or Orange Money, chosen next), or a private transfer to family's Boloka. */}
       <div style={{ display: 'flex', gap: 10 }}>
         <button type="button" style={{ ...button.dark, flex: 1 }} onClick={() => navigate('/orange')}>
-          Withdraw
+          Withdraw to cash
         </button>
         <button type="button" style={{ ...button.outline, flex: 1 }} onClick={() => navigate('/send-boloka')}>
-          Send to family
+          Private transfer
         </button>
       </div>
 

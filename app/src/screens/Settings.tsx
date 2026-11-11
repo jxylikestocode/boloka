@@ -154,7 +154,7 @@ export default function Settings() {
         <Line label="Ask before every withdrawal" sub="One more confirmation before money leaves" right={<Toggle on={s.confirmWithdraw} onChange={(v) => set({ confirmWithdraw: v })} label="Ask before every withdrawal" />} last />
       </Section>
 
-      <Section title="Payout accounts" note="Where Withdraw goes unless you choose otherwise on the screen. Tap one to make it the default.">
+      <Section title="Payout accounts" note="Where Withdraw to cash goes unless you choose otherwise on the screen. Tap one to make it the default.">
         {(['bank', 'orange'] as Destination[]).map((d, i, all) => (
           <Line
             key={d}

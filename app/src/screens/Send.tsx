@@ -58,7 +58,7 @@ export default function Send() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [receipt, setReceipt] = useState<SendReceipt | null>(null)
-  usePageMeta(receipt ? 'Boloka — Payment sent' : 'Boloka — Withdraw')
+  usePageMeta(receipt ? 'Boloka — Payment sent' : 'Boloka — Withdraw to cash')
 
   if (receipt) return <Confirmation r={receipt} />
 
@@ -84,7 +84,7 @@ export default function Send() {
 
   return (
     <Frame gap={20}>
-      <BackHeader title="Withdraw" />
+      <BackHeader title="Withdraw to cash" />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Pay out to</div>

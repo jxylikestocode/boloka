@@ -1,6 +1,6 @@
 // The root of the single-URL build: two phones at a time, the same size.
 // Mom's Boloka stays on the right; the phone beside it follows the money:
-// MoneyGram while Kate sends, Neo when Mom opens Send to family or a transfer
+// MoneyGram while Kate sends, Neo when Mom opens Private transfer or a transfer
 // runs, the bank when she withdraws. It switches by itself from what the
 // phones are doing (Mom's screen, the flow in progress) and can be picked by
 // hand. Until the first transfer, MoneyGram's Continue button pulses: that is
@@ -13,12 +13,13 @@ import { FONT, GREEN, INK, LINE, MUTED, PANEL, usePageMeta } from '../ui.tsx'
 
 type Mode = 'testnet' | 'demo'
 
-type App = { name: string; who: string; href: string; icon: string; bg: string }
+/** `person` is the emoji that says whose phone this is; `owner` their name. */
+type App = { name: string; owner: string; person: string; who: string; href: string; icon: string; bg: string }
 const APPS: App[] = [
-  { name: 'MoneyGram', who: 'Kate, in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C' },
-  { name: 'Boloka', who: 'Mom, in Gaborone', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Boloka', who: "Neo, Kate's sister, in Francistown", href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Kalahari Bank', who: "The school's bank", href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
+  { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C' },
+  { name: 'Boloka', owner: 'Mom', person: '👩🏿‍🦳', who: 'in Gaborone', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
+  { name: 'Boloka', owner: 'Neo', person: '👩🏿‍🎓', who: "Kate's sister, in Francistown", href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
+  { name: 'Kalahari Bank', owner: 'The school', person: '🏦', who: "the school's bank", href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
 ]
 const MOM = '/home'
 const byHref = (href: string) => APPS.find((a) => a.href === href)!
@@ -78,16 +79,18 @@ function Phone({ app, scale = 1, hidden = false }: { app: App; scale?: number; h
       <div style={{ width: w, height: h }}>
         <div style={{ width: PHONE_W + 16, height: PHONE_H + 16, padding: 8, borderRadius: 40, background: '#0F1412', boxShadow: app.href === MOM ? '0 24px 60px rgba(14,124,91,0.28), inset 0 0 0 1px rgba(255,255,255,0.08)' : '0 12px 30px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.08)', transform: `scale(${scale})`, transformOrigin: 'top left' }}>
           <iframe
-            title={`${app.name} · ${app.who}`}
+            title={`${app.name} · ${app.owner}, ${app.who}`}
             src={`${app.href}?embed=1`}
             style={{ width: PHONE_W, height: PHONE_H, border: 'none', borderRadius: 32, background: '#FFFFFF', display: 'block' }}
           />
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: MUTED }}>
-        <img src={app.icon} alt="" width={20} height={20} style={{ borderRadius: 6 }} />
-        <span style={{ fontWeight: 700, color: INK }}>{app.name}</span>
-        <span>· {app.who}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: MUTED }}>
+        <span style={{ fontSize: 26, lineHeight: 1 }} aria-hidden="true">{app.person}</span>
+        <span style={{ fontWeight: 700, color: INK, fontSize: 15 }}>{app.owner}</span>
+        <span>· {app.who} ·</span>
+        <img src={app.icon} alt="" width={18} height={18} style={{ borderRadius: 5 }} />
+        <span>{app.name}</span>
       </div>
     </div>
   )
@@ -95,7 +98,7 @@ function Phone({ app, scale = 1, hidden = false }: { app: App; scale?: number; h
 
 /**
  * Which phone belongs beside Mom's right now, from what the phones are doing:
- * Mom's screen (Send to family → Neo, Withdraw → the bank) and the flow in
+ * Mom's screen (Private transfer → Neo, Withdraw to cash → the bank) and the flow in
  * progress (Kate's transfer → MoneyGram, a send → Neo, a payout → the bank).
  * Each new signal switches once; a hand-picked phone stays until the next.
  * Also tells whether any flow has started since the page loaded.
@@ -191,7 +194,7 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
       <span>Open on its own:</span>
       {APPS.map((a) => (
         <a key={a.href} href={a.href} target={`boloka-${a.href}`} style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>
-          {a.name} · {a.who.split(',')[0]} ↗
+          {a.person} {a.owner === 'The school' ? a.name : `${a.owner} · ${a.name}`} ↗
         </a>
       ))}
       <span style={{ width: 1, height: 14, background: LINE }} />
@@ -229,8 +232,8 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
                     onClick={() => pick(href)}
                     style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px 0 8px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 14, fontWeight: 600, background: on ? GREEN : 'transparent', color: on ? '#FFFFFF' : MUTED, transition: 'background 200ms ease, color 200ms ease' }}
                   >
-                    <img src={a.icon} alt="" width={20} height={20} style={{ borderRadius: 6 }} />
-                    {a.name === 'Boloka' ? `Boloka · ${a.who.split(',')[0]}` : a.name}
+                    <span style={{ fontSize: 20, lineHeight: 1 }} aria-hidden="true">{a.person}</span>
+                    {a.owner === 'The school' ? a.name : `${a.owner} · ${a.name}`}
                   </button>
                 )
               })}
@@ -265,13 +268,13 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
               {APPS.map((a, i) => (
                 <div key={a.href} style={card}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <img src={a.icon} alt="" width={44} height={44} style={{ borderRadius: 11 }} />
+                    <span style={{ fontSize: 40, lineHeight: 1 }} aria-hidden="true">{a.person}</span>
                     <div>
-                      <div style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>App {i + 1}</div>
-                      <div style={{ fontSize: 18, fontWeight: 700 }}>{a.name}</div>
+                      <div style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>App {i + 1} · {a.name}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700 }}>{a.owner}</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5, flex: 1 }}>{a.who}</div>
+                  <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5, flex: 1 }}>{a.owner}, {a.who}</div>
                   <a href={a.href} target={`boloka-${a.href}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 46, borderRadius: 12, background: a.bg, color: '#FFFFFF', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
                     Open {a.name}
                   </a>
