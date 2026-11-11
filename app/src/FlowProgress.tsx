@@ -1,10 +1,11 @@
-// The transfer or payout running right now, as a step list: ✓ done (with its
-// transaction link), a spinner for the step in progress, · for the rest.
-// Shown floating beside the phones on the homepage, and inside the strip.
+// The transfer, send or payout running right now, as a step list: ✓ done (with
+// its transaction link), a spinner for the step in progress, · for the rest.
+// Shown as a status pill on the homepage (opening into the list) and inside
+// the apps' under-the-hood overlay.
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { EXPLORER } from './explorer.ts'
 import { fmtDuration, readProgress, stepDurations, type Progress } from './progress.ts'
-import { clampPos, useDraggable, type Pos } from './useDraggable.ts'
+import { useDraggable } from './useDraggable.ts'
 
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace'
 
@@ -85,67 +86,86 @@ export function ProgressSteps({ progress }: { progress: Progress }) {
 
 const CARD_W = 380
 
-/**
- * Where a new flow's card goes: just ABOVE the phone where the action happened
- * (MoneyGram for a transfer, Boloka for a payout), over the page's headline,
- * aligned to that phone's left edge. Never beside it: the phone to its right
- * is where the effect shows (the money arriving, the bank credit), and the
- * card must not cover it. Bottom-right of the window when that phone isn't
- * on the page.
- */
-function anchorFor(progress: Progress, cardHeight = 150): Pos {
-  const app = progress.app ?? (progress.title.startsWith('payout') || progress.title.startsWith('sending') ? '/home' : '/moneygram')
-  const r = document.querySelector(`[data-app="${app}"]`)?.getBoundingClientRect()
-  // Kept within the phone's own columns: a phone narrower than the card gets the card right-aligned.
-  if (r && r.width > 0) return clampPos({ x: Math.max(0, Math.min(r.left, r.right - CARD_W)), y: Math.max(0, r.top - cardHeight - 10) }, CARD_W)
-  return clampPos({ x: window.innerWidth - CARD_W - 16, y: window.innerHeight - 200 }, CARD_W)
+const consoleLook: CSSProperties = {
+  fontFamily: MONO,
+  fontSize: 11,
+  color: '#D7E6DD',
+  background: 'rgba(12, 18, 16, 0.82)',
+  border: '1px dashed rgba(120, 220, 170, 0.55)',
+  boxShadow: '0 8px 28px rgba(0,0,0,0.3)',
+  backdropFilter: 'blur(6px)',
 }
 
 /**
- * Floats next to the app being used while a transfer or payout runs, so the
- * steps are seen without scrolling to the strip. Draggable by its title bar,
- * slightly see-through, and in the same console look as the strip: clearly
- * not part of the apps.
+ * The transfer, send or payout running right now, as a one-line status pill
+ * in the bottom-right corner of the window: "transfer in progress · 2/4 ·
+ * 6.3 s". A click opens the full step list (with its transaction links and
+ * timers), which can be dragged anywhere; the pill is the default so the
+ * phones stay uncovered. In the same console look as the strip: clearly not
+ * part of the apps.
  */
 export default function FloatingProgress() {
   const progress = useProgress()
+  const [open, setOpen] = useState(false)
   const [dismissed, setDismissed] = useState<number | null>(null)
-  const { pos, setPos, handle } = useDraggable({ key: null, width: CARD_W, defaultPos: () => null })
+  const { pos, setPos, handle, lastWasDrag } = useDraggable({ key: null, width: CARD_W, defaultPos: () => null })
   const ref = useRef<HTMLDivElement>(null)
-  // A new flow re-anchors the card above its phone, using the card's real
-  // height once rendered (a drag moves it until the next flow).
+  // A new flow starts collapsed, back in the corner.
   const flowId = progress?.id ?? null
   useEffect(() => {
-    if (progress) setPos(anchorFor(progress, ref.current?.getBoundingClientRect().height))
+    setOpen(false)
+    setPos(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flowId])
+  const done = progress ? new Set(progress.steps.map((s) => s.key)) : new Set<string>()
+  const current = progress && !progress.failed ? progress.flow.find((f) => !done.has(f.key)) : undefined
+  useTicker(!!current && !open)
   if (!progress || dismissed === progress.id) return null
-  const at = pos ?? anchorFor(progress)
-  const style: CSSProperties = {
-    position: 'fixed',
-    left: at.x,
-    top: at.y,
-    zIndex: 60,
-    width: CARD_W,
-    padding: '10px 12px',
-    fontFamily: MONO,
-    fontSize: 11,
-    color: '#D7E6DD',
-    background: 'rgba(12, 18, 16, 0.78)',
-    border: '1px dashed rgba(120, 220, 170, 0.55)',
-    borderRadius: 10,
-    boxShadow: '0 8px 28px rgba(0,0,0,0.3)',
-    backdropFilter: 'blur(6px)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 6,
-    animation: 'arrival-in 320ms ease-out',
+
+  const { lastDone } = stepDurations(progress)
+  const total = current ? Date.now() - progress.id : lastDone - progress.id
+  const landed = progress.flow.filter((f) => done.has(f.key)).length
+  const state = progress.failed ? 'failed' : current ? 'running' : 'settled'
+  const tone = state === 'failed' ? '#F28B82' : state === 'settled' ? '#8EE0B4' : '#F0B96B'
+  const title = progress.title.replace(' in progress', '')
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        title="Show every step with its transaction"
+        data-progress-pill=""
+        style={{ ...consoleLook, position: 'fixed', right: 16, bottom: 16, zIndex: 60, borderRadius: 999, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', animation: 'arrival-in 320ms ease-out' }}
+      >
+        <span style={{ color: tone, fontWeight: 700 }}>
+          {state === 'running' ? (
+            <span aria-label="in progress" style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', border: `2px solid ${tone}`, borderRightColor: 'transparent', animation: 'strip-spin 0.8s linear infinite', verticalAlign: '-1px' }} />
+          ) : state === 'settled' ? (
+            '✓'
+          ) : (
+            '✕'
+          )}
+        </span>
+        <span style={{ fontWeight: 700, color: '#D7E6DD' }}>{title}</span>
+        <span style={{ opacity: 0.75 }}>
+          {state === 'running' ? 'in progress' : state} · {landed}/{progress.flow.length} · {fmtDuration(total)}
+        </span>
+        <span style={{ color: '#8EE0B4' }}>under the hood ▸</span>
+      </button>
+    )
   }
+
+  // Open: bottom-right until dragged.
+  const placement: CSSProperties = pos ? { left: pos.x, top: pos.y } : { right: 16, bottom: 16 }
   return (
-    <div ref={ref} style={style} data-progress="" data-strip="">
+    <div ref={ref} style={{ ...consoleLook, ...placement, position: 'fixed', zIndex: 60, width: CARD_W, padding: '10px 12px', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 6, animation: 'arrival-in 240ms ease-out' }} data-progress="" data-strip="">
       <div {...handle} title="Drag to move" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'grab', touchAction: 'none', userSelect: 'none', margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
         <span style={{ fontWeight: 700, color: '#8EE0B4', letterSpacing: 0.4 }}>⛓ DEMO · UNDER THE HOOD</span>
         <span style={{ flex: 1, opacity: 0.7 }}>drag me</span>
+        <button type="button" onClick={() => !lastWasDrag.current && setOpen(false)} aria-label="Collapse" title="Back to the status pill" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
+          ▾
+        </button>
         <button type="button" onClick={() => setDismissed(progress.id)} aria-label="Hide" style={{ background: 'transparent', border: 'none', color: '#D7E6DD', cursor: 'pointer', fontFamily: MONO, fontSize: 12, padding: '0 4px' }}>
           ✕
         </button>

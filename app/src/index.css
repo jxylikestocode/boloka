@@ -663,3 +663,12 @@ button:active,
 
 /* Numbers still arriving from the chain. */
 @keyframes soft-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
+
+/* Demo launcher: the button to tap next, pointed out with a soft pulse (set from the launcher page). */
+.demo-nudge {
+  animation: demo-nudge 1.6s ease-in-out infinite;
+}
+@keyframes demo-nudge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14, 124, 91, 0.55); }
+  60% { box-shadow: 0 0 0 10px rgba(14, 124, 91, 0); }
+}
