@@ -42,7 +42,8 @@ createServer((req, res) => {
     }
     const ext = extname(file)
     res.setHeader('Content-Type', TYPES[ext] ?? 'application/octet-stream')
-    res.setHeader('Cache-Control', ext === '.html' ? 'no-cache' : path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=300')
+    // The circuit files (14 MB) change only with a rebuild and redeploy: let browsers keep them for a day.
+    res.setHeader('Cache-Control', ext === '.html' ? 'no-cache' : path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : path.startsWith('/zk/') ? 'public, max-age=86400' : 'public, max-age=300')
     createReadStream(file).pipe(res)
     })
   })()

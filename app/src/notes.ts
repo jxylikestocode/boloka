@@ -225,9 +225,37 @@ export const g1 = (p: string[]) => concat(toBytes32(BigInt(p[0])), toBytes32(Big
 export const g2 = (p: string[][]) =>
   concat(toBytes32(BigInt(p[0][1])), toBytes32(BigInt(p[0][0])), toBytes32(BigInt(p[1][1])), toBytes32(BigInt(p[1][0])))
 
-/** Makes the proof for `plan` (a few seconds in a browser). */
+// The circuit files, fetched once each and kept: handed to snarkjs as bytes,
+// since given a URL it reads them in many small range requests (seconds per
+// proof over the network; the production server also answers each with the
+// whole file). File paths (Node) are passed through.
+const fetched = new Map<string, Promise<Uint8Array>>()
+const isUrl = (f: string) => /^https?:\/\//.test(f) || (typeof window !== 'undefined' && f.startsWith('/'))
+function circuitFile(f: string): Promise<Uint8Array | string> {
+  if (!isUrl(f)) return Promise.resolve(f)
+  let p = fetched.get(f)
+  if (!p) {
+    p = fetch(f)
+      .then((r) => {
+        if (!r.ok) throw new Error(`${f}: ${r.status}`)
+        return r.arrayBuffer()
+      })
+      .then((b) => new Uint8Array(b))
+    p.catch(() => fetched.delete(f))
+    fetched.set(f, p)
+  }
+  return p
+}
+
+/** Starts downloading the circuit files so the first proof does not wait for them. */
+export function warmCircuit(files: CircuitFiles = CIRCUIT) {
+  void Promise.all([circuitFile(files.wasm), circuitFile(files.zkey)]).catch(() => {})
+}
+
+/** Makes the proof for `plan` (a second or two in a browser once the circuit files are loaded). */
 export async function proveSpend(plan: SpendPlan, files: CircuitFiles = CIRCUIT): Promise<SpendProof> {
   const { groth16 } = await import('./snarkjs.ts')
+  const [wasm, zkey] = await Promise.all([circuitFile(files.wasm), circuitFile(files.zkey)])
   const { keys, ins, outs } = plan
   const nullifiers = ins.map((i) => nullifierOf(commitmentOf({ amount: i.amount, pk: keys.pk, blinding: i.blinding }), keys.sk)) as [bigint, bigint]
   const commitments = outs.map(commitmentOf) as [bigint, bigint]
@@ -247,7 +275,7 @@ export async function proveSpend(plan: SpendPlan, files: CircuitFiles = CIRCUIT)
     outPk: outs.map((o) => s(o.pk)),
     outBlinding: outs.map((o) => s(o.blinding)),
   }
-  const { proof, publicSignals } = await groth16.fullProve(input, files.wasm, files.zkey)
+  const { proof, publicSignals } = await groth16.fullProve(input, wasm, zkey)
   return {
     proof: { a: g1(proof.pi_a), b: g2(proof.pi_b), c: g1(proof.pi_c) },
     root: plan.root,

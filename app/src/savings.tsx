@@ -45,6 +45,7 @@ import {
   recipientHash,
   sealMemo,
   toBytes32,
+  warmCircuit,
   type InputNote,
   type Opening,
   type Recipient,
@@ -290,12 +291,15 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     // account is set up in the background and awaited only before sending.
     setupAccount(keypair()).catch(console.error)
     void register()
+    // The proving files (14 MB) in the background, so the first send does not wait for them.
+    const warm = setTimeout(warmCircuit, 4000)
     refresh()
       .then(() => setStatus('ready'))
       .catch((e) => {
         console.error(e)
         setStatus('error')
       })
+    return () => clearTimeout(warm)
   }, [refresh])
 
   // MoneyGram and the other phone run as separate apps; their notes reach this
