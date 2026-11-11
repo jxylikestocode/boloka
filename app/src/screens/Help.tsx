@@ -110,7 +110,8 @@ export default function Help() {
           Send to anyone with Boloka from Home: the dollars never leave the pool, so there is no fee, no limit and nothing
           to turn into pula. Your phone seals a new note that only their phone can open and proves the dollars were yours
           without pointing at any note. Outsiders see that the pool was used, not who paid whom or how much. Give family
-          your Boloka ID (in Settings) so they can send to you the same way.
+          your Boloka ID (in Settings) so they can send to you the same way. It is not only for family: someone who wants
+          to help you without being named can give to you this way too, from their own wallet, under any name they choose.
         </Point>
         <Point
           title="Where the interest comes from"

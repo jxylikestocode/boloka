@@ -226,6 +226,8 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
             the new notes are well formed, value is conserved, and any payout goes to this address. The chain records two nullifiers and two
             commitments: not which notes were spent, not the owners, and for a transfer not the amount. The dollars never leave the pool and
             keep earning. A send needing more than two notes first combines them, two at a time, with spends that pay nothing out.
+            The case that made us build it: Kate's boyfriend, well off and shy, wants Mom to have the school money without Kate, Mom or
+            Boloka knowing it was him. Every other rail puts his name on it; a private transfer puts nothing on it.
             <br />
             <strong>Anonymous giving from an outside wallet</strong> (<a href="/wallet" target="boloka-wallet" style={{ color: GREEN }}>/wallet</a>): the wallet
             funds a private pocket with <code>deposit_note</code> (public: that wallet paid the pool), the browser proves a transfer from the pocket to the
