@@ -136,7 +136,7 @@ export default function FloatingProgress() {
         onClick={() => setOpen(true)}
         title="Show every step with its transaction"
         data-progress-pill=""
-        style={{ ...consoleLook, position: 'fixed', right: 16, bottom: 16, zIndex: 60, borderRadius: 999, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', animation: 'arrival-in 320ms ease-out' }}
+        style={{ ...consoleLook, position: 'fixed', right: 16, bottom: 16, zIndex: 60, borderRadius: 999, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', animation: 'fade-down 260ms ease-out' }}
       >
         <span style={{ color: tone, fontWeight: 700 }}>
           {state === 'running' ? (
@@ -159,7 +159,7 @@ export default function FloatingProgress() {
   // Open: bottom-right until dragged.
   const placement: CSSProperties = pos ? { left: pos.x, top: pos.y } : { right: 16, bottom: 16 }
   return (
-    <div ref={ref} style={{ ...consoleLook, ...placement, position: 'fixed', zIndex: 60, width: CARD_W, padding: '10px 12px', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 6, animation: 'arrival-in 240ms ease-out' }} data-progress="" data-strip="">
+    <div ref={ref} style={{ ...consoleLook, ...placement, position: 'fixed', zIndex: 60, width: CARD_W, padding: '10px 12px', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 6, animation: 'fade-down 240ms ease-out' }} data-progress="" data-strip="">
       <div {...handle} title="Drag to move" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'grab', touchAction: 'none', userSelect: 'none', margin: '-10px -12px 0', padding: '10px 12px 4px' }}>
         <span style={{ fontWeight: 700, color: '#8EE0B4', letterSpacing: 0.4 }}>⛓ DEMO · UNDER THE HOOD</span>
         <span style={{ flex: 1, opacity: 0.7 }}>drag me</span>

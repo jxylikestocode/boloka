@@ -250,7 +250,7 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
                 )
               })}
             </div>
-            <div key={partner} style={{ fontSize: 15, color: INK, textAlign: 'center', maxWidth: 760, lineHeight: 1.45, animation: 'arrival-in 240ms ease-out' }}>
+            <div key={partner} style={{ fontSize: 15, color: INK, textAlign: 'center', maxWidth: 760, lineHeight: 1.45, animation: 'fade-down 260ms ease-out' }}>
               {byHref(partner).goal}
             </div>
             </div>

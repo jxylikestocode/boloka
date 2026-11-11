@@ -664,6 +664,12 @@ button:active,
 /* Numbers still arriving from the chain. */
 @keyframes soft-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
 
+/* A line or panel appearing in place: fades in while settling down a few pixels. */
+@keyframes fade-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* Demo launcher: the button to tap next, pointed out with a soft pulse (set from the launcher page). */
 .demo-nudge {
   animation: demo-nudge 1.6s ease-in-out infinite;
