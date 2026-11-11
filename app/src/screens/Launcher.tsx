@@ -1,8 +1,8 @@
 // The root of the single-URL build: a guided walk through the story, two
 // phones at a time, the same size. Mom's Boloka stays on the right; the phone beside it is
 // whoever she is dealing with at this step (MoneyGram, Neo, the bank). A step
-// strip says what to tap next, the button itself pulses, the phone to watch
-// is bright and the other one dimmed, and the strip moves on by itself as the
+// strip says what to tap next, the button itself pulses, and the strip moves
+// on by itself as the
 // money lands (any step can also be clicked). The under-the-hood status is a
 // small pill in the corner (FlowProgress.tsx). Narrow screens get the apps as
 // cards to open. Not a parents' screen.
@@ -101,7 +101,7 @@ function useScale() {
 }
 
 /** A phone-shaped frame running one of the apps. */
-function Phone({ app, scale = 1, dim = false, hidden = false }: { app: App; scale?: number; dim?: boolean; hidden?: boolean }) {
+function Phone({ app, scale = 1, hidden = false }: { app: App; scale?: number; hidden?: boolean }) {
   const w = (PHONE_W + 16) * scale
   const h = (PHONE_H + 16) * scale
   return (
@@ -113,11 +113,10 @@ function Phone({ app, scale = 1, dim = false, hidden = false }: { app: App; scal
         gap: 10,
         alignItems: 'center',
         width: w,
-        opacity: hidden ? 0 : dim ? 0.55 : 1,
-        filter: dim && !hidden ? 'saturate(0.6)' : undefined,
+        opacity: hidden ? 0 : 1,
         visibility: hidden ? 'hidden' : 'visible',
         pointerEvents: hidden ? 'none' : 'auto',
-        transition: 'opacity 360ms ease, filter 360ms ease',
+        transition: 'opacity 360ms ease',
       }}
     >
       <div style={{ width: w, height: h }}>
@@ -229,9 +228,6 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
   const cur = STEPS[step]
   const acted = !!cur.flow && started.has(cur.flow)
   useNudge(wide && cur.nudge && !acted ? cur.nudge : null)
-  // Bright: the phone to tap; once tapped, also the phone where the effect shows.
-  const bright = new Set<string>([cur.act])
-  if (acted || !cur.nudge) bright.add(MOM).add(cur.partner)
   const partners = [...new Set(STEPS.map((s) => s.partner))]
 
   const links = (
@@ -299,12 +295,12 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
                   // Hidden partners must not sit over the visible one: no pointer events, underneath.
                   return (
                     <div key={href} style={{ position: 'absolute', inset: 0, pointerEvents: active ? 'auto' : 'none', zIndex: active ? 1 : 0 }}>
-                      <Phone app={byHref(href)} scale={scale} hidden={!active} dim={!bright.has(href)} />
+                      <Phone app={byHref(href)} scale={scale} hidden={!active} />
                     </div>
                   )
                 })}
               </div>
-              <Phone app={byHref(MOM)} scale={scale} dim={!bright.has(MOM)} />
+              <Phone app={byHref(MOM)} scale={scale} />
             </div>
             {links}
             {strip}
