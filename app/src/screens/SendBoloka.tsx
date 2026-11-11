@@ -76,8 +76,7 @@ export default function SendBoloka() {
   const payee: Payee | null = other ? (typed ? { name: 'Boloka account', recipient: typed } : null) : to
   const pula = parse(text)
   const over = pula > s.balance
-  const tooMuch = !over && pula > s.sendable
-  const canSend = pula > 0 && !over && !tooMuch && payee !== null && !busy
+  const canSend = pula > 0 && !over && payee !== null && !busy
 
   async function send() {
     if (!payee) return
@@ -143,8 +142,8 @@ export default function SendBoloka() {
             style={{ flex: 1, border: 'none', outline: 'none', font: `700 44px ${FONT}`, color: INK, background: 'transparent', minWidth: 0 }}
           />
         </div>
-        <div style={{ fontSize: 13, color: over || tooMuch ? RED : MUTED }}>
-          {tooMuch ? `Up to P ${amt(s.sendable)} in one send · ` : 'No fee, no limit · '}P {amt(s.balance)} available
+        <div style={{ fontSize: 13, color: over ? RED : MUTED }}>
+          No fee, no limit · P {amt(s.balance)} available
         </div>
       </div>
 

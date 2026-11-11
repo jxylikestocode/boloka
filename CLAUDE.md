@@ -82,7 +82,9 @@ sha256(secret ‖ amount ‖ month)) is unchanged and still serves anything depo
   `src/savings.tsx` (memo scan, balance = unspent notes, `spend()` for payouts and transfers),
   `src/screens/SendBoloka.tsx`. A second phone runs at `/as/<profile>/…` with its own keys and
   records (`src/profile.ts`; the launcher shows Neo, Kate's sister). At most two notes are spent
-  per send (the circuit's arity); the screen says so when more would be needed.
+  per send (the circuit's arity): when more are needed, `spend()` first combines the largest two
+  at a time with spends that pay nothing out (~10 s each, listed in the pill as "Combining
+  savings"), then sends. No per-send limit on the screens.
 - Measured 11 Nov 2026 (testnet, local backend): proof 1.4–1.8 s in Chrome; transfer tap → the
   other phone shows arrival 6.3 s; payout tap → receipt 3.2 s.
 

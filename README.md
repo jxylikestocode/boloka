@@ -173,7 +173,8 @@ with `cd app && npm run export:animation` (needs Chrome and ffmpeg).
   needs a multi-party one. The circuit and contract are unaudited.
 - Deposits and payouts are visible on chain with their amounts (they move USDC); only transfers
   inside the pool hide the amount. The fee-paying account of a spend is the phone's testnet key.
-- A spend uses at most two notes, so a send larger than the two biggest notes must be split.
+- A spend uses at most two notes, so a send larger than the two biggest notes first combines
+  notes two at a time (each a real transaction, about 10 s), shown in the status pill.
 - The original SHA-256 tree (`deposit` / `withdraw`) is kept for savings from before the note
   tree; its withdraw checks membership only, not knowledge of the secret.
 - Testnet only; the test anchor's KYC is auto-completed with fictional details. A production

@@ -76,6 +76,18 @@ export function stepDurations(p: Progress): { byKey: Map<string, number>; lastDo
   return { byKey, lastDone: prev }
 }
 
+/**
+ * Adds steps to the running flow (before `beforeKey`, else at the end): work
+ * that turned out to be needed on the way, e.g. combining notes before a send.
+ */
+export function extendFlow(steps: FlowDef, beforeKey?: string) {
+  const cur = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Progress | null
+  if (!cur) return
+  const i = beforeKey ? cur.flow.findIndex((f) => f.key === beforeKey) : -1
+  const flow = i < 0 ? [...cur.flow, ...steps] : [...cur.flow.slice(0, i), ...steps, ...cur.flow.slice(i)]
+  localStorage.setItem(KEY, JSON.stringify({ ...cur, at: Date.now(), flow }))
+}
+
 export const clearProgress = () => localStorage.removeItem(KEY)
 
 /** The flow stopped: the card shows why instead of spinning. */

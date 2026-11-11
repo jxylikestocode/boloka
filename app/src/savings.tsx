@@ -23,7 +23,7 @@ import {
   u32,
 } from './chain.ts'
 import { depositForReceiver, runFlow } from './deposit.ts'
-import { addProgress, clearProgress, failProgress, PAYOUT_FLOW, startProgress, TRANSFER_FLOW } from './progress.ts'
+import { addProgress, clearProgress, extendFlow, failProgress, PAYOUT_FLOW, startProgress, TRANSFER_FLOW } from './progress.ts'
 import {
   encodeNoteProof,
   encodeProof,
@@ -88,8 +88,6 @@ type Savings = {
   status: 'loading' | 'ready' | 'error'
   balance: number
   activity: Activity[]
-  /** The most that can go in one send (at most two notes are spent at once). */
-  sendable: number
   /** This phone's Boloka ID, for others to pay it. */
   myId: string
   send(pula: number, dest: Destination): Promise<SendReceipt>
@@ -133,8 +131,6 @@ type Snapshot = {
   pendingSpends: store.SpendRecord[]
   /** Confirmed, less what pending spends take out. */
   balanceUnits: bigint
-  /** The two largest unspent notes together: the most one spend can move. */
-  sendableUnits: bigint
 }
 
 const PENDING_WINDOW = 15 * 60_000
@@ -210,9 +206,7 @@ async function snapshot(): Promise<Snapshot> {
 
   const v1 = sum(deposits.map((d) => d.rec)) - sum(withdrawals) - sum(pendingWithdrawals)
   const balanceUnits = v1 + sum(unspent.map((n) => n.rec)) - sum(pendingSpends)
-  const top = unspent.map((n) => BigInt(n.rec.amount)).sort((a, b) => (a > b ? -1 : a < b ? 1 : 0))
-  const sendableUnits = (top[0] ?? 0n) + (top[1] ?? 0n) - sum(pendingSpends)
-  return { leaves, deposits, withdrawals, pendingDeposits, pendingWithdrawals, noteLeaves, notes, unspent, spends, pendingNotes, pendingSpends, balanceUnits, sendableUnits: sendableUnits > 0n ? sendableUnits : 0n }
+  return { leaves, deposits, withdrawals, pendingDeposits, pendingWithdrawals, noteLeaves, notes, unspent, spends, pendingNotes, pendingSpends, balanceUnits }
 }
 
 const depositActivity = (d: store.DepositRecord): Activity => ({
@@ -272,7 +266,7 @@ function friendly(e: unknown): Error {
     return new Error('Your savings changed while sending. Please try again.')
   }
   if (m.includes('Error(Contract, #5)')) return new Error('That money was already sent.')
-  if (m.startsWith('Only ') || m.startsWith('That is more')) return new Error(m)
+  if (m.startsWith('Combining') || m.startsWith('That is more') || m.startsWith('Your savings changed')) return new Error(m)
   return new Error('That did not go through. Please try again.')
 }
 
@@ -328,27 +322,38 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     }
   }, [refresh, waiting])
 
-  /**
-   * A spend of this account's notes: `units` to a payee inside the pool, or
-   * out of the pool to the payout account. Picks the fewest notes that cover
-   * it (at most two), proves, records, submits. Resolves on submission with
-   * the record and the confirmation promise.
-   */
-  async function spend(units: bigint, out: { kind: 'payout'; dest: Destination } | { kind: 'transfer'; to: Payee }, date: string, fee: number, ref: string) {
-    const kp = keypair()
-    const keys = noteKeys()
-    const s = await snapshot()
-    if (units > s.balanceUnits) throw new Error('That is more than your savings.')
-    // Largest first; one or two notes.
-    const picked: Note[] = []
-    let total = 0n
-    for (const n of [...s.unspent].sort((a, b) => (BigInt(b.rec.amount) > BigInt(a.rec.amount) ? 1 : -1))) {
-      if (total >= units || picked.length === 2) break
-      picked.push(n)
-      total += BigInt(n.rec.amount)
+  /** Unspent notes worth something, largest first. */
+  const byAmount = (s: Snapshot) =>
+    s.unspent.filter((n) => BigInt(n.rec.amount) > 0n).sort((a, b) => (BigInt(b.rec.amount) > BigInt(a.rec.amount) ? 1 : -1))
+
+  /** How many pairs of notes must be combined before the two largest cover `units`. */
+  function mergesNeeded(s: Snapshot, units: bigint): number {
+    const amounts = byAmount(s).map((n) => BigInt(n.rec.amount))
+    let merges = 0
+    while (amounts.length > 2 && amounts[0] + (amounts[1] ?? 0n) < units) {
+      amounts.splice(0, 2, amounts[0] + amounts[1])
+      amounts.sort((a, b) => (b > a ? 1 : b < a ? -1 : 0))
+      merges++
     }
-    if (total < units) throw new Error(`Only P ${Math.floor(unitsToPula(s.sendableUnits)).toLocaleString('en-US')} can go in one send. Please send it in parts.`)
-    const change = total - units
+    return merges
+  }
+
+  /** The snapshot once the note `id` is in the tree and unspent. */
+  async function waitForNote(id: string): Promise<Snapshot> {
+    for (let i = 0; i < 45; i++) {
+      const s = await snapshot()
+      if (s.unspent.some((n) => n.rec.id === id)) return s
+      await new Promise((r) => setTimeout(r, 1000))
+    }
+    throw new Error('Combining your savings took too long. Please try again.')
+  }
+
+  /**
+   * Proves and submits one spend of `picked` (one or two notes) into `outs`,
+   * paying `publicAmount` to `to`. Resolves on submission.
+   */
+  async function submitSpend(s: Snapshot, picked: Note[], outs: [Opening, Opening], memos: Uint8Array[], publicAmount: bigint, to: string) {
+    const keys = noteKeys()
     const ins = picked.map((n): InputNote => ({
       amount: BigInt(n.rec.amount),
       blinding: unhex(n.rec.blinding),
@@ -356,34 +361,86 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
       path: merklePath(s.noteLeaves, n.index).path,
     }))
     while (ins.length < 2) ins.push(filler())
-    const changeNote: Opening = { amount: change, pk: keys.pk, blinding: randomField() }
-    const outs: [Opening, Opening] =
-      out.kind === 'transfer'
-        ? [{ amount: units, pk: out.to.recipient.pk, blinding: randomField() }, changeNote]
-        : [changeNote, { amount: 0n, pk: keys.pk, blinding: randomField() }]
-    const memos =
-      out.kind === 'transfer'
-        ? [sealMemo(outs[0].amount, outs[0].blinding, `${ME.name}|Boloka`, out.to.recipient.memoPk), sealMemo(change, changeNote.blinding, 'change|Boloka', keys.memo.publicKey)]
-        : [sealMemo(change, changeNote.blinding, 'change|Boloka', keys.memo.publicKey), sealMemo(0n, outs[1].blinding, 'change|Boloka', keys.memo.publicKey)]
-    const to = out.kind === 'payout' ? PAYOUT_ADDRESS : kp.publicKey()
-
     const t0 = Date.now()
     const proof = await proveSpend({
       keys,
       root: merklePath(s.noteLeaves, picked[0].index).root,
       ins: ins as [InputNote, InputNote],
       outs,
-      publicAmount: out.kind === 'payout' ? units : 0n,
+      publicAmount,
       recipient: recipientHash(to),
     })
+    const proofMs = Date.now() - t0
+    const kp = keypair()
+    await setupAccount(kp)
+    const res = await spendNotes(kp, { proof: proof.proof, root: proof.root, nullifiers: proof.nullifiers, commitments: proof.commitments, memos, amount: publicAmount, to })
+    return { proof, res, proofMs }
+  }
+
+  /**
+   * A spend of this account's notes: `units` to a payee inside the pool, or
+   * out of the pool to the payout account. One spend takes at most two notes
+   * (the circuit's arity), so when more are needed the largest are first
+   * combined, two at a time, by spends that pay nothing out; each is a real
+   * transaction the status pill shows. Then the send itself: proves,
+   * records, submits. Resolves on submission with the record and the
+   * confirmation promise.
+   */
+  async function spend(units: bigint, out: { kind: 'payout'; dest: Destination } | { kind: 'transfer'; to: Payee }, date: string, fee: number, ref: string) {
+    const kp = keypair()
+    const keys = noteKeys()
+    const mine = (amount: bigint): Opening => ({ amount, pk: keys.pk, blinding: randomField() })
+    const memoToMe = (o: Opening) => sealMemo(o.amount, o.blinding, 'change|Boloka', keys.memo.publicKey)
+    let s = await snapshot()
+    if (units > s.balanceUnits) throw new Error('That is more than your savings.')
+
+    const merges = mergesNeeded(s, units)
+    if (merges > 0) {
+      extendFlow(
+        Array.from({ length: merges }, (_, k) => ({ key: `merge-${k + 1}`, label: `Combining savings privately (${k + 1} of ${merges}): two notes become one, inside the pool` })),
+        'zk-proof',
+      )
+    }
+    for (let k = 1; k <= merges; k++) {
+      const pair = byAmount(s).slice(0, 2)
+      const merged = mine(BigInt(pair[0].rec.amount) + BigInt(pair[1].rec.amount))
+      const zero = mine(0n)
+      const id = hex32(commitmentOf(merged))
+      store.putNote({ id, amount: merged.amount.toString(), blinding: hex32(merged.blinding), from: 'change', via: 'Boloka', date, change: true })
+      const { res, proofMs } = await submitSpend(s, pair, [merged, zero], [memoToMe(merged), memoToMe(zero)], 0n, kp.publicKey())
+      await res.confirmed
+      addProgress({ key: `merge-${k}`, title: 'Notes combined', kind: 'real', tx: res.hash, note: `Proof made on this phone in ${(proofMs / 1000).toFixed(1)} s; nothing left the pool.` })
+      s = await waitForNote(id)
+    }
+
+    const picked = byAmount(s).slice(0, 2)
+    let total = 0n
+    for (const n of picked) total += BigInt(n.rec.amount)
+    if (picked.length > 1 && BigInt(picked[0].rec.amount) >= units) picked.pop(), (total = BigInt(picked[0].rec.amount))
+    if (total < units) throw new Error('Your savings changed while sending. Please try again.')
+    const change = total - units
+    const changeNote = mine(change)
+    const outs: [Opening, Opening] =
+      out.kind === 'transfer'
+        ? [{ amount: units, pk: out.to.recipient.pk, blinding: randomField() }, changeNote]
+        : [changeNote, mine(0n)]
+    const memos =
+      out.kind === 'transfer'
+        ? [sealMemo(outs[0].amount, outs[0].blinding, `${ME.name}|Boloka`, out.to.recipient.memoPk), memoToMe(changeNote)]
+        : [memoToMe(changeNote), memoToMe(outs[1])]
+    const to = out.kind === 'payout' ? PAYOUT_ADDRESS : kp.publicKey()
+
+    // The record goes in before the proof (it counts once the pool has used the nullifiers).
+    if (change > 0n) {
+      store.putNote({ id: hex32(commitmentOf(changeNote)), amount: change.toString(), blinding: hex32(changeNote.blinding), from: 'change', via: 'Boloka', date, change: true })
+    }
+    const { proof, res, proofMs } = await submitSpend(s, picked, outs, memos, out.kind === 'payout' ? units : 0n, to)
     addProgress({
       key: 'zk-proof',
       title: 'Zero-knowledge proof',
       kind: 'offchain',
-      note: `Made on this phone in ${((Date.now() - t0) / 1000).toFixed(1)} s (Groth16, ${picked.length} note${picked.length === 1 ? '' : 's'} spent, verified by the pool contract).`,
+      note: `Made on this phone in ${(proofMs / 1000).toFixed(1)} s (Groth16, ${picked.length} note${picked.length === 1 ? '' : 's'} spent, verified by the pool contract).`,
     })
-
-    // Saved before sending; they count once the pool has used the nullifiers.
     const rec: store.SpendRecord = {
       id: hex32(proof.nullifiers[0]),
       nullifiers: proof.nullifiers.map(hex32),
@@ -394,22 +451,9 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
       fee,
       reference: ref,
       date,
+      tx: res.hash,
     }
     store.putSpend(rec)
-    if (change > 0n) {
-      store.putNote({ id: hex32(commitmentOf(changeNote)), amount: change.toString(), blinding: hex32(changeNote.blinding), from: 'change', via: 'Boloka', date, change: true })
-    }
-    await setupAccount(kp)
-    const res = await spendNotes(kp, {
-      proof: proof.proof,
-      root: proof.root,
-      nullifiers: proof.nullifiers,
-      commitments: proof.commitments,
-      memos,
-      amount: out.kind === 'payout' ? units : 0n,
-      to,
-    })
-    store.setSpendTx(rec.id, res.hash)
     return { rec, res }
   }
 
@@ -571,7 +615,6 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     status,
     balance: snap ? unitsToPula(snap.balanceUnits) : 0,
     activity: snap ? activityOf(snap) : [],
-    sendable: snap ? unitsToPula(snap.sendableUnits) : 0,
     myId: myId(),
     send,
     transfer,
