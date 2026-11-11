@@ -4,16 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --configLoader native",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "dev:boloka": "VITE_APP=boloka vite --port 5173 --strictPort",
-    "dev:moneygram": "VITE_APP=moneygram vite --port 5177 --strictPort",
-    "dev:bank": "VITE_APP=bank vite --port 5178 --strictPort",
+    "dev:boloka": "VITE_APP=boloka vite --configLoader native --port 5173 --strictPort",
+    "dev:moneygram": "VITE_APP=moneygram vite --configLoader native --port 5177 --strictPort",
+    "dev:bank": "VITE_APP=bank vite --configLoader native --port 5178 --strictPort",
     "demo:e2e": "node scripts/demo-e2e.ts",
     "export:animation": "node scripts/export-animation.mjs",
-    "start": "node server/serve.ts"
+    "start": "node server/serve.ts",
+    "dev:all": "vite --configLoader native --port 5181"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

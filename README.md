@@ -90,7 +90,7 @@ full app against the live testnet backend with no keys, no Rust and no Chrome.
 git clone https://github.com/jxylikestocode/boloka.git
 cd boloka/app
 npm install
-npx vite --port 5181          # one URL for everything: http://localhost:5181
+npm run dev:all               # one URL for everything: http://localhost:5181
 ```
 
 Also available, each app on its own port: `npm run dev:boloka` (5173),
@@ -121,7 +121,7 @@ npm install
 sed -i '' '/^VITE_API_ORIGIN=/d' .env     # use the local backend instead of boloka.fly.dev
 npm run demo:e2e                  # the whole flow on testnet from fresh accounts (~3 min),
                                   # prints every step + tx hash; /how-it-works shows this run
-npx vite --port 5181              # the app, now with the backend running in the dev server
+npm run dev:all                   # the app, now with the backend running in the dev server
 ```
 
 `VERBOSE=1 npm run demo:e2e` also prints anchor statuses; `SEND_CAD=1000 SCHOOL_FEE=24000`
