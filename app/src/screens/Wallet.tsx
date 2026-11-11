@@ -1,7 +1,7 @@
-// /wallet: Boloka for a sender with an ordinary Stellar wallet, in its own
-// window. Sign in with Freighter (or a test wallet), paste a Boloka ID, give
-// an amount under any name you like: the recipient's phone sees the money and
-// the label, nobody sees you. The wallet funds a private pocket in the pool,
+// /wallet: the open Boloka dapp for anyone with a Stellar wallet (a laptop
+// frame on the homepage, or its own window). Sign in with Freighter (or a
+// test wallet), paste a Boloka ID, give an amount under any name you like:
+// the recipient's phone sees the money and the label, nobody sees you. The wallet funds a private pocket in the pool,
 // a zero-knowledge transfer moves it on, and Boloka's relayer submits that
 // transfer (src/give.ts). The sender's side: jargon is fine here.
 import { useEffect, useState, type CSSProperties } from 'react'
@@ -15,8 +15,6 @@ import { BORDER, FONT, GREEN, INK, LINE, MUTED, PANEL, RED, TINT, amt, button, d
 import { directory, type DirectoryEntry } from '../wallet.ts'
 import { addProgress, clearProgress, failProgress, GIVE_FLOW, startProgress } from '../progress.ts'
 
-/** Inside the homepage's laptop frame: the persona is named, and the page is told so. */
-const EMBEDDED = typeof location !== 'undefined' && new URLSearchParams(location.search).get('embed') === '1'
 
 const short = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`
 const card: CSSProperties = { background: '#FFFFFF', borderRadius: 18, border: `1px solid ${LINE}`, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }
@@ -135,21 +133,6 @@ export default function Wallet() {
       </div>
 
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '28px 20px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-        {EMBEDDED && (
-          <div style={{ ...card, flexDirection: 'row', alignItems: 'center', gap: 14, padding: '14px 18px', background: TINT, border: 'none' }}>
-            <span style={{ fontSize: 34, lineHeight: 1 }} aria-hidden="true">🤫</span>
-            <div style={{ fontSize: 13, color: INK, lineHeight: 1.5 }}>
-              <strong>Kate's boyfriend</strong>. Well off, and shy about it. He wants Mom to have the school money without Kate, Mom or Boloka ever knowing it came from him. He is a permissionless Boloka wallet user: the open dapp, signed in with his own wallet, nothing to register.
-            </div>
-          </div>
-        )}
-        <div>
-          <h1 style={{ margin: 0, fontSize: 26, letterSpacing: -0.3 }}>Give to someone's Boloka, without being named</h1>
-          <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5, marginTop: 6 }}>
-            A traditional dapp: no account, no sign-up, nobody to ask. Sign in with your wallet; it signs one transaction. Their phone shows the money and the name you choose; the chain, Boloka and they never see your wallet.
-          </div>
-        </div>
-
         {!signer ? (
           <div style={card}>
             <div style={{ fontWeight: 700 }}>1 · Sign in with your wallet</div>
