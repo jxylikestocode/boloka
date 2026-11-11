@@ -1,5 +1,9 @@
 # Boloka — Devpost "About the project"
 
+**A school fee in Botswana takes six transfers, four card swipes or one bus ride across town. A boyfriend who wants to help cannot do it without his name on it. We built the savings account that fixes both: dollars that arrive in seconds, pay the school directly, keep their value, and move between family privately, with real zero-knowledge proofs on Stellar testnet.**
+
+Try it: https://boloka.fly.dev. Send from Kate's MoneyGram, watch it land on Mom's phone, send some to Kate's sister without the chain learning a thing, and let Kate's boyfriend give from his own wallet under the name "A friend". Every step is a real transaction with its explorer link and timing.
+
 ## Inspiration
 
 *Boloka* means "to keep" in Setswana.
