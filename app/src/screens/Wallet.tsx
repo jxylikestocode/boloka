@@ -139,7 +139,7 @@ export default function Wallet() {
           <div style={{ ...card, flexDirection: 'row', alignItems: 'center', gap: 14, padding: '14px 18px', background: TINT, border: 'none' }}>
             <span style={{ fontSize: 34, lineHeight: 1 }} aria-hidden="true">🤫</span>
             <div style={{ fontSize: 13, color: INK, lineHeight: 1.5 }}>
-              <strong>Kate's boyfriend</strong>. Well off, and shy about it. He wants Mom to have the school money without Kate, Mom or Boloka ever knowing it came from him. He is not a Boloka customer: this is the open dapp, and he signs in with his own wallet.
+              <strong>Kate's boyfriend</strong>. Well off, and shy about it. He wants Mom to have the school money without Kate, Mom or Boloka ever knowing it came from him. He is a permissionless Boloka wallet user: the open dapp, signed in with his own wallet, nothing to register.
             </div>
           </div>
         )}

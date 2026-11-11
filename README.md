@@ -25,7 +25,7 @@ dollars earning interest, and the P 24,000 school fee goes straight to the schoo
 | **Boloka** | Her parents ("Mom"), in Botswana | The money arrives in seconds, shown in pula or dollars, growing at Blend's real rate; **Send to family** moves some to Neo's Boloka privately, inside the pool; **Withdraw** pays the school fee to the bank or Orange Money |
 | **Boloka · Kate's sister** | Kate's sister, with her own Boloka | Mom's transfer arrives in seconds, still in dollars (`/as/neo/home`) |
 | **Kalahari Bank** (fictional) | Mom's bank account | The payout lands; from there the school fee is paid |
-| **Boloka dapp** (`/wallet`, a laptop frame on the homepage or its own window) | Kate's bf, not a Boloka customer | A permissionless dapp: signs in with his own wallet (Freighter, or a test wallet), gives to a Boloka ID under any name; the transfer is relayed by Boloka, so nobody can name him |
+| **Boloka dapp** (`/wallet`, a laptop frame on the homepage or its own window) | Kate's bf, a permissionless Boloka wallet user | A permissionless dapp: signs in with his own wallet (Freighter, or a test wallet), gives to a Boloka ID under any name; the transfer is relayed by Boloka, so nobody can name him |
 
 The homepage shows two phones at a time: Mom's Boloka, and beside it whichever phone the
 money involves right now (MoneyGram while Kate sends, Neo when Mom sends to family, the bank
