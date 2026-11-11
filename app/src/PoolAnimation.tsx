@@ -116,6 +116,7 @@ export default function PoolAnimation() {
           <g transform="translate(132 148)">
             <Coin className="coin-move" delay={0.6} glyph="?" />
           </g>
+          <text x="170" y="165" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={GREEN} fontFamily={FONT} letterSpacing="0.3">private transfer</text>
           {/* Interest: "+" tokens rising through the water */}
           {[
             [128, 0],

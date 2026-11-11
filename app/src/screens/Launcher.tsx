@@ -15,13 +15,15 @@ import { FONT, GREEN, INK, LINE, MUTED, PANEL, usePageMeta } from '../ui.tsx'
 type Mode = 'testnet' | 'demo'
 
 /** `person` is the emoji that says whose phone this is; `owner` their name. */
-type App = { name: string; owner: string; person: string; who: string; href: string; icon: string; bg: string; kind?: 'phone' | 'laptop'; goal?: string }
+/** What to achieve with this phone beside Mom's: the money's path as emoji, then one sentence. */
+type Goal = { flow: [string, string][]; text: string }
+type App = { name: string; owner: string; person: string; who: string; href: string; icon: string; bg: string; kind?: 'phone' | 'laptop'; goal?: Goal }
 const APPS: App[] = [
-  { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C', goal: 'Kate sends money home from Canada. Tap Continue in MoneyGram and watch it land on Mom\u2019s phone in seconds, in dollars, with no cap.' },
+  { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C', goal: { flow: [['👩🏿', 'Kate, Canada'], ['💸', 'MoneyGram'], ['💵', 'dollars in the pool'], ['👩🏿‍🦳', "Mom's Boloka"]], text: 'Tap Continue in MoneyGram. It lands on Mom\u2019s phone in seconds, in dollars, with no cap.' } },
   { name: 'Boloka', owner: 'Mom', person: '👩🏿‍🦳', who: 'in Botswana', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Boloka', owner: "Kate's sister", person: '👩🏿‍🎓', who: 'her own Boloka, in Botswana', goal: 'Mom shares some with Kate\u2019s sister. On Mom\u2019s phone tap Private transfer: the dollars move inside the pool, her sister\u2019s phone shows them, and the chain shows neither the amount nor the two of them.', href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Kalahari Bank', owner: 'Mom', person: '👩🏿‍🦳', who: 'her bank account, where the school fee lands', goal: 'Mom pays the school fee without a cash trip. On her phone tap Withdraw to cash and pay to the bank: the credit appears in her bank account beside it.', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
-  { name: 'Boloka dapp', owner: "Kate's bf", person: '🤫', who: 'the open dapp, his own wallet', goal: 'Kate\u2019s boyfriend gives to Mom without anyone knowing. In the dapp, sign in with a wallet (or a test wallet), pick Mom, give under any name: Mom sees the money and the name, nobody sees him.', href: '/wallet', icon: '/icons/boloka-180.png', bg: GREEN, kind: 'laptop' },
+  { name: 'Boloka', owner: "Kate's sister", person: '👩🏿‍🎓', who: 'her own Boloka, in Botswana', goal: { flow: [['👩🏿‍🦳', 'Mom'], ['🔒', 'private transfer, inside the pool'], ['👩🏿‍🎓', "Kate's sister"]], text: 'On Mom\u2019s phone tap Private transfer. The dollars never leave the pool; her sister\u2019s phone shows them, the chain shows neither the amount nor the two of them.' }, href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
+  { name: 'Kalahari Bank', owner: 'Mom', person: '👩🏿‍🦳', who: 'her bank account, where the school fee lands', goal: { flow: [['👩🏿‍🦳', 'Mom'], ['💵', 'dollars out of the pool'], ['🏦', 'Kalahari Bank, in pula'], ['🏫', 'school fee']], text: 'On Mom\u2019s phone tap Withdraw to cash and pay to the bank. The credit appears in her account beside it: no cash trip, no split swipes.' }, href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
+  { name: 'Boloka dapp', owner: "Kate's bf", person: '🤫', who: 'the open dapp, his own wallet', goal: { flow: [['🤫', "Kate's bf"], ['👛', 'his own wallet'], ['🕶️', 'a private pocket in the pool'], ['📨', "Boloka's relayer"], ['👩🏿‍🦳', 'Mom: "A friend"']], text: 'In the dapp, sign in with a wallet (or a test wallet), pick Mom, give under any name. Mom sees the money and the name; nobody sees him.' }, href: '/wallet', icon: '/icons/boloka-180.png', bg: GREEN, kind: 'laptop' },
 ]
 const MOM = '/home'
 const byHref = (href: string) => APPS.find((a) => a.href === href)!
@@ -190,6 +192,27 @@ function useNudge(target: { app: string; button: RegExp } | null) {
   }, [target])
 }
 
+/** The selected phone's goal: the money's path as emoji with arrows, then what to do, in a shaded card. */
+function GoalCard({ goal }: { goal?: Goal }) {
+  if (!goal) return null
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 16, padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', maxWidth: 820, animation: 'fade-down 260ms ease-out', boxShadow: '0 6px 18px rgba(14,124,91,0.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+        {goal.flow.map(([emoji, label], i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+            {i > 0 && <span style={{ color: GREEN, fontSize: 18, lineHeight: '26px', fontWeight: 700 }}>→</span>}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, width: 104 }}>
+              <span style={{ fontSize: 24, lineHeight: '26px' }} aria-hidden="true">{emoji}</span>
+              <span style={{ fontSize: 11, color: MUTED, textAlign: 'center', lineHeight: 1.3 }}>{label}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 14, color: INK, textAlign: 'center', lineHeight: 1.45, background: PANEL, borderRadius: 10, padding: '8px 14px' }}>{goal.text}</div>
+    </div>
+  )
+}
+
 export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?: ReactNode; floating?: ReactNode }) {
   usePageMeta('Boloka — Demo')
   const scale = useScale()
@@ -250,9 +273,7 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
                 )
               })}
             </div>
-            <div key={partner} style={{ fontSize: 15, color: INK, textAlign: 'center', maxWidth: 760, lineHeight: 1.45, animation: 'fade-down 260ms ease-out' }}>
-              {byHref(partner).goal}
-            </div>
+            <GoalCard key={partner} goal={byHref(partner).goal} />
             </div>
 
             {/* The stage: the phone the money involves right now and Mom's, the same size. All partners stay loaded, so they keep up. */}
