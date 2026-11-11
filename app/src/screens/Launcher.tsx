@@ -9,6 +9,7 @@
 // Not a parents' screen.
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { readProgress } from '../progress.ts'
+import { installFreighterBridge } from '../freighter.ts'
 import { FONT, GREEN, INK, LINE, MUTED, PANEL, usePageMeta } from '../ui.tsx'
 
 type Mode = 'testnet' | 'demo'
@@ -194,6 +195,8 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
   const scale = useScale()
   const wide = scale !== null
   const { partner, pick, anyFlow } = useFollow()
+  // Freighter for the dapp frame: the extension only talks to this top-level page.
+  useEffect(installFreighterBridge, [])
   // Until something has happened: point at where the story starts.
   useNudge(wide && !anyFlow && partner === MONEYGRAM ? { app: MONEYGRAM, button: /^continue$/i } : null)
 
