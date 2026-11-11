@@ -1,11 +1,12 @@
-// The root of the single-URL build: a guided walk through the story, two
-// phones at a time, the same size. Mom's Boloka stays on the right; the phone beside it is
-// whoever she is dealing with at this step (MoneyGram, Neo, the bank). A step
-// strip says what to tap next, the button itself pulses, and the strip moves
-// on by itself as the
-// money lands (any step can also be clicked). The under-the-hood status is a
-// small pill in the corner (FlowProgress.tsx). Narrow screens get the apps as
-// cards to open. Not a parents' screen.
+// The root of the single-URL build: two phones at a time, the same size.
+// Mom's Boloka stays on the right; the phone beside it follows the money:
+// MoneyGram while Kate sends, Neo when Mom opens Send to family or a transfer
+// runs, the bank when she withdraws. It switches by itself from what the
+// phones are doing (Mom's screen, the flow in progress) and can be picked by
+// hand. Until the first transfer, MoneyGram's Continue button pulses: that is
+// where the story starts. The under-the-hood status is a small pill in the
+// corner (FlowProgress.tsx). Narrow screens get the apps as cards to open.
+// Not a parents' screen.
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { readProgress } from '../progress.ts'
 import { FONT, GREEN, INK, LINE, MUTED, PANEL, usePageMeta } from '../ui.tsx'
@@ -22,55 +23,10 @@ const APPS: App[] = [
 const MOM = '/home'
 const byHref = (href: string) => APPS.find((a) => a.href === href)!
 
-/** The walk. `partner` is the phone beside Mom's; `act` the phone to tap; `flow` the progress title its action starts. */
-type Step = {
-  title: string
-  partner: string
-  act: string
-  hint: string
-  /** The button to pulse until the step's action has started. */
-  nudge?: { app: string; button: RegExp }
-  flow?: 'transfer' | 'sending' | 'payout'
-  /** Once this progress step lands, the strip moves on. */
-  advanceOn?: string
-}
-const STEPS: Step[] = [
-  {
-    title: 'Kate sends',
-    partner: '/moneygram',
-    act: '/moneygram',
-    hint: 'In MoneyGram, tap Continue: Kate sends $1,000 CAD to Mom.',
-    nudge: { app: '/moneygram', button: /^continue$/i },
-    flow: 'transfer',
-  },
-  {
-    title: 'Mom receives',
-    partner: '/moneygram',
-    act: MOM,
-    hint: "Watch Mom's phone: the money arrives in a few seconds, in dollars, already earning interest.",
-    flow: 'transfer',
-    advanceOn: 'pool-deposit',
-  },
-  {
-    title: 'Mom sends to Neo',
-    partner: '/as/neo/home',
-    act: MOM,
-    hint: "On Mom's phone, tap Send to family and send Neo some. It moves inside the pool, so nobody outside can see it.",
-    nudge: { app: MOM, button: /^Send to family$/ },
-    flow: 'sending',
-    advanceOn: 'pool-transfer',
-  },
-  {
-    title: 'School fee to the bank',
-    partner: '/bank',
-    act: MOM,
-    hint: "On Mom's phone, tap Withdraw and pay the school fee. It lands in the bank beside it.",
-    nudge: { app: MOM, button: /^Withdraw$/ },
-    flow: 'payout',
-    advanceOn: 'pool-withdraw',
-  },
-]
-const DONE_HINT = 'That is the whole story. Open Pool admin to see every transaction, or start again from MoneyGram.'
+const PARTNERS = ['/moneygram', '/as/neo/home', '/bank']
+const NEO = '/as/neo/home'
+const BANK = '/bank'
+const MONEYGRAM = '/moneygram'
 
 const PHONE_W = 390
 const PHONE_H = 760
@@ -138,36 +94,45 @@ function Phone({ app, scale = 1, hidden = false }: { app: App; scale?: number; h
 }
 
 /**
- * Follows the money to move the strip on, and knows which step's action has
- * started. Reads the same saved progress the status pill does; only flows
- * started after this page loaded count, each once.
+ * Which phone belongs beside Mom's right now, from what the phones are doing:
+ * Mom's screen (Send to family → Neo, Withdraw → the bank) and the flow in
+ * progress (Kate's transfer → MoneyGram, a send → Neo, a payout → the bank).
+ * Each new signal switches once; a hand-picked phone stays until the next.
+ * Also tells whether any flow has started since the page loaded.
  */
-function useWalk() {
-  const [step, setStep] = useState(0)
-  const [started, setStarted] = useState<Set<string>>(new Set())
-  const [finished, setFinished] = useState(false)
+function useFollow() {
+  const [partner, setPartner] = useState(MONEYGRAM)
+  const [anyFlow, setAnyFlow] = useState(false)
   const loadedAt = useRef(Date.now())
-  const handled = useRef(new Set<string>())
+  const lastSignal = useRef('')
   useEffect(() => {
     const tick = () => {
-      const p = readProgress()
-      if (!p || p.id < loadedAt.current) return
-      const flow = p.title.startsWith('payout') ? 'payout' : p.title.startsWith('sending') ? 'sending' : 'transfer'
-      if (!handled.current.has(`${p.id}:start`)) {
-        handled.current.add(`${p.id}:start`)
-        setStarted((s) => new Set(s).add(flow))
-        // Kate's send has begun: look at Mom's phone.
-        if (flow === 'transfer') setStep((cur) => Math.max(cur, 1))
+      let signal = ''
+      let want = ''
+      const mom = document.querySelector<HTMLIFrameElement>(`[data-app="${MOM}"] iframe`)
+      let path = ''
+      try {
+        path = mom?.contentWindow?.location.pathname ?? ''
+      } catch {
+        // not ours to read
       }
-      const landed = new Set(p.steps.map((s) => s.key))
-      STEPS.forEach((s, i) => {
-        if (s.flow !== flow || !s.advanceOn || !landed.has(s.advanceOn)) return
-        const key = `${p.id}:${s.advanceOn}`
-        if (handled.current.has(key)) return
-        handled.current.add(key)
-        if (i === STEPS.length - 1) setTimeout(() => setFinished(true), 1500)
-        else setTimeout(() => setStep((cur) => Math.max(cur, i + 1)), 3500)
-      })
+      const p = readProgress()
+      const fresh = p && p.id >= loadedAt.current ? p : null
+      if (fresh) setAnyFlow(true)
+      if (path === '/send-boloka') {
+        signal = 'mom:send'
+        want = NEO
+      } else if (path === '/orange') {
+        signal = 'mom:withdraw'
+        want = BANK
+      } else if (fresh) {
+        signal = `flow:${fresh.id}`
+        want = fresh.title.startsWith('payout') ? BANK : fresh.title.startsWith('sending') ? (fresh.app?.startsWith('/as/neo') ? MOM : NEO) : MONEYGRAM
+      }
+      if (signal && signal !== lastSignal.current) {
+        lastSignal.current = signal
+        if (want !== MOM) setPartner(want)
+      }
     }
     tick()
     const t = setInterval(tick, 500)
@@ -177,14 +142,7 @@ function useWalk() {
       window.removeEventListener('storage', tick)
     }
   }, [])
-  /** A clicked step starts afresh: its action is to be taken again, so its nudge comes back. */
-  const choose = (i: number) => {
-    setStep(i)
-    if (i < STEPS.length - 1) setFinished(false)
-    const again = new Set(STEPS.slice(i).map((s) => s.flow))
-    setStarted((s) => new Set([...s].filter((f) => !again.has(f as Step['flow']))))
-  }
-  return { step, choose, started, finished }
+  return { partner, pick: setPartner, anyFlow }
 }
 
 /**
@@ -192,7 +150,7 @@ function useWalk() {
  * this same site, so their documents can be reached). Re-applied every half
  * second: the apps re-render their buttons.
  */
-function useNudge(target: Step['nudge'] | null) {
+function useNudge(target: { app: string; button: RegExp } | null) {
   useEffect(() => {
     const clear = () => {
       for (const f of document.querySelectorAll<HTMLIFrameElement>('iframe')) {
@@ -224,11 +182,9 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
   usePageMeta('Boloka — Demo')
   const scale = useScale()
   const wide = scale !== null
-  const { step, choose, started, finished } = useWalk()
-  const cur = STEPS[step]
-  const acted = !!cur.flow && started.has(cur.flow)
-  useNudge(wide && cur.nudge && !acted ? cur.nudge : null)
-  const partners = [...new Set(STEPS.map((s) => s.partner))]
+  const { partner, pick, anyFlow } = useFollow()
+  // Until something has happened: point at where the story starts.
+  useNudge(wide && !anyFlow && partner === MONEYGRAM ? { app: MONEYGRAM, button: /^continue$/i } : null)
 
   const links = (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 18px', justifyContent: 'center', fontSize: 13, color: MUTED, alignItems: 'center' }}>
@@ -259,39 +215,32 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
       <div style={{ maxWidth: wide ? 2 * (PHONE_W + 16) * scale + GAP + 288 : 980, margin: '0 auto', padding: wide ? '22px 24px 40px' : '48px 20px 60px', display: 'flex', flexDirection: 'column', gap: 22, flex: 1, width: '100%', boxSizing: 'border-box', justifyContent: wide ? 'flex-start' : 'center' }}>
         {wide ? (
           <>
-            {/* The step strip: where we are, what to tap. */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
-              <div role="tablist" aria-label="The story, step by step" style={{ display: 'flex', gap: 6, background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 999, padding: 4 }}>
-                {STEPS.map((s, i) => {
-                  const on = i === step
-                  const done = i < step || (finished && i === step)
-                  return (
-                    <button
-                      key={s.title}
-                      type="button"
-                      role="tab"
-                      aria-selected={on}
-                      onClick={() => choose(i)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px 0 6px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 14, fontWeight: 600, background: on ? GREEN : 'transparent', color: on ? '#FFFFFF' : done ? GREEN : MUTED, transition: 'background 200ms ease, color 200ms ease' }}
-                    >
-                      <span style={{ width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, background: on ? 'rgba(255,255,255,0.22)' : done ? '#E3F2E8' : PANEL, color: on ? '#FFFFFF' : done ? GREEN : MUTED }}>
-                        {done && !on ? '✓' : i + 1}
-                      </span>
-                      {s.title}
-                    </button>
-                  )
-                })}
-              </div>
-              <div key={finished ? 'done' : step} style={{ fontSize: 16, color: INK, textAlign: 'center', maxWidth: 720, lineHeight: 1.45, animation: 'arrival-in 240ms ease-out' }}>
-                {finished && step === STEPS.length - 1 ? DONE_HINT : cur.hint}
-              </div>
+            {/* Which phone is beside Mom's: follows the money, or pick one. */}
+            <div role="tablist" aria-label="The phone beside Mom's" style={{ display: 'flex', gap: 6, background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 999, padding: 4, alignSelf: 'center' }}>
+              {PARTNERS.map((href) => {
+                const a = byHref(href)
+                const on = href === partner
+                return (
+                  <button
+                    key={href}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    onClick={() => pick(href)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px 0 8px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 14, fontWeight: 600, background: on ? GREEN : 'transparent', color: on ? '#FFFFFF' : MUTED, transition: 'background 200ms ease, color 200ms ease' }}
+                  >
+                    <img src={a.icon} alt="" width={20} height={20} style={{ borderRadius: 6 }} />
+                    {a.name === 'Boloka' ? `Boloka · ${a.who.split(',')[0]}` : a.name}
+                  </button>
+                )
+              })}
             </div>
 
-            {/* The stage: the partner phone (whichever this step needs) and Mom's, the same size. All partners stay loaded, so they keep up. */}
+            {/* The stage: the phone the money involves right now and Mom's, the same size. All partners stay loaded, so they keep up. */}
             <div style={{ display: 'flex', gap: GAP, justifyContent: 'center', alignItems: 'flex-start' }}>
               <div style={{ position: 'relative', width: (PHONE_W + 16) * scale, height: (PHONE_H + 16) * scale + 36 }}>
-                {partners.map((href) => {
-                  const active = href === cur.partner
+                {PARTNERS.map((href) => {
+                  const active = href === partner
                   // Hidden partners must not sit over the visible one: no pointer events, underneath.
                   return (
                     <div key={href} style={{ position: 'absolute', inset: 0, pointerEvents: active ? 'auto' : 'none', zIndex: active ? 1 : 0 }}>

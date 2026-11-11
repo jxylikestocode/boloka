@@ -26,7 +26,9 @@ dollars earning interest, and the P 24,000 school fee goes straight to the schoo
 | **Boloka · Neo** | Kate's sister, with her own Boloka | Mom's transfer arrives in seconds, still in dollars (`/as/neo/home`) |
 | **Kalahari Bank** (fictional) | The school's bank | The payout lands |
 
-The homepage shows the four as phones side by side. While a transfer or payout runs, a
+The homepage shows two phones at a time: Mom's Boloka, and beside it whichever phone the
+money involves right now (MoneyGram while Kate sends, Neo when Mom sends to family, the bank
+when she withdraws), switching by itself or by hand. While a transfer or payout runs, a
 floating **under the hood** card lists every step with its testnet transaction link and how
 long it took. **Pool admin** (`/admin`) lists all transactions; **How it works**
 (`/how-it-works`) tells the story for judges.
