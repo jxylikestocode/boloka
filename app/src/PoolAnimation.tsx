@@ -1,6 +1,8 @@
 // The picture on "How it works": dollar coins from family abroad drop into
 // one shared pool, interest bubbles up inside it (most of it stays in the
-// pool, a small share leaves for Boloka), and coins go out to the bank.
+// pool, a small share leaves for Boloka), coins go out to the bank, and a
+// private transfer slides from one owner to another inside the water, its
+// amount hidden ("?").
 // Inline SVG with CSS animation (no image file); still when the person
 // prefers reduced motion. Generic: no particular sender.
 import { GREEN, INK, MUTED, TINT } from './ui.tsx'
@@ -18,6 +20,8 @@ const CSS = `
 @keyframes help-wave { to { transform: translateX(-70px) } }
 @keyframes help-rise { 0% { transform: translateY(0) scale(.6); opacity: 0 } 25% { opacity: 1; transform: translateY(-12px) scale(1) } 100% { transform: translateY(-46px) scale(1); opacity: 0 } }
 @keyframes help-cut { 0% { transform: translate(0, 0); opacity: 0 } 15% { opacity: 1 } 85% { opacity: 1 } 100% { transform: translate(46px, 66px); opacity: 0 } }
+@keyframes help-move { 0% { transform: translate(0, 0); opacity: 0 } 12% { opacity: 1; transform: translate(6px, -3px) } 50% { transform: translate(38px, -8px) } 84% { opacity: 1; transform: translate(70px, -3px) } 100% { transform: translate(76px, 0); opacity: 0 } }
+@keyframes help-glow { 0%, 100% { opacity: .35 } 50% { opacity: .9 } }
 .help-anim .coin-in { animation: help-in 2.7s ease-in infinite; transform-box: fill-box; transform-origin: center }
 .help-anim .splash-in { animation: help-splash 2.7s ease-out infinite; transform-box: fill-box; transform-origin: center }
 .help-anim .coin-out { animation: help-out 2.7s ease-out infinite; transform-box: fill-box; transform-origin: center }
@@ -25,16 +29,29 @@ const CSS = `
 .help-anim .wave.back { animation-duration: 4.6s; animation-direction: reverse }
 .help-anim .bubble { animation: help-rise 3s ease-out infinite; transform-box: fill-box; transform-origin: center }
 .help-anim .coin-cut { animation: help-cut 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center }
+.help-anim .coin-move { animation: help-move 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center }
+.help-anim .owner-glow { animation: help-glow 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center }
 @media (prefers-reduced-motion: reduce) { .help-anim * { animation: none !important } }
 `
 
-/** A USDC-style coin centred on (0, 0). */
-function Coin({ className, delay }: { className: string; delay: number }) {
+/** A USDC-style coin centred on (0, 0); `glyph` "?" for a transfer whose amount nobody sees. */
+function Coin({ className, delay, glyph = '$' }: { className: string; delay: number; glyph?: string }) {
   return (
     <g className={className} style={{ animationDelay: `${delay}s` }}>
       <circle r="10" fill={USDC_BLUE} />
       <circle r="10" fill="none" stroke="#FFFFFF" strokeOpacity="0.5" strokeWidth="1" />
-      <text y="4" textAnchor="middle" fontSize="12" fontWeight="700" fill="#FFFFFF" fontFamily={FONT}>$</text>
+      <text y="4" textAnchor="middle" fontSize="12" fontWeight="700" fill="#FFFFFF" fontFamily={FONT}>{glyph}</text>
+    </g>
+  )
+}
+
+/** A note owner inside the pool: a small person mark centred on (0, 0). */
+function Owner({ x, y, delay }: { x: number; y: number; delay: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <circle className="owner-glow" r="11" fill="#FFFFFF" fillOpacity="0.9" style={{ animationDelay: `${delay}s` }} />
+      <circle r="3.2" cy="-2.6" fill={INK} />
+      <path d="M-5.5 5.5 a5.5 5.5 0 0 1 11 0 z" fill={INK} />
     </g>
   )
 }
@@ -63,7 +80,7 @@ export default function PoolAnimation() {
         viewBox="0 0 340 214"
         width="100%"
         role="img"
-        aria-label={`Dollars from family abroad flow into one shared pool, earn interest there (${pct(1 - YIELD_CUT)} stays in the pool, ${pct(YIELD_CUT)} goes to Boloka), and flow out to the bank as pula`}
+        aria-label={`Dollars from family abroad flow into one shared pool, earn interest there (${pct(1 - YIELD_CUT)} stays in the pool, ${pct(YIELD_CUT)} goes to Boloka), move privately between owners inside the pool, and flow out to the bank as pula`}
       >
         <defs>
           <clipPath id="help-pool-clip">
@@ -76,6 +93,8 @@ export default function PoolAnimation() {
         <text x="52" y="31" textAnchor="middle" fontSize="10" fill={MUTED} fontFamily={FONT}>arrives as dollars</text>
         <text x="290" y="18" textAnchor="middle" fontSize="11" fontWeight="600" fill={INK} fontFamily={FONT}>To your bank</text>
         <text x="290" y="31" textAnchor="middle" fontSize="10" fill={MUTED} fontFamily={FONT}>paid out in pula</text>
+        <text x="170" y="61" textAnchor="middle" fontSize="10.5" fontWeight="600" fill={GREEN} fontFamily={FONT}>Private transfer</text>
+        <text x="170" y="73" textAnchor="middle" fontSize="9" fill={MUTED} fontFamily={FONT}>nobody sees who or how much</text>
 
         {/* The arcs the coins travel */}
         <path d="M58 42 C 80 70, 100 80, 128 92" fill="none" stroke={GREEN} strokeOpacity="0.35" strokeWidth="1.5" strokeDasharray="3 4" />
@@ -89,6 +108,13 @@ export default function PoolAnimation() {
           </g>
           <g transform="translate(0 108)">
             <path className="wave" d={WAVE} fill={WATER} fillOpacity="0.95" />
+          </g>
+          {/* A private transfer: a coin slides from one owner to another under the water, amount unseen */}
+          <path d="M132 146 Q 170 128 208 146" fill="none" stroke={GREEN} strokeOpacity="0.45" strokeWidth="1.5" strokeDasharray="3 4" />
+          <Owner x={120} y={148} delay={0} />
+          <Owner x={220} y={148} delay={2} />
+          <g transform="translate(132 148)">
+            <Coin className="coin-move" delay={0.6} glyph="?" />
           </g>
           {/* Interest: "+" tokens rising through the water */}
           {[
