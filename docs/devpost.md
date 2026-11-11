@@ -11,7 +11,12 @@ Kate, our teammate, studies at a university in Waterloo, Canada. Every term she 
 3. **Spending.** Paying by the wallet's prepaid card instead? P4,000 per swipe: four swipes and four fees per term, twelve a year.
 4. **Saving.** Meanwhile the pula has lost 17% against the US dollar in five years (P10,000 bought US$878 in November 2021 and US$727 in November 2026). Every pula the family keeps buys less each year.
 
-We interviewed senders to Egypt, India, Zimbabwe and Nigeria and heard the same pattern: the hard part of a remittance is not the transfer, it's holding, saving and spending the money after it lands.
+We interviewed senders in Canada to Botswana, China, Egypt, India, Nigeria and Zimbabwe and heard the same pattern: the hard part of a remittance is not the transfer, it's holding, saving and spending the money after it lands.
+
+Two findings from the China and India interviews sharpened it:
+
+- **The hard direction is out, not in.** Sending from Canada to China or India is relatively easy; the apps and banks are quick and the money lands. The friction both groups described is sending money *out* of China and India: both countries restrict it, and a family paying for a student abroad meets limits, paperwork and delays at every step. Our product sits on the receiving side today; the sending side of those two corridors is a market of its own.
+- **Recurring, not occasional.** One Indian sender was unusual: he sends money *to* India every month, to pay the mortgage on the family home and to fund a mutual-fund auto-invest plan. Fixed dates, exact amounts, specific accounts. That is "pay directly" as a standing order, and it is why scheduled payouts and in-app bill payment are on the roadmap rather than a nice-to-have.
 
 ## What it does
 
@@ -56,13 +61,14 @@ The parents never see a wallet address, a token, or the word crypto. A "How it w
 - A real family's problem, documented step by step with their own numbers, solved end to end on testnet and running publicly.
 - Money that arrives in seconds, on the anchor standards the whole Stellar ecosystem shares.
 - Private transfers between family members with real zero-knowledge proofs, made on the phone and verified by the contract on testnet, measured at about six seconds from tap to the other phone.
-- Sender interviews across four corridors (Botswana, Egypt, India, Nigeria) confirming the problem is not unique to one country.
+- Sender interviews across six corridors (Botswana, China, Egypt, India, Nigeria, Zimbabwe) confirming the problem is not unique to one country, and showing where it differs: for China and India, the hard direction is money going out.
 - A model that earns without charging families anything.
 
 ## What we learned
 
 - The cost of a remittance hides in the exchange rate, not the fee line: about 5%, against the UN's 3% target.
 - The last mile is the product: holding, saving and spending the money after it lands. A P10,000 cap and a P4,000 swipe limit turn one school fee into six transfers or twelve swipes.
+- Corridors differ in direction. Into China and India the transfer is easy; out of them it is the hard part. And some senders are not sending occasional support but standing payments: a mortgage, an investment plan, every month.
 - Stellar's anchors make the regulated steps someone else's licensed job, which is what lets a small team build this.
 - Prefunding is what makes "instant" possible — settle with the network later, pay the family now.
 - A clear user story makes design decisions easy. Abstracting the chain away was the right call the moment we pictured Kate's mom using it.
@@ -71,5 +77,6 @@ The parents never see a wallet address, a token, or the word crypto. A "How it w
 
 - Go live with MoneyGram and a licensed Botswana off-ramp as anchors.
 - Pilot with one community in Botswana, starting with Kate's family.
-- Version two: school fees, electricity, water and phone paid in-app; scheduled payouts; a multi-party trusted-setup ceremony and an audit of the circuit and contract before mainnet.
+- Version two: school fees, electricity, water and phone paid in-app; scheduled payouts (the monthly mortgage and the auto-invest plan our Indian interviewee pays by hand today); a multi-party trusted-setup ceremony and an audit of the circuit and contract before mainnet.
 - Expand across Southern Africa and to high-inflation corridors such as Egypt. 800 million people depend on money sent from abroad.
+- Later, the other direction: for families in China and India, a Boloka account funded in-country that a student abroad spends in dollars, where getting money out is the problem the interviews named.
