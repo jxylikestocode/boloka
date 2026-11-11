@@ -17,8 +17,8 @@ type Mode = 'testnet' | 'demo'
 type App = { name: string; owner: string; person: string; who: string; href: string; icon: string; bg: string }
 const APPS: App[] = [
   { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C' },
-  { name: 'Boloka', owner: 'Mom', person: '👩🏿‍🦳', who: 'in Gaborone', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Boloka', owner: 'Neo', person: '👩🏿‍🎓', who: "Kate's sister, in Francistown", href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
+  { name: 'Boloka', owner: 'Mom', person: '👩🏿‍🦳', who: 'in Botswana', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
+  { name: 'Boloka', owner: 'Neo', person: '👩🏿‍🎓', who: "Kate's sister, in Botswana", href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
   { name: 'Kalahari Bank', owner: 'Mom', person: '👩🏿‍🦳', who: 'her bank account, where the school fee lands', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
 ]
 const MOM = '/home'
