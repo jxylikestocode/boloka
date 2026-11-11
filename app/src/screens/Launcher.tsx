@@ -15,13 +15,13 @@ import { FONT, GREEN, INK, LINE, MUTED, PANEL, usePageMeta } from '../ui.tsx'
 type Mode = 'testnet' | 'demo'
 
 /** `person` is the emoji that says whose phone this is; `owner` their name. */
-type App = { name: string; owner: string; person: string; who: string; href: string; icon: string; bg: string; kind?: 'phone' | 'laptop' }
+type App = { name: string; owner: string; person: string; who: string; href: string; icon: string; bg: string; kind?: 'phone' | 'laptop'; goal?: string }
 const APPS: App[] = [
-  { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C' },
+  { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C', goal: 'Kate sends money home from Canada. Tap Continue in MoneyGram and watch it land on Mom\u2019s phone in seconds, in dollars, with no cap.' },
   { name: 'Boloka', owner: 'Mom', person: '👩🏿‍🦳', who: 'in Botswana', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Boloka', owner: "Kate's sister", person: '👩🏿‍🎓', who: 'her own Boloka, in Botswana', href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Kalahari Bank', owner: 'Mom', person: '👩🏿‍🦳', who: 'her bank account, where the school fee lands', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
-  { name: 'Boloka dapp', owner: "Kate's bf", person: '🤫', who: 'the open dapp, his own wallet', href: '/wallet', icon: '/icons/boloka-180.png', bg: GREEN, kind: 'laptop' },
+  { name: 'Boloka', owner: "Kate's sister", person: '👩🏿‍🎓', who: 'her own Boloka, in Botswana', goal: 'Mom shares some with Kate\u2019s sister. On Mom\u2019s phone tap Private transfer: the dollars move inside the pool, her sister\u2019s phone shows them, and the chain shows neither the amount nor the two of them.', href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
+  { name: 'Kalahari Bank', owner: 'Mom', person: '👩🏿‍🦳', who: 'her bank account, where the school fee lands', goal: 'Mom pays the school fee without a cash trip. On her phone tap Withdraw to cash and pay to the bank: the credit appears in her bank account beside it.', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
+  { name: 'Boloka dapp', owner: "Kate's bf", person: '🤫', who: 'the open dapp, his own wallet', goal: 'Kate\u2019s boyfriend gives to Mom without anyone knowing. In the dapp, sign in with a wallet (or a test wallet), pick Mom, give under any name: Mom sees the money and the name, nobody sees him.', href: '/wallet', icon: '/icons/boloka-180.png', bg: GREEN, kind: 'laptop' },
 ]
 const MOM = '/home'
 const byHref = (href: string) => APPS.find((a) => a.href === href)!
@@ -229,7 +229,8 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
       <div style={{ maxWidth: wide ? 2 * (PHONE_W + 16) * scale + GAP + 288 : 980, margin: '0 auto', padding: wide ? '22px 24px 40px' : '48px 20px 60px', display: 'flex', flexDirection: 'column', gap: 22, flex: 1, width: '100%', boxSizing: 'border-box', justifyContent: wide ? 'flex-start' : 'center' }}>
         {wide ? (
           <>
-            {/* Which phone is beside Mom's: follows the money, or pick one. */}
+            {/* Which phone is beside Mom's: follows the money, or pick one; and what to do with this pair. */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
             <div role="tablist" aria-label="The phone beside Mom's" style={{ display: 'flex', gap: 6, background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: 999, padding: 4, alignSelf: 'center' }}>
               {PARTNERS.map((href) => {
                 const a = byHref(href)
@@ -248,6 +249,10 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
                   </button>
                 )
               })}
+            </div>
+            <div key={partner} style={{ fontSize: 15, color: INK, textAlign: 'center', maxWidth: 760, lineHeight: 1.45, animation: 'arrival-in 240ms ease-out' }}>
+              {byHref(partner).goal}
+            </div>
             </div>
 
             {/* The stage: the phone the money involves right now and Mom's, the same size. All partners stay loaded, so they keep up. */}
