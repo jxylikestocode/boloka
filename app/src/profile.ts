@@ -23,7 +23,7 @@ export type Person = { name: string; initial: string; phone: string; town: strin
 /** The people in the demo, by profile. */
 export const PEOPLE: Record<string, Person> = {
   '': { name: 'Mom', initial: 'M', phone: '+267 71 234 567', town: 'Botswana', who: "Kate's mother" },
-  neo: { name: 'Neo', initial: 'N', phone: '+267 72 456 789', town: 'Botswana', who: "Kate's sister, at university" },
+  neo: { name: "Kate's sister", initial: 'S', phone: '+267 72 456 789', town: 'Botswana', who: 'at university' },
 }
 
 export const ME: Person = PEOPLE[PROFILE] ?? {

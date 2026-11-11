@@ -66,10 +66,10 @@ type Mode = 'testnet' | 'demo'
 const STORY: [string, ReactNode][] = [
   ['MoneyGram', <>Type <b>10,000</b> CAD. Orange Money and cash pickup grey out (over the P 9,500 per-transfer cap); Boloka stays available. Tap <b>Continue</b>.</>],
   ['Boloka · Mom', <>A notification drops in: <b>Money from Kate arrived · P 99,300</b>. Tap it.</>],
-  ['Boloka · Mom', <>Tap <b>Private transfer</b> → <b>Neo</b> (Kate's sister) → P 3,000 → <b>Send</b>. The homepage switches to Neo's phone beside Mom's.</>],
-  ['Boloka · Neo', <><b>Money from Mom arrived · P 3,000</b> within seconds. The dollars never left the pool; the chain shows two nullifiers and two new notes, not the amount or the two people.</>],
+  ['Boloka · Mom', <>Tap <b>Private transfer</b> → <b>Kate's sister</b> → P 3,000 → <b>Send</b>. The homepage switches to her phone beside Mom's.</>],
+  ["Boloka · Kate's sister", <><b>Money from Mom arrived · P 3,000</b> within seconds. The dollars never left the pool; the chain shows two nullifiers and two new notes, not the amount or the two people.</>],
   ['Boloka · Mom', <>Tap <b>Withdraw to cash</b> → <b>Pay to bank / school</b> → P 24,000 → <b>Pay</b>.</>],
-  ['Thabo · dapp', <>Pick <b>Thabo</b> on the homepage: the <a href="/wallet" target="boloka-wallet" style={{ color: GREEN }}>open Boloka dapp</a>, permissionless, no account. Sign in with Freighter (or a test wallet), pick Mom, give P 20,000 as "A friend". Mom's phone shows <b>Money from A friend</b>; neither Mom, Kate, Boloka nor the chain can name the giver.</>],
+  ["Kate's bf · dapp", <>Pick <b>Kate's bf</b> on the homepage: the <a href="/wallet" target="boloka-wallet" style={{ color: GREEN }}>open Boloka dapp</a>, permissionless, no account. Sign in with Freighter (or a test wallet), pick Mom, give P 20,000 as "A friend". Mom's phone shows <b>Money from A friend</b>; neither Mom, Kate, Boloka nor the chain can name the giver.</>],
   ['Kalahari Bank', <>The balance counts up and the credit appears at the top, marked <b>NEW</b>.</>],
   ['Boloka → Lender', <>Open <a href="/prove" style={{ color: GREEN }}>Show a lender</a>, copy the code, paste it in the <a href="/lender" style={{ color: GREEN }}>lender portal</a> and tap Verify → <b>APPROVED</b>.</>],
 ]
@@ -133,7 +133,7 @@ export default function HowItWorks({ mode = 'testnet' }: { mode?: Mode }) {
           <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.6 }}>
             Kate in Canada sends her parents $10,000 CAD. Transfer apps cap at P 9,500 per transfer, an ATM gives P 3,000 at a
             time (a card P 4,000), other routes hide about 5% in the exchange rate, and the pula keeps losing value. With Boloka
-            the whole amount arrives, sits in US dollars earning interest, part of it goes to her sister Neo's Boloka privately,
+            the whole amount arrives, sits in US dollars earning interest, part of it goes to her sister's own Boloka privately,
             inside the pool, and the P 24,000 school fee goes straight to the bank — no cash trip.
           </div>
           <div style={{ fontSize: 15, fontWeight: 700, marginTop: 6 }}>Follow the story across the phones</div>

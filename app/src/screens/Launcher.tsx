@@ -1,7 +1,7 @@
 // The root of the single-URL build: two phones at a time, the same size.
 // Mom's Boloka stays on the right; the phone beside it follows the money:
-// MoneyGram while Kate sends, Neo when Mom opens Private transfer or a transfer
-// runs, the bank when she withdraws, Thabo's laptop (the wallet page) when he gives. It switches by itself from what the
+// MoneyGram while Kate sends, Kate's sister when Mom opens Private transfer or a
+// transfer runs, the bank when she withdraws, Kate's bf's laptop (the wallet page) when he gives. It switches by itself from what the
 // phones are doing (Mom's screen, the flow in progress) and can be picked by
 // hand. Until the first transfer, MoneyGram's Continue button pulses: that is
 // where the story starts. The under-the-hood status is a small pill in the
@@ -19,9 +19,9 @@ type App = { name: string; owner: string; person: string; who: string; href: str
 const APPS: App[] = [
   { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C' },
   { name: 'Boloka', owner: 'Mom', person: '👩🏿‍🦳', who: 'in Botswana', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Boloka', owner: 'Neo', person: '👩🏿‍🎓', who: "Kate's sister, in Botswana", href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
+  { name: 'Boloka', owner: "Kate's sister", person: '👩🏿‍🎓', who: 'her own Boloka, in Botswana', href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
   { name: 'Kalahari Bank', owner: 'Mom', person: '👩🏿‍🦳', who: 'her bank account, where the school fee lands', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
-  { name: 'Boloka dapp', owner: 'Thabo', person: '🤫', who: "Kate's boyfriend, on the open dapp with his own wallet", href: '/wallet', icon: '/icons/boloka-180.png', bg: GREEN, kind: 'laptop' },
+  { name: 'Boloka dapp', owner: "Kate's bf", person: '🤫', who: 'the open dapp, his own wallet', href: '/wallet', icon: '/icons/boloka-180.png', bg: GREEN, kind: 'laptop' },
 ]
 const MOM = '/home'
 const byHref = (href: string) => APPS.find((a) => a.href === href)!
@@ -31,7 +31,7 @@ const NEO = '/as/neo/home'
 const BANK = '/bank'
 const MONEYGRAM = '/moneygram'
 const WALLET = '/wallet'
-/** Thabo's laptop: wider than a phone, same height. */
+/** The boyfriend's laptop: wider than a phone, same height. */
 const LAPTOP_W = 560
 const widthOf = (href: string) => (byHref(href).kind === 'laptop' ? LAPTOP_W : PHONE_W)
 
@@ -107,8 +107,8 @@ function Phone({ app, scale = 1, hidden = false }: { app: App; scale?: number; h
 
 /**
  * Which phone belongs beside Mom's right now, from what the phones are doing:
- * Mom's screen (Private transfer → Neo, Withdraw to cash → the bank) and the flow in
- * progress (Kate's transfer → MoneyGram, a send → Neo, a payout → the bank).
+ * Mom's screen (Private transfer → Kate's sister, Withdraw to cash → the bank) and the flow in
+ * progress (Kate's transfer → MoneyGram, a send → the sister, a payout → the bank).
  * Each new signal switches once; a hand-picked phone stays until the next.
  * Also tells whether any flow has started since the page loaded.
  */
@@ -273,7 +273,7 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'center' }}>
               <h1 style={{ margin: 0, fontSize: 28, letterSpacing: -0.4, lineHeight: 1.2 }}>Four apps. Open them in order.</h1>
-              <div style={{ fontSize: 15, color: MUTED }}>Kate sends in MoneyGram, Mom receives in Boloka and sends Neo some, the school fee lands in the bank.</div>
+              <div style={{ fontSize: 15, color: MUTED }}>Kate sends in MoneyGram, Mom receives in Boloka and sends Kate's sister some, the school fee lands in the bank.</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
               {APPS.map((a, i) => (
