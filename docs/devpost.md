@@ -4,19 +4,37 @@
 
 *Boloka* means "to keep" in Setswana.
 
-Kate, our teammate, studies at a university in Waterloo, Canada. Every term she sends P13,500 (about C$1,350) home to Mogoditshane, Botswana, into her mom's Orange Money wallet, to pay her little sister's school fees. The transfer works. Everything around it doesn't:
+One family, one school fee, and four people who each hit a wall trying to move money around it.
 
-1. **Sending.** The wallet caps each transfer at P10,000, so one term's fee is two transfers and two fees — six a year. And about 5% vanishes in the exchange rate on top of the fee line: roughly P675 lost on a single term's fees, against a UN target of 3% for remittance costs.
-2. **Receiving.** Orange Money can't pay the school. So her mom cashes out at an agent, travels 8.5 km each way to a deposit ATM at Gaborone Bus Rank, queues, feeds the same cash back into her bank account, and only then pays the school by transfer. Three extra steps, a ride across town and the risk of carrying cash, to pay one bill.
-3. **Spending.** Paying by the wallet's prepaid card instead? P4,000 per swipe: four swipes and four fees per term, twelve a year.
-4. **Saving.** Meanwhile the pula has lost 17% against the US dollar in five years (P10,000 bought US$878 in November 2021 and US$727 in November 2026). Every pula the family keeps buys less each year.
+**Kate, in Waterloo, Canada.** Our teammate. Every term she sends P13,500 (about C$1,350) home to Mogoditshane, Botswana, into her mom's Orange Money wallet, to pay her little sister's school fees. The transfer works. Everything around it doesn't.
 
-We interviewed senders in Canada to Botswana, China, Egypt, India, Nigeria and Zimbabwe and heard the same pattern: the hard part of a remittance is not the transfer, it's holding, saving and spending the money after it lands.
+- The wallet caps each transfer at P10,000, so one term's fee is two transfers and two fees: six a year.
+- About 5% vanishes in the exchange rate on top of the fee line: roughly P675 lost on a single term's fees, against the UN target of 3% for remittance costs.
 
-Two findings from the China and India interviews sharpened it:
+**Mom, in Botswana.** The money lands in a wallet that cannot pay the school.
+
+- She cashes out at an agent, travels 8.5 km each way to a deposit ATM at Gaborone Bus Rank, queues, feeds the same cash back into her bank account, and only then pays the school by transfer. Three extra steps, a ride across town and the risk of carrying cash, to pay one bill.
+- Paying by the wallet's prepaid card instead? P4,000 per swipe: four swipes and four fees per term, twelve a year.
+- Whatever she manages to keep loses value while she keeps it. The pula has lost 17% against the US dollar in five years: P10,000 bought US$878 in November 2021 and US$727 in November 2026.
+- She cannot pass money on without the same trip in reverse. Sending some to Kate's sister means cashing out again.
+
+**Kate's sister, at university in Botswana.** The person the money is for, and the one with the least say in how it arrives: a wallet cap, a card limit and a bus ride stand between her mother's phone and her fees.
+
+**Kate's boyfriend, in Toronto.** Well off, and shy about it. He wants Mom to have the school money before the term, without Kate, Mom or anyone ever knowing it came from him. He cannot do it with any rail that exists:
+
+- A bank transfer carries his name on the statement.
+- MoneyGram needs a named sender and a named receiver, and hands the receiver a reference with his details.
+- Cash means being there, and being seen.
+- A payment app shows Kate, Mom and the company exactly who paid. Even "anonymous" crypto puts his address next to the amount on a public ledger, and the exchange that sold him the coins knows who he is.
+
+So he does nothing, and the fee gets paid the hard way.
+
+We interviewed senders in Canada to Botswana, China, Egypt, India, Nigeria and Zimbabwe and heard the same pattern: the hard part of a remittance is not the transfer, it's holding, saving and spending the money after it lands, and moving it on. Two findings from the China and India interviews sharpened it:
 
 - **The hard direction is out, not in.** Sending from Canada to China or India is relatively easy; the apps and banks are quick and the money lands. The friction both groups described is sending money *out* of China and India: both countries restrict it, and a family paying for a student abroad meets limits, paperwork and delays at every step. Our product sits on the receiving side today; the sending side of those two corridors is a market of its own.
 - **Recurring, not occasional.** One Indian sender was unusual: he sends money *to* India every month, to pay the mortgage on the family home and to fund a mutual-fund auto-invest plan. Fixed dates, exact amounts, specific accounts. That is "pay directly" as a standing order, and it is why scheduled payouts and in-app bill payment are on the roadmap rather than a nice-to-have.
+
+Boloka is the answer to all four: one transfer with no cap, money that stays in dollars and pays the school directly, a private transfer to the sister that never leaves the pool, and a way for the boyfriend to give without being named, by anyone, to anyone.
 
 ## What it does
 
