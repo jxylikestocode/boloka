@@ -294,11 +294,15 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
             {/* The stage: the partner phone (whichever this step needs) and Mom's, the same size. All partners stay loaded, so they keep up. */}
             <div style={{ display: 'flex', gap: GAP, justifyContent: 'center', alignItems: 'flex-start' }}>
               <div style={{ position: 'relative', width: (PHONE_W + 16) * scale, height: (PHONE_H + 16) * scale + 36 }}>
-                {partners.map((href) => (
-                  <div key={href} style={{ position: 'absolute', inset: 0 }}>
-                    <Phone app={byHref(href)} scale={scale} hidden={href !== cur.partner} dim={!bright.has(href)} />
-                  </div>
-                ))}
+                {partners.map((href) => {
+                  const active = href === cur.partner
+                  // Hidden partners must not sit over the visible one: no pointer events, underneath.
+                  return (
+                    <div key={href} style={{ position: 'absolute', inset: 0, pointerEvents: active ? 'auto' : 'none', zIndex: active ? 1 : 0 }}>
+                      <Phone app={byHref(href)} scale={scale} hidden={!active} dim={!bright.has(href)} />
+                    </div>
+                  )
+                })}
               </div>
               <Phone app={byHref(MOM)} scale={scale} dim={!bright.has(MOM)} />
             </div>
