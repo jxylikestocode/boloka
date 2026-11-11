@@ -19,7 +19,7 @@ const APPS: App[] = [
   { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C' },
   { name: 'Boloka', owner: 'Mom', person: '👩🏿‍🦳', who: 'in Gaborone', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
   { name: 'Boloka', owner: 'Neo', person: '👩🏿‍🎓', who: "Kate's sister, in Francistown", href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
-  { name: 'Kalahari Bank', owner: 'The school', person: '🏦', who: "the school's bank", href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
+  { name: 'Kalahari Bank', owner: 'Mom', person: '👩🏿‍🦳', who: 'her bank account, where the school fee lands', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
 ]
 const MOM = '/home'
 const byHref = (href: string) => APPS.find((a) => a.href === href)!
@@ -194,7 +194,7 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
       <span>Open on its own:</span>
       {APPS.map((a) => (
         <a key={a.href} href={a.href} target={`boloka-${a.href}`} style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>
-          {a.person} {a.owner === 'The school' ? a.name : `${a.owner} · ${a.name}`} ↗
+          {a.person} {`${a.owner} · ${a.name}`} ↗
         </a>
       ))}
       <span style={{ width: 1, height: 14, background: LINE }} />
@@ -233,7 +233,7 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
                     style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px 0 8px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 14, fontWeight: 600, background: on ? GREEN : 'transparent', color: on ? '#FFFFFF' : MUTED, transition: 'background 200ms ease, color 200ms ease' }}
                   >
                     <span style={{ fontSize: 20, lineHeight: 1 }} aria-hidden="true">{a.person}</span>
-                    {a.owner === 'The school' ? a.name : `${a.owner} · ${a.name}`}
+                    {`${a.owner} · ${a.name}`}
                   </button>
                 )
               })}

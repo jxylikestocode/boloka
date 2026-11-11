@@ -24,7 +24,7 @@ dollars earning interest, and the P 24,000 school fee goes straight to the schoo
 | **MoneyGram** (mock) | Kate, in Canada | Sends $10,000 CAD; Boloka is the only option with no cap |
 | **Boloka** | Her parents ("Mom"), in Botswana | The money arrives in seconds, shown in pula or dollars, growing at Blend's real rate; **Send to family** moves some to Neo's Boloka privately, inside the pool; **Withdraw** pays the school fee to the bank or Orange Money |
 | **Boloka · Neo** | Kate's sister, with her own Boloka | Mom's transfer arrives in seconds, still in dollars (`/as/neo/home`) |
-| **Kalahari Bank** (fictional) | The school's bank | The payout lands |
+| **Kalahari Bank** (fictional) | Mom's bank account | The payout lands; from there the school fee is paid |
 
 The homepage shows two phones at a time: Mom's Boloka, and beside it whichever phone the
 money involves right now (MoneyGram while Kate sends, Neo when Mom sends to family, the bank
