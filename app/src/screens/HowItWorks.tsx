@@ -69,7 +69,7 @@ const STORY: [string, ReactNode][] = [
   ['Boloka · Mom', <>Tap <b>Private transfer</b> → <b>Neo</b> (Kate's sister) → P 3,000 → <b>Send</b>. The homepage switches to Neo's phone beside Mom's.</>],
   ['Boloka · Neo', <><b>Money from Mom arrived · P 3,000</b> within seconds. The dollars never left the pool; the chain shows two nullifiers and two new notes, not the amount or the two people.</>],
   ['Boloka · Mom', <>Tap <b>Withdraw to cash</b> → <b>Pay to bank / school</b> → P 24,000 → <b>Pay</b>.</>],
-  ['Thabo · own window', <>Open <a href="/wallet" target="boloka-wallet" style={{ color: GREEN }}>send from a wallet</a>: sign in with Freighter (or a test wallet), pick Mom, give P 20,000 as "A friend". Mom's phone shows <b>Money from A friend</b>; neither Mom, Kate, Boloka nor the chain can name the giver.</>],
+  ['Thabo · dapp', <>Pick <b>Thabo</b> on the homepage: the <a href="/wallet" target="boloka-wallet" style={{ color: GREEN }}>open Boloka dapp</a>, permissionless, no account. Sign in with Freighter (or a test wallet), pick Mom, give P 20,000 as "A friend". Mom's phone shows <b>Money from A friend</b>; neither Mom, Kate, Boloka nor the chain can name the giver.</>],
   ['Kalahari Bank', <>The balance counts up and the credit appears at the top, marked <b>NEW</b>.</>],
   ['Boloka → Lender', <>Open <a href="/prove" style={{ color: GREEN }}>Show a lender</a>, copy the code, paste it in the <a href="/lender" style={{ color: GREEN }}>lender portal</a> and tap Verify → <b>APPROVED</b>.</>],
 ]

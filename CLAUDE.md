@@ -87,8 +87,9 @@ sha256(secret ‖ amount ‖ month)) is unchanged and still serves anything depo
   savings"), then sends. No per-send limit on the screens.
 - Measured 11 Nov 2026 (testnet, local backend): proof 1.4–1.8 s in Chrome; transfer tap → the
   other phone shows arrival 6.3 s; payout tap → receipt 3.2 s.
-- **Outside wallets** (`/wallet`, `src/screens/Wallet.tsx`, `src/give.ts`; own window, not a phone;
-  jargon fine): Freighter (`src/freighter.ts`) or a test keypair kept under `wallet.*` keys (never
+- **Outside wallets** (`/wallet`, `src/screens/Wallet.tsx`, `src/give.ts`; "Boloka dapp": permissionless,
+  wallet sign-in, no account; shown on the homepage as Thabo's laptop frame (`?embed=1` names him) or
+  in its own window; jargon fine): Freighter (`src/freighter.ts`) or a test keypair kept under `wallet.*` keys (never
   `savings.*`, so never shared by sync). `deposit_note` from the wallet into a pocket note, then a
   spend proved in the browser and **relayed** by `POST /api/relay` (routes.ts: validates shapes,
   amount 0, `to` = the payout address, submits `spend` from the sender role account through the

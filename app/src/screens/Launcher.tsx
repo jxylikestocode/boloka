@@ -1,7 +1,7 @@
 // The root of the single-URL build: two phones at a time, the same size.
 // Mom's Boloka stays on the right; the phone beside it follows the money:
 // MoneyGram while Kate sends, Neo when Mom opens Private transfer or a transfer
-// runs, the bank when she withdraws. It switches by itself from what the
+// runs, the bank when she withdraws, Thabo's laptop (the wallet page) when he gives. It switches by itself from what the
 // phones are doing (Mom's screen, the flow in progress) and can be picked by
 // hand. Until the first transfer, MoneyGram's Continue button pulses: that is
 // where the story starts. The under-the-hood status is a small pill in the
@@ -14,20 +14,25 @@ import { FONT, GREEN, INK, LINE, MUTED, PANEL, usePageMeta } from '../ui.tsx'
 type Mode = 'testnet' | 'demo'
 
 /** `person` is the emoji that says whose phone this is; `owner` their name. */
-type App = { name: string; owner: string; person: string; who: string; href: string; icon: string; bg: string }
+type App = { name: string; owner: string; person: string; who: string; href: string; icon: string; bg: string; kind?: 'phone' | 'laptop' }
 const APPS: App[] = [
   { name: 'MoneyGram', owner: 'Kate', person: '👩🏿', who: 'in Canada', href: '/moneygram', icon: '/icons/moneygram-180.png', bg: '#DA291C' },
   { name: 'Boloka', owner: 'Mom', person: '👩🏿‍🦳', who: 'in Botswana', href: '/home', icon: '/icons/boloka-180.png', bg: GREEN },
   { name: 'Boloka', owner: 'Neo', person: '👩🏿‍🎓', who: "Kate's sister, in Botswana", href: '/as/neo/home', icon: '/icons/boloka-180.png', bg: GREEN },
   { name: 'Kalahari Bank', owner: 'Mom', person: '👩🏿‍🦳', who: 'her bank account, where the school fee lands', href: '/bank', icon: '/icons/bank-180.png', bg: '#0B2545' },
+  { name: 'Boloka dapp', owner: 'Thabo', person: '🤫', who: "Kate's boyfriend, on the open dapp with his own wallet", href: '/wallet', icon: '/icons/boloka-180.png', bg: GREEN, kind: 'laptop' },
 ]
 const MOM = '/home'
 const byHref = (href: string) => APPS.find((a) => a.href === href)!
 
-const PARTNERS = ['/moneygram', '/as/neo/home', '/bank']
+const PARTNERS = ['/moneygram', '/as/neo/home', '/bank', '/wallet']
 const NEO = '/as/neo/home'
 const BANK = '/bank'
 const MONEYGRAM = '/moneygram'
+const WALLET = '/wallet'
+/** Thabo's laptop: wider than a phone, same height. */
+const LAPTOP_W = 560
+const widthOf = (href: string) => (byHref(href).kind === 'laptop' ? LAPTOP_W : PHONE_W)
 
 const PHONE_W = 390
 const PHONE_H = 760
@@ -39,7 +44,8 @@ const MIN_SCALE = 0.6
 
 /** One scale for both phones: full size when the window allows, smaller to fit; null when it cannot. */
 function scaleFor(width: number, height: number): number | null {
-  const byWidth = (width - 48 - GAP) / (2 * (PHONE_W + 16))
+  // Room for Mom's phone beside the widest partner (the laptop).
+  const byWidth = (width - 48 - GAP) / (PHONE_W + 16 + LAPTOP_W + 16)
   const byHeight = (height - CHROME_H) / (PHONE_H + 16)
   const scale = Math.min(1, byWidth, byHeight)
   return scale >= MIN_SCALE ? scale : null
@@ -59,7 +65,9 @@ function useScale() {
 
 /** A phone-shaped frame running one of the apps. */
 function Phone({ app, scale = 1, hidden = false }: { app: App; scale?: number; hidden?: boolean }) {
-  const w = (PHONE_W + 16) * scale
+  const laptop = app.kind === 'laptop'
+  const cw = laptop ? LAPTOP_W : PHONE_W
+  const w = (cw + 16) * scale
   const h = (PHONE_H + 16) * scale
   return (
     <div
@@ -77,15 +85,15 @@ function Phone({ app, scale = 1, hidden = false }: { app: App; scale?: number; h
       }}
     >
       <div style={{ width: w, height: h }}>
-        <div style={{ width: PHONE_W + 16, height: PHONE_H + 16, padding: 8, borderRadius: 40, background: '#0F1412', boxShadow: app.href === MOM ? '0 24px 60px rgba(14,124,91,0.28), inset 0 0 0 1px rgba(255,255,255,0.08)' : '0 12px 30px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.08)', transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+        <div style={{ width: cw + 16, height: PHONE_H + 16, padding: 8, borderRadius: laptop ? 16 : 40, background: '#0F1412', boxShadow: app.href === MOM ? '0 24px 60px rgba(14,124,91,0.28), inset 0 0 0 1px rgba(255,255,255,0.08)' : '0 12px 30px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.08)', transform: `scale(${scale})`, transformOrigin: 'top left' }}>
           <iframe
             title={`${app.name} · ${app.owner}, ${app.who}`}
             src={`${app.href}?embed=1`}
-            style={{ width: PHONE_W, height: PHONE_H, border: 'none', borderRadius: 32, background: '#FFFFFF', display: 'block' }}
+            style={{ width: cw, height: PHONE_H, border: 'none', borderRadius: laptop ? 10 : 32, background: '#FFFFFF', display: 'block' }}
           />
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: MUTED }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, color: MUTED, whiteSpace: 'nowrap', maxWidth: w, overflow: 'hidden', textOverflow: 'ellipsis' }}>
         <span style={{ fontSize: 26, lineHeight: 1 }} aria-hidden="true">{app.person}</span>
         <span style={{ fontWeight: 700, color: INK, fontSize: 15 }}>{app.owner}</span>
         <span>· {app.who} ·</span>
@@ -130,7 +138,7 @@ function useFollow() {
         want = BANK
       } else if (fresh) {
         signal = `flow:${fresh.id}`
-        want = fresh.title.startsWith('payout') ? BANK : fresh.title.startsWith('sending') ? (fresh.app?.startsWith('/as/neo') ? MOM : NEO) : MONEYGRAM
+        want = fresh.title.startsWith('payout') ? BANK : fresh.title.startsWith('giving') ? WALLET : fresh.title.startsWith('sending') ? (fresh.app?.startsWith('/as/neo') ? MOM : NEO) : MONEYGRAM
       }
       if (signal && signal !== lastSignal.current) {
         lastSignal.current = signal
@@ -198,10 +206,6 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
         </a>
       ))}
       <span style={{ width: 1, height: 14, background: LINE }} />
-      <a href="/wallet" target="boloka-wallet" title="Give to a Boloka ID from an ordinary Stellar wallet, anonymously" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>
-        🤫 Thabo · send from a wallet ↗
-      </a>
-      <span style={{ width: 1, height: 14, background: LINE }} />
       <a href="/how-it-works" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>How it works →</a>
       <a href="/admin" style={{ color: GREEN, fontWeight: 600, textDecoration: 'none' }}>Pool admin →</a>
     </div>
@@ -245,7 +249,7 @@ export default function Launcher({ mode, strip, floating }: { mode: Mode; strip?
 
             {/* The stage: the phone the money involves right now and Mom's, the same size. All partners stay loaded, so they keep up. */}
             <div style={{ display: 'flex', gap: GAP, justifyContent: 'center', alignItems: 'flex-start' }}>
-              <div style={{ position: 'relative', width: (PHONE_W + 16) * scale, height: (PHONE_H + 16) * scale + 36 }}>
+              <div style={{ position: 'relative', width: (widthOf(partner) + 16) * scale, height: (PHONE_H + 16) * scale + 36, transition: 'width 300ms ease' }}>
                 {PARTNERS.map((href) => {
                   const active = href === partner
                   // Hidden partners must not sit over the visible one: no pointer events, underneath.

@@ -13,6 +13,10 @@ import { pulaToUnits, unitsToPula } from '../money.ts'
 import { decodeId, type Recipient } from '../notes.ts'
 import { BORDER, FONT, GREEN, INK, LINE, MUTED, PANEL, RED, TINT, amt, button, disabledStyle, usePageMeta } from '../ui.tsx'
 import { directory, type DirectoryEntry } from '../wallet.ts'
+import { addProgress, clearProgress, failProgress, GIVE_FLOW, startProgress } from '../progress.ts'
+
+/** Inside the homepage's laptop frame: the persona is named, and the page is told so. */
+const EMBEDDED = typeof location !== 'undefined' && new URLSearchParams(location.search).get('embed') === '1'
 
 const short = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`
 const card: CSSProperties = { background: '#FFFFFF', borderRadius: 18, border: `1px solid ${LINE}`, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }
@@ -97,12 +101,19 @@ export default function Wallet() {
     setError('')
     setSteps([])
     setDone(null)
+    // The homepage's status pill follows this too (same origin).
+    startProgress('giving in progress', GIVE_FLOW, [], '/wallet')
     try {
-      const tx = await give(signer, recipient, need, name.trim() || 'A friend', (s) => setSteps((prev) => [...prev, s]))
+      const tx = await give(signer, recipient, need, name.trim() || 'A friend', (s) => {
+        setSteps((prev) => [...prev, s])
+        addProgress({ key: s.key, title: s.title, kind: s.key === 'proof' ? 'offchain' : 'real', tx: s.tx, note: s.note })
+      })
       setDone(tx)
       await refreshBalance(signer)
     } catch (e) {
       setError(friendly(e))
+      if (steps.length === 0) clearProgress()
+      else failProgress(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
     }
@@ -112,29 +123,37 @@ export default function Wallet() {
     <div style={{ minHeight: '100vh', background: PANEL, fontFamily: FONT, color: INK }}>
       <div style={{ background: '#FFFFFF', borderBottom: `1px solid ${LINE}`, padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 32, height: 32, borderRadius: 8, background: GREEN, color: '#FFFFFF', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>B</div>
-        <div style={{ fontWeight: 700, fontSize: 17 }}>Boloka · send from your wallet</div>
-        <span style={{ fontSize: 12, fontWeight: 600, color: MUTED, background: PANEL, borderRadius: 999, padding: '4px 10px' }}>Stellar testnet</span>
+        <div style={{ fontWeight: 700, fontSize: 17 }}>Boloka dapp</div>
+        <span style={{ fontSize: 12, fontWeight: 600, color: MUTED, background: PANEL, borderRadius: 999, padding: '4px 10px' }}>Permissionless · any Stellar wallet · testnet</span>
         <span style={{ flex: 1 }} />
         {signer && (
           <span style={{ fontSize: 13, color: MUTED }}>
-            {mode === 'freighter' ? 'Freighter' : 'Test wallet'} · <span style={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>{short(signer.address)}</span>
+            Signed in with {mode === 'freighter' ? 'Freighter' : 'a test wallet'} · <span style={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>{short(signer.address)}</span>
             {units !== null && <> · <strong style={{ color: INK }}>P {amt(unitsToPula(units))}</strong> in USDC</>}
           </span>
         )}
       </div>
 
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '28px 20px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {EMBEDDED && (
+          <div style={{ ...card, flexDirection: 'row', alignItems: 'center', gap: 14, padding: '14px 18px', background: TINT, border: 'none' }}>
+            <span style={{ fontSize: 34, lineHeight: 1 }} aria-hidden="true">🤫</span>
+            <div style={{ fontSize: 13, color: INK, lineHeight: 1.5 }}>
+              <strong>Thabo</strong>, Kate's boyfriend. Well off, and shy about it. He wants Mom to have the school money without Kate, Mom or Boloka ever knowing it came from him. He is not a Boloka customer: this is the open dapp, and he signs in with his own wallet.
+            </div>
+          </div>
+        )}
         <div>
           <h1 style={{ margin: 0, fontSize: 26, letterSpacing: -0.3 }}>Give to someone's Boloka, without being named</h1>
           <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5, marginTop: 6 }}>
-            No Boloka account needed. Their phone shows the money and the name you choose; the chain, Boloka and they never see your wallet.
+            A traditional dapp: no account, no sign-up, nobody to ask. Sign in with your wallet; it signs one transaction. Their phone shows the money and the name you choose; the chain, Boloka and they never see your wallet.
           </div>
         </div>
 
         {!signer ? (
           <div style={card}>
             <div style={{ fontWeight: 700 }}>1 · Sign in with your wallet</div>
-            <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5 }}>Freighter on Testnet. No Freighter? A test wallet lives in this browser and gets test dollars from the demo.</div>
+            <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5 }}>Permissionless: any Stellar wallet works, nothing to register. Freighter on Testnet; no Freighter? A test wallet lives in this browser and gets test dollars from the demo.</div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button type="button" style={{ ...button.green, flex: 1 }} onClick={() => connect('freighter')}>Connect Freighter</button>
               <button type="button" style={{ ...button.outline, flex: 1 }} onClick={() => connect('test')}>Use a test wallet</button>

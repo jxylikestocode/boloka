@@ -36,6 +36,13 @@ export const TRANSFER_FLOW: FlowDef = [
   { key: 'pool-transfer', label: 'Notes swapped inside the pool: two nullifiers in, two new notes out · the other phone shows arrival here' },
 ]
 
+/** An outside wallet → a Boloka account, anonymously (the /wallet page, src/give.ts). */
+export const GIVE_FLOW: FlowDef = [
+  { key: 'deposit', label: 'His wallet funds a private pocket in the pool (the one thing his wallet signs)' },
+  { key: 'proof', label: 'Zero-knowledge proof made on his device (which pocket, how much, for whom: not revealed)' },
+  { key: 'relay', label: 'Transfer submitted by Boloka’s relayer from its own account · her phone shows arrival here' },
+]
+
 export function startProgress(title: string, flow: FlowDef, steps: FlowStep[] = [], app?: string) {
   localStorage.setItem(KEY, JSON.stringify({ id: Date.now(), at: Date.now(), title, flow, steps, app } satisfies Progress))
 }
