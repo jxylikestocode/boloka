@@ -1,10 +1,5 @@
 # Boloka
 
-> **Disclaimer.** This project was generated 100% by Claude (Anthropic's AI) during a
-> hackathon, with no human-written code. It is a prototype on Stellar **testnet** and is
-> **not suitable for production**: the contract is unaudited, the privacy design is a
-> placeholder, and funds would not be safe. Do not use it with real money.
-
 A dollar savings account for families in Botswana who receive money from relatives abroad.
 
 **Live demo:** https://boloka.fly.dev (Stellar testnet; every transfer is a real transaction) ·
